@@ -1,6 +1,7 @@
 ################################
 ### import relevant packages ###
 ################################
+import pandas as pd
 from statsmodels.tsa.stattools import adfuller
 from definitions import paths, verbatim
 
@@ -8,11 +9,11 @@ data_path, figures_path, output_path = paths()
 pr_results, save_figs, show_plots = verbatim()
 
 
-def pivot_target(df, target_country, target_var):
+def pivot_target(df: object, target_country: str, target_var: str):
     return df[df['country'] == target_country][target_var]
 
 
-def pivot_donors(df, donor_countries):
+def pivot_donors(df: object, donor_countries: list):
     donors = df.copy()
     donors = donors[donors['country'].isin(donor_countries)].reset_index(drop=True)
     donors = donors.pivot(index='date', columns=['country'], values=donors.columns[2:])
@@ -24,7 +25,7 @@ def pivot_donors(df, donor_countries):
 
 
 # adfuller test for stationarity (unit-root test)
-def adf_test(df):
+def adf_test(df: object):
     print("Running adf test for all columns in dataset")
     for col in df.columns:
         donor_series = df[col]

@@ -33,7 +33,7 @@ def print_lasso_path(X: list, y: list, alpha_min: float, alpha_max: float, alpha
         plt.show()
 
 
-def plot_predictions(act, pred, target_impl_year):
+def plot_predictions(act: list, pred: list, target_impl_year: int):
     plt.figure(figsize=(15, 6))
     plt.plot(act, label='actual')
     plt.plot(pred, label='predicted')
@@ -45,7 +45,7 @@ def plot_predictions(act, pred, target_impl_year):
         plt.show()
 
 
-def plot_diff(act, pred, target_impl_year):
+def plot_diff(act: list, pred: list, target_impl_year: int):
     diff = act - pred
     print(sum(diff[:round(target_impl_year / 12)]))
     print(sum(diff[round(target_impl_year / 12):]))

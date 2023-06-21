@@ -20,7 +20,7 @@ pr_results, save_figs, show_plots = verbatim()
 ################################
 ### Arco method              ###
 ################################
-def arco(target, donors, target_impl_year):
+def arco(target: list, donors: list, target_impl_year: int):
 
     y = np.array(target).reshape(-1, 1)
     X = np.array(donors)
