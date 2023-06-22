@@ -32,12 +32,13 @@ def main():
     target = pivot_target(df, target_country, target_var)
     donors = pivot_donors(df, donor_countries)
     # stationarity test
-    adf_test(df=donors)
+    # adf_test(df=donors)
     # arco
-    model, act, pred = arco(target=target, donors=donors, target_impl_year=target_impl_year)
+    model, act, pred = arco(target=target, donors=donors,
+                            alpha_min=0.01, alpha_max=1.0, alpha_step=0.001, lasso_iters=100000)
     # plot predictions versus actual
-    plot_predictions(act=act, pred=pred, target_impl_year=target_impl_year)
-    plot_diff(act=act, pred=pred, target_impl_year=target_impl_year)
+    plot_predictions(act=act, pred=pred)
+    plot_diff(act=act, pred=pred)
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@
 ################################
 import numpy as np
 import pandas as pd
+
 from definitions import *
 
 from sklearn.preprocessing import StandardScaler
@@ -17,7 +18,7 @@ from plot_functions import print_lasso_path
 ################################
 ### Arco method              ###
 ################################
-def arco(target: list, donors: list, target_impl_year: int):
+def arco(target: list, donors: list, alpha_min: float, alpha_max: float, alpha_step: float, lasso_iters: int):
 
     y = np.array(target).reshape(-1, 1)
     X = np.array(donors)
@@ -35,7 +36,7 @@ def arco(target: list, donors: list, target_impl_year: int):
     y = TargetVarScalerFit.transform(y)
 
     # Split the data into training and testing set
-    ts = (2019 - target_impl_year + 1) * 12
+    ts = (2019 - target_impl_year + 1) * timeframe_scale
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=ts, random_state=42)
 
     # Quick sanity check with the shapes of Training and testing datasets
@@ -44,7 +45,9 @@ def arco(target: list, donors: list, target_impl_year: int):
     print(X_test.shape)
     print(y_test.shape)
 
-    print_lasso_path(X_train, y_train, alpha_min=0.01, alpha_max=2, alpha_step=0.01, lasso_iters=10000)
+    print_lasso_path(X_train, y_train,
+                     alpha_min=alpha_min, alpha_max=alpha_max, alpha_step=alpha_step,
+                     lasso_iters=lasso_iters)
 
     # define model
     model = LassoCV(

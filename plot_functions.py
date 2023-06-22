@@ -30,11 +30,11 @@ def print_lasso_path(X: list, y: list, alpha_min: float, alpha_max: float, alpha
         plt.show()
 
 
-def plot_predictions(act: list, pred: list, target_impl_year: int):
+def plot_predictions(act: list, pred: list):
     plt.figure(figsize=(15, 6))
     plt.plot(act, label='actual')
     plt.plot(pred, label='predicted')
-    plt.axvline(x=target_impl_year/12)
+    plt.axvline(x=target_impl_year/timeframe_scale)
     plt.legend()
     if save_figs:
         plt.savefig(f'{figures_path}act_vs_pred.png')
@@ -42,15 +42,15 @@ def plot_predictions(act: list, pred: list, target_impl_year: int):
         plt.show()
 
 
-def plot_diff(act: list, pred: list, target_impl_year: int):
+def plot_diff(act: list, pred: list):
     diff = act - pred
-    print(sum(diff[:round(target_impl_year / 12)]))
-    print(sum(diff[round(target_impl_year / 12):]))
+    print(sum(diff[:round(target_impl_year / timeframe_scale)]))
+    print(sum(diff[round(target_impl_year / timeframe_scale):]))
 
     # act_cum = np.cumsum(act)
     # pred_cum = np.cumsum(pred)
-    act_cum = np.cumsum(act[round(target_impl_year / 12):])
-    pred_cum = np.cumsum(pred[round(target_impl_year / 12):])
+    act_cum = np.cumsum(act[round(target_impl_year / timeframe_scale):])
+    pred_cum = np.cumsum(pred[round(target_impl_year / timeframe_scale):])
 
     plt.figure(figsize=(15, 6))
     plt.plot(act_cum, label='act_cum')

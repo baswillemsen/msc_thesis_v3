@@ -79,9 +79,11 @@ def downsample_month_to_quarter(df_monthly: object, country_col: str, date_col: 
 
 def upsample_quarter_to_month(df_quarterly: object, country_col: str, date_col: str,
                               var_quarterly: str, var_monthly: str):
+
     df_monthly = pd.DataFrame({var_monthly: [],
                                country_col: []}
                               )
+
     for country in df_quarterly[country_col].unique():
         df_country = df_quarterly.copy()
         df_country = df_country[df_country[country_col] == country].rename(columns={var_quarterly: var_monthly})

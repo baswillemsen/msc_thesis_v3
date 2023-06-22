@@ -10,9 +10,11 @@ show_plots = True
 save_figs = True
 
 # NON-STATIC DEFINITIONS
-data_file = 'total_monthly.csv'
+timeframe = 'monthly'
+timeframe_scale = 12
 target_country = 'iceland'
-target_var = 'co2_monthly'
+data_file = f'total_{timeframe}.csv'
+target_var = f'co2_{timeframe}'
 
 # COUNTRIES, YEARS INCLUDED
 target_countries = ['switzerland', 'iceland', 'ireland', 'france', 'portugal']  # 5x
