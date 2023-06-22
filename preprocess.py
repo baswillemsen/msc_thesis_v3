@@ -36,6 +36,8 @@ def preprocesss_co2_monthly(source_file: str, country_col: str, year_col: str):
     # export to csv
     co2_quarterly.to_csv(f'{data_path}co2_quarterly_processed.csv')
 
+    return co2_monthly, co2_quarterly
+
 
 # Quarterly population data
 def preprocesss_pop_quarterly(source_file: str, country_col: str, measure_col: str, incl_measure: list):
@@ -67,6 +69,7 @@ def preprocesss_pop_quarterly(source_file: str, country_col: str, measure_col: s
     # export to csv
     pop_monthly.to_csv(f'{data_path}pop_monthly_processed.csv')
 
+    return pop_monthly, pop_quarterly
 
 # Quarterly GDP data
 def preprocesss_gdp_quarterly(source_file: str, country_col: str, measure_col: str, incl_measure: list):
@@ -98,10 +101,30 @@ def preprocesss_gdp_quarterly(source_file: str, country_col: str, measure_col: s
     # export to csv
     gdp_monthly.to_csv(f'{data_path}gdp_monthly_processed.csv')
 
+    return gdp_monthly, gdp_quarterly
+
+
+def total_join(time: str, co2: object, pop: object, gdp: object, date_col: str, country_col: str):
+    total = co2.copy()
+    total = total.merge(pop, how='left', on=[date_col, country_col])
+    total = total.merge(gdp, how='left', on=[date_col, country_col])
+
+    total[f'co2_{time}_cap'] = total[f'co2_{time}'] / total[f'pop_{time}']
+    total[f'gdp_{time}_cap'] = total[f'gdp_{time}'] / total[f'pop_{time}']
+
+    total.to_csv(f'{data_path}total_{time}.csv', header=True, index=False)
+
+    return total
+
 
 if __name__ == "__main__":
-    preprocesss_co2_monthly(source_file='co2_monthly', country_col='Name', year_col='Year')
-    preprocesss_pop_quarterly(source_file='pop_quarterly', country_col='Country',
-                              measure_col='MEASURE', incl_measure=['PERSA'])
-    preprocesss_gdp_quarterly(source_file='gdp_quarterly', country_col='Country',
-                              measure_col='MEASURE', incl_measure=['CPCARSA'])
+    co2_monthly, co2_quarterly = preprocesss_co2_monthly(source_file='co2_monthly', country_col='Name', year_col='Year')
+    pop_monthly, pop_quarterly = preprocesss_pop_quarterly(source_file='pop_quarterly', country_col='Country',
+                                                           measure_col='MEASURE', incl_measure=['PERSA'])
+    gdp_monthly, gdp_quarterly = preprocesss_gdp_quarterly(source_file='gdp_quarterly', country_col='Country',
+                                                           measure_col='MEASURE', incl_measure=['CPCARSA'])
+
+    total_monthly = total_join(time='monthly', co2=co2_monthly, pop=pop_monthly, gdp=gdp_monthly,
+                               date_col='date', country_col='country')
+    total_quarterly = total_join(time='quarterly', co2=co2_quarterly, pop=pop_quarterly, gdp=gdp_quarterly,
+                                 date_col='date', country_col='country')
