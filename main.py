@@ -3,11 +3,10 @@
 ################################
 import os
 import pandas as pd
+from definitions import *
 
 # custom functions
-from definitions import paths, verbatim
-from helper_functions import pivot_target
-from helper_functions import pivot_donors
+from helper_functions import pivot_target, pivot_donors
 from helper_functions import adf_test
 from estimators import arco
 from plot_functions import plot_predictions, plot_diff
@@ -15,8 +14,9 @@ from plot_functions import plot_predictions, plot_diff
 ###################################
 ### define paths & static defs  ###
 ###################################
-data_path, figures_path, output_path = paths()
-pr_results, save_figs, show_plots = verbatim()
+for path in [data_path, figures_path, output_path]:
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 
 ################################

@@ -3,7 +3,7 @@
 ################################
 import numpy as np
 import pandas as pd
-from definitions import paths, verbatim
+from definitions import *
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
@@ -12,9 +12,6 @@ from sklearn.linear_model import LassoCV
 
 # custom functions
 from plot_functions import print_lasso_path
-
-data_path, figures_path, output_path = paths()
-pr_results, save_figs, show_plots = verbatim()
 
 
 ################################

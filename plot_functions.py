@@ -3,12 +3,9 @@
 ################################
 import numpy as np
 import matplotlib.pyplot as plt
-from definitions import paths, verbatim
+from definitions import *
 
 from sklearn.linear_model import Lasso
-
-data_path, figures_path, output_path = paths()
-pr_results, save_figs, show_plots = verbatim()
 
 
 # print lasso path for given alphas and LASSO solution

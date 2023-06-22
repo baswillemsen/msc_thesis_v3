@@ -3,10 +3,7 @@
 ################################
 import pandas as pd
 from statsmodels.tsa.stattools import adfuller
-from definitions import paths, verbatim
-
-data_path, figures_path, output_path = paths()
-pr_results, save_figs, show_plots = verbatim()
+from definitions import *
 
 
 def pivot_target(df: object, target_country: str, target_var: str):
