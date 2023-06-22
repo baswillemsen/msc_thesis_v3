@@ -26,9 +26,8 @@ def read_data(source_path: str, file_name: str):
     return df_raw
 
 
-def select_country_year_measure(df_raw: object, country_col: str, year_col: str,
+def select_country_year_measure(df: object, country_col: str, year_col: str,
                                 measure_col: str = None, incl_measure: list = None):
-    df = df_raw.copy()
     df = df[
         (df[country_col].isin(incl_countries)) &
         (df[year_col].isin(incl_years))
@@ -68,7 +67,8 @@ def downsample_month_to_quarter(df_monthly: object, country_col: str, date_col: 
 
         df_quarterly = pd.concat([df_quarterly, df_country], axis=0)
 
-    df_quarterly = df_quarterly.reset_index().rename(columns={'index': date_col})
+    df_quarterly = df_quarterly.reset_index()
+    df_quarterly = df_quarterly.rename(columns={'index': date_col})
     df_quarterly[date_col] = [df_monthly[date_col][3 * i].to_pydatetime() for i in range(0, int(len(df_monthly)/3))]
     df_quarterly[date_col] = pd.to_datetime(
         df_quarterly[date_col].astype(str).replace({'-10': '-12'}, regex=True)).dt.to_period('M')
@@ -79,7 +79,23 @@ def downsample_month_to_quarter(df_monthly: object, country_col: str, date_col: 
 
 def upsample_quarter_to_month(df_quarterly: object, country_col: str, date_col: str,
                               var_quarterly: str, var_monthly: str):
-    pass
+    df_monthly = pd.DataFrame({var_monthly: [],
+                               country_col: []}
+                              )
+    for country in df_quarterly[country_col].unique():
+        df_country = df_quarterly.copy()
+        df_country = df_country[df_country[country_col] == country].rename(columns={var_quarterly: var_monthly})
+        df_country = df_country.set_index(date_col)[var_monthly]
+        df_country = df_country.resample('M').interpolate().to_frame()
+        df_country[country_col] = [country] * len(df_country)
+        df_monthly = pd.concat([df_monthly, df_country], axis=0)
+
+    df_monthly = df_monthly.reset_index()
+    df_monthly = df_monthly.rename(columns={'index': date_col})
+    df_monthly[date_col] = pd.to_datetime(df_monthly[date_col].astype(str))
+    df_monthly = df_monthly[[country_col, date_col, var_monthly]]
+
+    return df_monthly
 
 
 def pivot_target(df: object, target_country: str, target_var: str):
