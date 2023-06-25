@@ -60,7 +60,6 @@ def downsample_month_to_quarter(df_monthly: object, country_col: str, date_col: 
         df_country = df_monthly.copy()
         df_country = df_country[df_country[country_col] == country]
         df_country = df_country.rename(columns={var_monthly: var_quarterly})
-
         df_country = df_country.set_index(date_col)[var_quarterly]
         df_country = df_country.resample('Q', convention='start').sum().to_frame()
         df_country[country_col] = [country] * len(df_country)
@@ -86,10 +85,12 @@ def upsample_quarter_to_month(df_quarterly: object, country_col: str, date_col: 
 
     for country in df_quarterly[country_col].unique():
         df_country = df_quarterly.copy()
-        df_country = df_country[df_country[country_col] == country].rename(columns={var_quarterly: var_monthly})
+        df_country = df_country[df_country[country_col] == country]
+        df_country = df_country.rename(columns={var_quarterly: var_monthly})
         df_country = df_country.set_index(date_col)[var_monthly]
         df_country = df_country.resample('M').interpolate().to_frame()
         df_country[country_col] = [country] * len(df_country)
+
         df_monthly = pd.concat([df_monthly, df_country], axis=0)
 
     df_monthly = df_monthly.reset_index()

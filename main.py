@@ -31,8 +31,6 @@ def main():
     # pivot donors
     target = pivot_target(df, target_country, target_var)
     donors = pivot_donors(df, donor_countries)
-    # stationarity test
-    # adf_test(df=donors)
     # arco
     model, act, pred = arco(target=target, donors=donors,
                             alpha_min=0.01, alpha_max=1.0, alpha_step=0.001, lasso_iters=100000)

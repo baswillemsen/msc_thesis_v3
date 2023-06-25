@@ -10,9 +10,9 @@ show_plots = True
 save_figs = True
 
 # NON-STATIC DEFINITIONS
-timeframe = 'monthly'
-timeframe_scale = 12
-target_country = 'iceland'
+timeframe = 'quarterly'
+timeframe_scale = 4
+target_country = 'france'
 data_file = f'total_{timeframe}.csv'
 target_var = f'co2_{timeframe}'
 
