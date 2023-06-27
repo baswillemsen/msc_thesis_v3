@@ -49,10 +49,10 @@ def adf_test(sign_level: str):
                            columns=['country', 'series', 'diff_level', 'stationary', 'p_value'])
     df_stat.to_csv(f'{output_path}stationarity_results.csv')
 
-    # df_stat_group = df_stat[df_stat['stationary']==1]
-    # print(df_stat_group.groupby(by=['series', 'stationary']).sum())
-    #
-    return df_stat[df_stat['stationary']==1]
+    df_stat_group = df_stat[df_stat['stationary']==1]
+    print(df_stat_group.groupby(by=['series', 'stationary']).sum())
+
+    return df_stat[df_stat['stationary'] == 1]
 
 
 if __name__ == "__main__":

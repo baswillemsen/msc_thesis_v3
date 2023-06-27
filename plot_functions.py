@@ -34,7 +34,7 @@ def plot_predictions(act: list, pred: list):
     plt.figure(figsize=(15, 6))
     plt.plot(act, label='actual')
     plt.plot(pred, label='predicted')
-    plt.axvline(x=target_impl_year/timeframe_scale)
+    # plt.axvline(x=target_impl_year/timeframe_scale)
     plt.legend()
     if save_figs:
         plt.savefig(f'{figures_path}act_vs_pred.png')

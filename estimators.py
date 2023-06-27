@@ -11,6 +11,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.linear_model import LassoCV
 
+import SparseSC
+
 # custom functions
 from plot_functions import print_lasso_path
 
@@ -83,8 +85,15 @@ def arco(target: list, donors: list, alpha_min: float, alpha_max: float, alpha_s
     return model, act, pred
 
 
-def sc():
+def sc(target: list, donors: list):
     pass
+    # y = target
+    # X = np.array(donors)
+    # sc_model = SparseSC.fit(
+    #     features=np.array(donors),
+    #     target=np.array(target),
+    #     treated_units=
+    # )
 
 
 def did():

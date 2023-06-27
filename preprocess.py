@@ -71,6 +71,7 @@ def preprocesss_pop_quarterly(source_file: str, country_col: str, measure_col: s
 
     return pop_monthly, pop_quarterly
 
+
 # Quarterly GDP data
 def preprocesss_gdp_quarterly(source_file: str, country_col: str, measure_col: str, incl_measure: list):
     # read data

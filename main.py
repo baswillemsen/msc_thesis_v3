@@ -23,6 +23,7 @@ for path in [data_path, figures_path, output_path]:
 ### main script              ###
 ################################
 def main():
+
     # read data
     df = pd.read_csv(os.path.join(data_path, data_file), delimiter=',', header=0, encoding='latin-1')
     # See which countries are included
