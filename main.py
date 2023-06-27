@@ -7,8 +7,7 @@ from definitions import *
 
 # custom functions
 from helper_functions import pivot_target, pivot_donors
-from statistical_tests import adf_test
-from estimators import arco
+from estimators import arco, sc, did
 from plot_functions import plot_predictions, plot_diff
 
 ###################################
