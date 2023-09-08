@@ -21,8 +21,8 @@ stat = 'stat'
 sign_level = 0.10
 fake_num = -99999
 target_country = 'france'
-data_file = f'total_{timeframe}.csv'
-target_var = f'co2_{timeframe}'
+data_file = 'total.csv'
+target_var = 'co2'
 
 country_col = 'country'
 year_col = 'year'
@@ -37,9 +37,6 @@ donor_countries = ['austria', 'belgium', 'bulgaria', 'croatia', 'czech republic'
 incl_countries = target_countries + donor_countries
 incl_countries.sort()
 incl_years = range(2000, 2020)
-
-target_countries_impl_years = {'switzerland': 2008, 'iceland': 2010, 'ireland': 2010, 'france': 2014, 'portugal': 2015}
-target_impl_year = target_countries_impl_years[target_country]
 
 corr_country_names = {'republic of cyprus': 'cyprus',
                       'slovak republic': 'slovakia',
