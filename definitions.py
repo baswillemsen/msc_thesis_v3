@@ -1,8 +1,8 @@
 # PATHS
 data_source_path = 'data/source/'
 data_path = 'data/'
-figures_path = 'figures/'
-output_path = 'output/'
+figures_path = 'output/figures/'
+tables_path = 'output/tables/'
 
 # PRINTING, SHOWING PLOTS
 show_results = False
