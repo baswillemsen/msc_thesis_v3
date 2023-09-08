@@ -20,7 +20,6 @@ timeframe_scale = 4
 stat = 'stat'
 sign_level = 0.10
 fake_num = -99999
-target_country = 'france'
 data_file = 'total.csv'
 target_var = 'co2'
 
