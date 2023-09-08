@@ -165,3 +165,22 @@ def arco_pivot(df: object, country_col: str, time_col: str, target_country: str,
     donors = donors.dropna(axis=1)
 
     return target, donors
+
+
+def sc_pivot(df: object, country_col: str, time_col: str, target_country: str, target_var: str, donor_countries: list):
+
+    df = df[df[country_col].isin(donor_countries + [target_country])]
+    df_pivot = df.copy()
+    df_pivot = df_pivot.pivot(index=country_col, columns=time_col, values=target_var)
+    df_pivot = df_pivot.dropna(axis=1, how='any')
+
+    pre_treat = df_pivot.iloc[:, df_pivot.columns <= get_impl_year(target_country)].values
+    post_treat = df_pivot.iloc[:, df_pivot.columns > get_impl_year(target_country)].values
+    treat_unit = [idx for idx, val in enumerate(df_pivot.index.values) if val == target_country]
+
+    return df_pivot, pre_treat, post_treat, treat_unit
+
+
+def did_pivot():
+    pass
+
