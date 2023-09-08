@@ -84,7 +84,6 @@ def rename_order_scale(df: object, source_country_col: str, source_year_col: str
 
 
 def downsample_month_to_quarter(df_m: object, var_name: str):
-
     df_q = pd.DataFrame({var_name: [],
                          country_col: []}
                         )
@@ -101,42 +100,39 @@ def downsample_month_to_quarter(df_m: object, var_name: str):
     df_q = df_q.reset_index()
     df_q = df_q.rename(columns={'index': date_col})
 
-    df_q[date_col] = [df_m[date_col][3 * i].to_pydatetime() for i in range(0, int(len(df_m)/3))]
-    # df_q[date_col] = pd.to_datetime(df_q[date_col].astype(str).replace({'-10': '-12'}, regex=True)).dt.to_period('M')
-    # df_q[month_col] = df_q.apply(lambda row: month_name_to_num(row.variable), axis=1)
-    # co2_m['quarter'] = co2_m.apply(lambda row: month_to_quarter(row.month), axis=1)
-
+    df_q[date_col] = [df_m[date_col][3 * i].to_pydatetime() for i in range(0, int(len(df_m) / 3))]
     df_q[year_col] = df_q[date_col].dt.year
     df_q[quarter_col] = df_q[date_col].dt.quarter
 
     df_q = df_q[[country_col, date_col, year_col, quarter_col, var_name]]
     df_q = df_q.sort_values(by=[country_col, year_col, quarter_col])
-    print(df_q)
 
     return df_q
 
 
-def upsample_quarter_to_month(df_q: object, country_col: str, time_col: str,
-                              var_quarterly: str, var_monthly: str):
-
-    df_m = pd.DataFrame({var_monthly: [],
-                               country_col: []}
-                              )
+def upsample_quarter_to_month(df_q: object, var_name: str):
+    df_m = pd.DataFrame({var_name: [],
+                         country_col: []}
+                        )
 
     for country in df_q[country_col].unique():
         df_country = df_q.copy()
         df_country = df_country[df_country[country_col] == country]
-        df_country = df_country.rename(columns={var_quarterly: var_monthly})
-        df_country = df_country.set_index(time_col)[var_monthly]
-        df_country = df_country.resample('M').interpolate().to_frame()
+        df_country = df_country.set_index(date_col)[var_name]
+        df_country = df_country.resample('M', convention='start').interpolate().to_frame()
         df_country[country_col] = [country] * len(df_country)
 
         df_m = pd.concat([df_m, df_country], axis=0)
 
     df_m = df_m.reset_index()
-    df_m = df_m.rename(columns={'index': time_col})
-    df_m[time_col] = pd.to_datetime(df_m[time_col].astype(str))
-    df_m = df_m[[country_col, time_col, var_monthly]]
+    df_m = df_m.rename(columns={'index': date_col})
+    df_m[date_col] = pd.to_datetime(df_m[date_col].astype(str))
+
+    df_m[year_col] = df_m[date_col].dt.year
+    df_m[month_col] = df_m[date_col].dt.month
+
+    df_m = df_m[[country_col, date_col, year_col, month_col, var_name]]
+    df_m = df_m.sort_values(by=[country_col, year_col, month_col])
 
     return df_m
 
@@ -156,7 +152,8 @@ def upsample_quarter_to_month(df_q: object, country_col: str, time_col: str,
 #     return donors
 
 
-def arco_pivot(df: object, country_col: str, time_col: str, target_country: str, target_var: str, donor_countries: list):
+def arco_pivot(df: object, country_col: str, time_col: str, target_country: str, target_var: str,
+               donor_countries: list):
     target = df[df[country_col] == target_country].set_index(time_col)[target_var]
 
     donors = df.copy()
