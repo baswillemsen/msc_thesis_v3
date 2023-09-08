@@ -65,7 +65,7 @@ def arco(target: list, donors: list, alpha_min: float, alpha_max: float, alpha_s
     act = TargetVarScalerFit.inverse_transform(y)
     pred = TargetVarScalerFit.inverse_transform(model.predict(X).reshape(-1, 1))
 
-    if pr_results:
+    if show_results:
         # print(model.alpha_)
         # print(model.coef_X)
         # print(model.intercept_)
