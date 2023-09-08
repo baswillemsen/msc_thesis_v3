@@ -26,11 +26,11 @@ def read_data(source_path: str, file_name: str):
     return df_raw
 
 
-def select_country_year_measure(df: object, country_col: str, year_col: str,
+def select_country_year_measure(df: object, country_col: str, time_col: str,
                                 measure_col: str = None, incl_measure: list = None):
     df = df[
         (df[country_col].isin(incl_countries)) &
-        (df[year_col].isin(incl_years))
+        (df[time_col].isin(incl_years))
     ]
     if incl_measure is not None:
         df = df[

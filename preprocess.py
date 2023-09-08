@@ -8,101 +8,107 @@ from helper_functions import *
 
 
 # Monthly CO2 data
-def preprocesss_co2_monthly(source_file: str, country_col: str, year_col: str):
+def preprocess_co2_m(source_file: str, country_col: str, time_col: str):
     # read data
-    co2_monthly_raw = read_data(source_path=data_source_path, file_name=source_file)
-    co2_monthly = co2_monthly_raw.copy()
+    co2_m_raw = read_data(source_path=data_source_path, file_name=source_file)
+    co2_m = co2_m_raw.copy()
+    
     # lowercase, replace country names
-    co2_monthly[country_col] = co2_monthly[country_col].str.lower()
-    co2_monthly = co2_monthly.replace({country_col: corr_country_names})
+    co2_m[country_col] = co2_m[country_col].str.lower()
+    co2_m = co2_m.replace({country_col: corr_country_names})
+
     # select countries and year
-    co2_monthly = select_country_year_measure(df=co2_monthly, country_col=country_col, year_col=year_col)
+    co2_m = select_country_year_measure(df=co2_m, country_col=country_col, time_col=time_col)
+
     # pivot
-    co2_monthly = co2_monthly.melt(id_vars=[country_col, year_col], value_vars=co2_monthly.drop([country_col, year_col], axis=1))
-    co2_monthly['month'] = co2_monthly.apply(lambda row: month_name_to_num(row.variable), axis=1)
-    co2_monthly['quarter'] = co2_monthly.apply(lambda row: month_to_quarter(row.month), axis=1)
-    co2_monthly['date'] = pd.to_datetime(dict(year=co2_monthly[year_col], month=co2_monthly['month'], day=1))
-    co2_monthly = co2_monthly.drop('variable', axis=1)
+    co2_m = co2_m.melt(id_vars=[country_col, time_col], value_vars=co2_m.drop([country_col, time_col], axis=1))
+    co2_m['month'] = co2_m.apply(lambda row: month_name_to_num(row.variable), axis=1)
+    co2_m['quarter'] = co2_m.apply(lambda row: month_to_quarter(row.month), axis=1)
+    co2_m['date'] = pd.to_datetime(dict(year=co2_m[time_col], month=co2_m['month'], day=1))
+    co2_m = co2_m.drop('variable', axis=1)
 
     # rename, order and scale: output = [index, country, date, value]
-    co2_monthly = rename_order_scale(df=co2_monthly, country_col=country_col, date_col='date', var_col='value',
-                                     var_name='co2_monthly', var_scale=1000)
+    co2_m = rename_order_scale(df=co2_m, country_col=country_col, date_col='date', var_col='value',
+                               var_name='co2_m', var_scale=1000)
     # export to csv
-    co2_monthly.to_csv(f'{data_path}co2_monthly_processed.csv')
+    co2_m.to_csv(f'{data_path}co2_m_processed.csv')
 
     # downsample monthly to quarterly
-    co2_quarterly = downsample_month_to_quarter(df_monthly=co2_monthly, country_col='country', date_col='date',
-                                               var_monthly='co2_monthly', var_quarterly='co2_quarterly')
+    co2_q = downsample_month_to_quarter(df_monthly=co2_m, country_col='country', date_col='date',
+                                        var_monthly='co2_m', var_quarterly='co2_q')
     # export to csv
-    co2_quarterly.to_csv(f'{data_path}co2_quarterly_processed.csv')
+    co2_q.to_csv(f'{data_path}co2_q_processed.csv')
 
-    return co2_monthly, co2_quarterly
+    return co2_m, co2_q
 
 
 # Quarterly population data
-def preprocesss_pop_quarterly(source_file: str, country_col: str, measure_col: str, incl_measure: list):
+def preprocess_pop_q(source_file: str, country_col: str, measure_col: str, incl_measure: list):
     # read data
-    pop_quarterly_raw = read_data(source_path=data_source_path, file_name=source_file)
-    pop_quarterly = pop_quarterly_raw.copy()
+    pop_q_raw = read_data(source_path=data_source_path, file_name=source_file)
+    pop_q = pop_q_raw.copy()
+
     # lowercase, replace country names
-    pop_quarterly[country_col] = pop_quarterly[country_col].str.lower()
-    pop_quarterly = pop_quarterly.replace({country_col: corr_country_names})
+    pop_q[country_col] = pop_q[country_col].str.lower()
+    pop_q = pop_q.replace({country_col: corr_country_names})
+
     # transform
-    pop_quarterly['year'] = pop_quarterly['TIME'].str[:4].astype(int)
-    pop_quarterly['quarter'] = pop_quarterly['TIME'].str[6:].astype(int)
-    pop_quarterly['month'] = pop_quarterly.apply(lambda row: quarter_to_month(row.quarter), axis=1)
-    pop_quarterly['date'] = pd.to_datetime(
-        dict(year=pop_quarterly.year, month=pop_quarterly.month, day=1)).dt.to_period('M')
+    pop_q['year'] = pop_q['TIME'].str[:4].astype(int)
+    pop_q['quarter'] = pop_q['TIME'].str[6:].astype(int)
+    pop_q['month'] = pop_q.apply(lambda row: quarter_to_month(row.quarter), axis=1)
+    pop_q['date'] = pd.to_datetime(dict(year=pop_q.year, month=pop_q.month, day=1)).dt.to_period('M')
 
     # select countries and year
-    pop_quarterly = select_country_year_measure(df=pop_quarterly, country_col=country_col, year_col='year',
-                                                measure_col=measure_col, incl_measure=incl_measure)
+    pop_q = select_country_year_measure(df=pop_q, country_col=country_col, time_col='year',
+                                        measure_col=measure_col, incl_measure=incl_measure)
     # rename, order and scale: output = [index, country, date, value]
-    pop_quarterly = rename_order_scale(df=pop_quarterly, country_col=country_col, date_col='date', var_col='Value',
-                                       var_name='pop_quarterly', var_scale=1e3)
+    pop_q = rename_order_scale(df=pop_q, country_col=country_col, date_col='date', var_col='Value',
+                               var_name='pop_q', var_scale=1e3)
     # export to csv
-    pop_quarterly.to_csv(f'{data_path}pop_quarterly_processed.csv')
+    pop_q.to_csv(f'{data_path}pop_q_processed.csv')
 
     # upsample monthly to quarterly
-    pop_monthly = upsample_quarter_to_month(df_quarterly=pop_quarterly, country_col='country', date_col='date',
-                                            var_quarterly='pop_quarterly', var_monthly='pop_monthly')
+    pop_m = upsample_quarter_to_month(df_quarterly=pop_q, country_col='country', date_col='date',
+                                      var_quarterly='pop_q', var_monthly='pop_m')
     # export to csv
-    pop_monthly.to_csv(f'{data_path}pop_monthly_processed.csv')
+    pop_m.to_csv(f'{data_path}pop_m_processed.csv')
 
-    return pop_monthly, pop_quarterly
+    return pop_m, pop_q
 
 
 # Quarterly GDP data
-def preprocesss_gdp_quarterly(source_file: str, country_col: str, measure_col: str, incl_measure: list):
+def preprocess_gdp_q(source_file: str, country_col: str, measure_col: str, incl_measure: list):
     # read data
-    gdp_quarterly_raw = read_data(source_path=data_source_path, file_name=source_file)
-    gdp_quarterly = gdp_quarterly_raw.copy()
+    gdp_q_raw = read_data(source_path=data_source_path, file_name=source_file)
+    gdp_q = gdp_q_raw.copy()
+
     # lowercase, replace country names
-    gdp_quarterly[country_col] = gdp_quarterly[country_col].str.lower()
-    gdp_quarterly = gdp_quarterly.replace({country_col: corr_country_names})
+    gdp_q[country_col] = gdp_q[country_col].str.lower()
+    gdp_q = gdp_q.replace({country_col: corr_country_names})
+
     # transform
-    gdp_quarterly['year'] = gdp_quarterly['TIME'].str[:4].astype(int)
-    gdp_quarterly['quarter'] = gdp_quarterly['TIME'].str[6:].astype(int)
-    gdp_quarterly['month'] = gdp_quarterly.apply(lambda row: quarter_to_month(row.quarter), axis=1)
-    gdp_quarterly['date'] = pd.to_datetime(
-        dict(year=gdp_quarterly.year, month=gdp_quarterly.month, day=1)).dt.to_period('M')
+    gdp_q['year'] = gdp_q['TIME'].str[:4].astype(int)
+    gdp_q['quarter'] = gdp_q['TIME'].str[6:].astype(int)
+    gdp_q['month'] = gdp_q.apply(lambda row: quarter_to_month(row.quarter), axis=1)
+    gdp_q['date'] = pd.to_datetime(
+        dict(year=gdp_q.year, month=gdp_q.month, day=1)).dt.to_period('M')
 
     # select countries and year
-    gdp_quarterly = select_country_year_measure(df=gdp_quarterly, country_col=country_col, year_col='year',
-                                                measure_col=measure_col, incl_measure=incl_measure)
+    gdp_q = select_country_year_measure(df=gdp_q, country_col=country_col, time_col='year',
+                                        measure_col=measure_col, incl_measure=incl_measure)
     # rename, order and scale: output = [index, country, date, value]
-    gdp_quarterly = rename_order_scale(df=gdp_quarterly, country_col=country_col, date_col='date', var_col='Value',
-                                       var_name='gdp_quarterly', var_scale=1e6)
+    gdp_q = rename_order_scale(df=gdp_q, country_col=country_col, date_col='date', var_col='Value',
+                               var_name='gdp_q', var_scale=1e6)
     # export to csv
-    gdp_quarterly.to_csv(f'{data_path}gdp_quarterly_processed.csv')
+    gdp_q.to_csv(f'{data_path}gdp_q_processed.csv')
 
     # upsample monthly to quarterly
-    gdp_monthly = upsample_quarter_to_month(df_quarterly=gdp_quarterly, country_col='country', date_col='date',
-                                            var_quarterly='gdp_quarterly', var_monthly='gdp_monthly')
+    gdp_m = upsample_quarter_to_month(df_quarterly=gdp_q, country_col='country', date_col='date',
+                                      var_quarterly='gdp_q', var_monthly='gdp_m')
     # export to csv
-    gdp_monthly.to_csv(f'{data_path}gdp_monthly_processed.csv')
+    gdp_m.to_csv(f'{data_path}gdp_m_processed.csv')
 
-    return gdp_monthly, gdp_quarterly
+    return gdp_m, gdp_q
 
 
 def total_join(time: str, co2: object, pop: object, gdp: object, date_col: str, country_col: str):
@@ -119,13 +125,25 @@ def total_join(time: str, co2: object, pop: object, gdp: object, date_col: str, 
 
 
 if __name__ == "__main__":
-    co2_monthly, co2_quarterly = preprocesss_co2_monthly(source_file='co2_monthly', country_col='Name', year_col='Year')
-    pop_monthly, pop_quarterly = preprocesss_pop_quarterly(source_file='pop_quarterly', country_col='Country',
-                                                           measure_col='MEASURE', incl_measure=['PERSA'])
-    gdp_monthly, gdp_quarterly = preprocesss_gdp_quarterly(source_file='gdp_quarterly', country_col='Country',
-                                                           measure_col='MEASURE', incl_measure=['CPCARSA'])
+    co2_m, co2_q = preprocess_co2_m(source_file='co2_m_2000_2021',
+                                    country_col='Name',
+                                    time_col='Year'
+                                    )
 
-    total_monthly = total_join(time='monthly', co2=co2_monthly, pop=pop_monthly, gdp=gdp_monthly,
+    gdp_m, gdp_q = preprocess_gdp_q(source_file='gdp_q_1990_2022',
+                                    country_col='Country',
+                                    measure_col='MEASURE',
+                                    incl_measure=['CPCARSA']
+                                    )
+
+    pop_m, pop_q = preprocess_pop_q(source_file='pop_q_1995_2022',
+                                    country_col='Country',
+                                    measure_col='MEASURE',
+                                    incl_measure=['PERSA']
+                                    )
+
+    total_monthly = total_join(time='m', co2=co2_m, pop=pop_m, gdp=gdp_m,
                                date_col='date', country_col='country')
-    total_quarterly = total_join(time='quarterly', co2=co2_quarterly, pop=pop_quarterly, gdp=gdp_quarterly,
+
+    total_quarterly = total_join(time='q', co2=co2_q, pop=pop_q, gdp=gdp_q,
                                  date_col='date', country_col='country')
