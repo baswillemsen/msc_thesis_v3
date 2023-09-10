@@ -64,9 +64,5 @@ def main(target_country: str):
             plot_diff(act_pred, target_country=target_country, year_start=year_start)
 
 
-# if __name__ == "__main__":
-#     main()
-
-
 if __name__ == "__main__":
     main(target_country=sys.argv[1])

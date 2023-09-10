@@ -55,3 +55,10 @@ corr_country_names = {'republic of cyprus': 'cyprus',
                       'italy, san marino and the holy see': 'italy',
                       'switzerland and liechtenstein': 'switzerland'
                       }
+
+# trans: 'var': (log, diff_level)
+trans = {
+    'co2': (True, 1)
+    , 'gdp': (True, 1)
+    , 'pop': (True, 1)
+}

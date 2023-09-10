@@ -4,7 +4,7 @@
 import numpy as np
 import pandas as pd
 
-from definitions import data_source_path, data_path, corr_country_names, stat, sign_level, fake_num, \
+from definitions import data_source_path, data_path, corr_country_names, stat, sign_level, fake_num, trans, \
     country_col, year_col, quarter_col, month_col, date_col
 from helper_functions import read_data, select_country_year_measure, month_name_to_num, rename_order_scale, \
     downsample_month_to_quarter, quarter_to_month, upsample_quarter_to_month
@@ -139,7 +139,7 @@ def make_stat(df: object, trans: dict, time: str):
     return total_stat
 
 
-if __name__ == "__main__":
+def preprocess():
     co2_m, co2_q = preprocess_co2_m(source_file='co2_m_2000_2021',
                                     source_country_col='Name',
                                     source_year_col='Year',
@@ -162,21 +162,20 @@ if __name__ == "__main__":
                                    var_name='pop'
                                    )
 
-    # trans: 'var': (log, diff_level)
-    trans = {
-        'co2': (True, 1)
-        , 'gdp': (True, 1)
-        , 'pop': (True, 1)
-    }
-
     # total monthly
     time = 'm'
     total_m = total_join(co2=co2_m, pop=pop_m, gdp=gdp_m,
                          key_cols=[country_col, date_col, year_col, month_col], time=time)
     total_m_stat = make_stat(total_m, trans, time=time)
+    print(total_m_stat)
 
     # total quarterly
     time = 'q'
     total_q = total_join(co2=co2_q, pop=pop_q, gdp=gdp_q,
                          key_cols=[country_col, date_col, year_col, quarter_col], time=time)
     total_q_stat = make_stat(total_q, trans, time=time)
+    print(total_q_stat)
+
+
+if __name__ == "__main__":
+    preprocess()
