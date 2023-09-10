@@ -24,7 +24,8 @@ def preprocess_co2_m(source_file: str, source_country_col: str, source_year_col:
     # select countries and year
     co2_m = select_country_year_measure(df=co2_m, country_col=source_country_col, year_col=source_year_col)
     # pivot
-    co2_m = co2_m.melt(id_vars=[source_country_col, source_year_col], value_vars=co2_m.drop([source_country_col, source_year_col], axis=1),
+    co2_m = co2_m.melt(id_vars=[source_country_col, source_year_col],
+                       value_vars=co2_m.drop([source_country_col, source_year_col], axis=1),
                        value_name=var_name)
     co2_m[month_col] = co2_m.apply(lambda row: month_name_to_num(row.variable), axis=1)
     co2_m[date_col] = pd.to_datetime(dict(year=co2_m[source_year_col], month=co2_m[month_col], day=1))

@@ -1,8 +1,6 @@
 ################################
 ### import relevant packages ###
 ################################
-import pandas as pd
-
 from preprocess import preprocess
 from main import main
 
@@ -14,7 +12,7 @@ if __name__ == "__main__":
     preprocess()
 
     for target_country in target_countries:
-        main(timeframe='m', target_country=target_country)
+        main(timeframe='q', target_country=target_country)
         print("\n")
 
 

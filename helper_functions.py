@@ -4,25 +4,25 @@
 import numpy as np
 import pandas as pd
 
-from definitions import target_var, data_path, incl_countries, incl_years, \
-    country_col, year_col, month_col, quarter_col, date_col, donor_countries
+from definitions import target_var, data_path, incl_countries, incl_years, donor_countries, \
+    country_col, year_col, month_col, quarter_col, date_col
 
 
-def get_impl_year(target_country: str = None):
-    target_countries_impl_years = {'switzerland': 2008,
-                                   'ireland': 2010,
-                                   'united kingdom': 2013,
-                                   'france': 2014,
-                                   'portugal': 2015
+def get_impl_date(target_country: str = None):
+    target_countries_impl_dates = {'switzerland': '2008-01-01',
+                                   'ireland': '2010-01-01',
+                                   'united kingdom': '2013-01-01',
+                                   'france': '2014-01-01',
+                                   'portugal': '2015-01-01'
                                    }
     if target_country is None:
-        return target_countries_impl_years
+        return target_countries_impl_dates
     else:
-        return target_countries_impl_years[target_country]
+        return target_countries_impl_dates[target_country]
 
 
 def get_timescale(timeframe: str = None):
-    timeframe_scale = {'q': 4,
+    timeframe_scale = {'q': 12*4,
                        'm': 12
                        }
     if timeframe is None:
@@ -41,7 +41,7 @@ def get_timeframe_col(timeframe: str = None):
         return timeframe_col[timeframe]
 
 
-def get_trans(timeframe: str):
+def get_trans(timeframe: str = None):
     # trans: 'var': (log, diff_level)
     if timeframe == 'm':
         trans = {
@@ -56,9 +56,10 @@ def get_trans(timeframe: str):
             , 'pop': (True, 4, 2)
         }
     else:
-        raise ValueError('Define timeframe as being "m" or "q"')
+        trans = ['co2', 'gdp', 'pop']
 
     return trans
+
 
 def month_name_to_num(month_name: str = None):
     month_num = {'Jan': 1,
@@ -230,9 +231,13 @@ def sc_pivot(df: object, target_country: str):
     df_pivot = df_pivot.pivot(index=country_col, columns=date_col, values=target_var)
     df_pivot = df_pivot.dropna(axis=1, how='any')
 
-    pre_treat = df_pivot.iloc[:, df_pivot.columns <= get_impl_year(target_country)].values
-    post_treat = df_pivot.iloc[:, df_pivot.columns > get_impl_year(target_country)].values
+    pre_treat = df_pivot.iloc[:, df_pivot.columns <= get_impl_date(target_country)].values
+    post_treat = df_pivot.iloc[:, df_pivot.columns > get_impl_date(target_country)].values
     treat_unit = [idx for idx, val in enumerate(df_pivot.index.values) if val == target_country]
+
+    series = [df_pivot, pre_treat, post_treat, treat_unit]
+    for i in range(0, len(series)):
+        pd.DataFrame(series[i]).to_csv(f'series_{i}.csv')
 
     return df_pivot, pre_treat, post_treat, treat_unit
 

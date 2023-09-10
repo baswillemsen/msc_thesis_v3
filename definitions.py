@@ -28,7 +28,7 @@ date_col = 'date'
 # COUNTRIES, YEARS INCLUDED
 target_countries = ['switzerland', 'ireland', 'france', 'portugal', 'united kingdom']  # 5x
 donor_countries = ['austria', 'belgium', 'bulgaria', 'croatia', 'czech republic',
-                   # 'cyprus',
+                   'cyprus',
                    'germany', 'greece', 'hungary', 'italy', 'lithuania', 'netherlands',
                    'romania', 'slovakia', 'spain']  # 14x
 incl_countries = target_countries + donor_countries

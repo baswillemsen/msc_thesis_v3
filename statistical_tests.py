@@ -8,7 +8,7 @@ import numpy as np
 
 from definitions import tables_path, show_results, data_path, save_results, \
     country_col, date_col
-from helper_functions import read_data, get_timescale, get_trans
+from helper_functions import read_data, get_timescale, get_trans, get_impl_date
 
 from statsmodels.tsa.stattools import adfuller
 from scipy.stats import shapiro
@@ -48,8 +48,7 @@ def adf_test(timeframe: str, sign_level: float = 0.05):
 
                     for diff_order in [1, 2]:
 
-                        # for reg in ['c', 'ct', 'ctt', 'n']:
-                        for reg in ['c']:
+                        for reg in ['c', 'ct', 'ctt', 'n']:
 
                             # print(country, series, diff_level)
                             country_list.append(country)
@@ -95,9 +94,9 @@ def adf_test(timeframe: str, sign_level: float = 0.05):
         df_stat_group.to_csv(f'{tables_path_cor}{timeframe}_stat_results_grouped.csv')
 
 
-def shapiro_wilk_test(df: object, target_impl_year: int, alpha: float):
+def shapiro_wilk_test(df: object, target_country: str, alpha: float):
     df['diff'] = df['pred'] - df['act']
-    shap = shapiro(df['diff'].loc[:target_impl_year])
+    shap = shapiro(df['diff'].loc[:get_impl_date(target_country)])
     if shap[1] > alpha:
         print(f"Shapiro-Wilk test: Errors are normally distributed (p-value={round(shap[1],3)})")
     else:

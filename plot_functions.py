@@ -9,7 +9,7 @@ from sklearn.linear_model import Lasso
 
 from definitions import data_path, figures_path, fig_size, show_plots, save_figs, stat, \
     date_col, country_col, year_col
-from helper_functions import read_data, first_value, get_impl_year, get_timescale
+from helper_functions import read_data, first_value, get_impl_date, get_timescale
 
 figures_path_cor = f'{figures_path}results/'
 
@@ -63,7 +63,7 @@ def plot_predictions(act_pred: object, target_country: str, timeframe: str):
     plt.figure(figsize=fig_size)
     plt.plot(act, label='actual')
     plt.plot(pred, label='predicted')
-    plt.axvline(x=get_impl_year(target_country=target_country)/get_timescale(timeframe=timeframe), c='black')
+    # plt.axvline(x=get_impl_date(target_country=target_country), c='black')
     plt.legend()
     if save_figs:
         plt.savefig(f'{figures_path_cor}{target_country}/{target_country}_act_pred.png',
@@ -75,12 +75,12 @@ def plot_predictions(act_pred: object, target_country: str, timeframe: str):
 def plot_diff(act_pred: object, target_country: str, timeframe: str):
     orig_value = first_value(target_country=target_country, timeframe=timeframe)
     diff = act_pred['act'] - act_pred['pred']
-    # diff = np.cumsum(diff)
-    # diff = np.exp(diff.cumsum())*orig_value
+    diff = np.cumsum(diff)
+    diff = np.exp(diff.cumsum())*orig_value
 
     plt.figure(figsize=fig_size)
     plt.plot(diff, label='diff')
-    plt.axvline(x=get_impl_year(target_country=target_country)/get_timescale(timeframe=timeframe), c='black')
+    # plt.axvline(x=get_impl_date(target_country=target_country), c='black')
     plt.tight_layout()
     plt.legend()
     if save_figs:

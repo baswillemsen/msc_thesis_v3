@@ -9,9 +9,9 @@ plt.rcParams.update({'font.size': 15})
 
 from sklearn.preprocessing import StandardScaler
 
-from definitions import data_path, show_plots, data_source_path, figures_path, \
-    target_countries, fig_size, show_plots, save_figs, show_results
-from helper_functions import read_data, get_impl_year, get_trans, get_timescale
+from definitions import data_path, figures_path, target_countries, fig_size, show_plots, save_figs, show_results, \
+    target_var, country_col, year_col, date_col
+from helper_functions import read_data, get_impl_date, get_trans, get_timescale
 from plot_functions import plot_corr
 
 figures_path_cor = f'{figures_path}methodology/'
@@ -26,30 +26,29 @@ def descriptive_stats(df: object, var_name: str):
 
         print(f"# missing: {sum(df[var_name].isna())}")
         if var_name != 'brent':
-            print(f"# countries: {len(df['country'].unique())}")
-            print(f"countries: {df['country'].unique()}")
+            print(f"# countries: {len(df[country_col].unique())}")
+            print(f"countries: {df[country_col].unique()}")
             print("\n")
 
-            print(df[df[var_name].isna()].groupby('country').count())
-            print(df[df[var_name].isna()].groupby('country').max() + 1)
+            print(df[df[var_name].isna()].groupby(country_col).count())
+            print(df[df[var_name].isna()].groupby(country_col).max() + 1)
             print("\n")
 
-            print(f"within-country std: \n{df.groupby('country').std().mean()[var_name]}")
+            print(f"within-country std: \n{df.groupby(country_col).std().mean()[var_name]}")
 
 
 def co2_target_countries(df: object):
-    print(get_impl_year)
 
     for country in target_countries:
         plt.figure(figsize=fig_size)
-        df_target = df[df['country'] == country].set_index('date')['co2']
+        df_target = df[df[country_col] == country].set_index(date_col)[target_var]
         df_target.plot(figsize=fig_size)
         plt.title(country.upper())
         plt.xlabel('date')
-        plt.ylabel('GHG (metric tons CO2e)')
+        plt.ylabel('CO2 emissions (metric tons)')
         plt.grid()
         plt.tight_layout()
-        plt.axvline(get_impl_year(country) / 12, color='black')
+        plt.axvline(get_impl_date(country), color='black')
         if save_figs:
             plt.savefig(f"{figures_path_cor}co2_{country}.png")
         if show_plots:
@@ -62,14 +61,14 @@ def all_series(df: object, timeframe: str):
 
     for series in trans.keys():
 
-        df_pivot = df.pivot(index='date', columns='country', values=series)
+        df_pivot = df.pivot(index=date_col, columns=country_col, values=series)
         df_scale = df_pivot
 
         plt.figure(figsize=fig_size)
         plt.plot(df_pivot.index, df_scale, label=df_pivot.columns)
         plt.title(series.upper())
         plt.xticks([df_pivot.index[timescale * i] for i in range(int(len(df_pivot)/timescale))], rotation='vertical')
-        plt.xlabel('dae')
+        plt.xlabel('date')
         plt.ylabel(f"{series}")
         if series == 'pop':
             plt.legend(loc='center left', bbox_to_anchor=(1.1, 0.5))
@@ -87,7 +86,7 @@ def all_series_stand(df: object, timeframe: str):
     scaler = StandardScaler()
     for series in trans.keys():
 
-        df_pivot = df.pivot(index='date', columns='country', values=series)
+        df_pivot = df.pivot(index=date_col, columns=country_col, values=series)
         df_scale = scaler.fit_transform(df_pivot)
 
         plt.figure(figsize=fig_size)
@@ -108,8 +107,8 @@ def all_series_stand(df: object, timeframe: str):
 
 def corr_matrix(df: object, target_country: str):
     df_cor = df.copy()
-    df_cor = df_cor[df_cor['country'] == target_country]
-    df_cor = df_cor.drop(['country', 'year'], axis=1)
+    df_cor = df_cor[df_cor[country_col] == target_country]
+    df_cor = df_cor[get_trans()]
     cor_matrix = df_cor.corr()
     if save_figs:
         plt.savefig(f"{figures_path_cor}corr_matrix.png")
@@ -126,6 +125,7 @@ def eda(timeframe: str):
     var_name = 'co2'
 
     descriptive_stats(df=df, var_name=var_name)
+    co2_target_countries(df=df)
     all_series(df=df, timeframe=timeframe)
     all_series_stand(df=df, timeframe=timeframe)
     corr_matrix(df=df, target_country=target_country)

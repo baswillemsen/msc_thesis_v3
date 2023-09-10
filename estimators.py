@@ -7,17 +7,15 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import TimeSeriesSplit
-from sklearn.model_selection import StratifiedKFold
 from sklearn.linear_model import LassoCV
 
 import SparseSC
 
 # custom functions
-from definitions import show_results, country_col, donor_countries, fake_num, target_var, \
-    country_col, year_col, quarter_col, month_col, date_col
-from helper_functions import flatten, arco_pivot, sc_pivot, get_impl_year
-from statistical_tests import shapiro_wilk_test
+from definitions import show_results, donor_countries, fake_num, country_col, date_col
+from helper_functions import flatten, arco_pivot, sc_pivot, get_impl_date
 from plot_functions import plot_lasso_path
+from statistical_tests import shapiro_wilk_test
 
 
 ################################
@@ -40,8 +38,6 @@ def arco(df: object, target_country: str, alpha_min: float, alpha_max: float, al
         # Generating the standardized values of X and y
         X = SS.fit_transform(X)
         y = SS.fit_transform(y)
-        # print(X.shape)
-        # print(y.shape)
 
         # Split the data into training and testing set
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42, shuffle=False)
@@ -55,8 +51,8 @@ def arco(df: object, target_country: str, alpha_min: float, alpha_max: float, al
         plot_lasso_path(X=X_train, y=y_train, target_country=target_country,
                         alpha_min=alpha_min, alpha_max=alpha_max, alpha_step=alpha_step, lasso_iters=lasso_iters)
 
-        ts_split = TimeSeriesSplit(n_splits=5)
         # define model
+        ts_split = TimeSeriesSplit(n_splits=5)
         model = LassoCV(
             alphas=np.arange(0.001, 1, 0.001),
             fit_intercept=True,
@@ -75,14 +71,14 @@ def arco(df: object, target_country: str, alpha_min: float, alpha_max: float, al
         pred = flatten(SS_targetfit.inverse_transform(model.predict(X).reshape(-1, 1)))
 
         act_pred = pd.DataFrame(list(zip(act, pred)), columns=['act', 'pred']).set_index(target.index)
-        # shapiro_wilk_test(df=act_pred, target_impl_year=get_impl_year(target_country), alpha=0.05)
+        shapiro_wilk_test(df=act_pred, target_country=target_country, alpha=0.05)
 
         if show_results:
             print('alpha: %f' % model.alpha_)
-            # print(model.coef_)
-            # print(model.intercept_)
-            # print(model.score)
-            # print(model.get_params)
+            print(model.coef_)
+            print(model.intercept_)
+            print(model.score)
+            print(model.get_params)
 
             coefs = list(model.coef_)
             coef_index = [i for i, val in enumerate(coefs) if val != 0]
@@ -96,26 +92,9 @@ def arco(df: object, target_country: str, alpha_min: float, alpha_max: float, al
         return model, act_pred
 
 
-# def sc(target: list, donors: list):
-#     pass
-#     # y = target
-#     # X = np.array(donors)
-#     # sc_model = SparseSC.fit(
-#     #     features=np.array(donors),
-#     #     target=np.array(target),
-#     #     treated_units=
-#     # )
-#
-#
-# def did():
-#     pass
-
-
 def sc(df: object, target_country: str):
     # pivot target and donors
-    df_pivot, pre_treat, post_treat, treat_unit = sc_pivot(df=df, country_col=country_col, date_col=date_col,
-                                                           target_country=target_country, target_var='co2_stat',
-                                                           donor_countries=donor_countries)
+    df_pivot, pre_treat, post_treat, treat_unit = sc_pivot(df=df, target_country=target_country)
 
     model = SparseSC.fit(
         features=np.array(pre_treat),
@@ -126,7 +105,6 @@ def sc(df: object, target_country: str):
     act_pred = df_pivot.loc[df_pivot.index == target_country].T
     act_pred.columns = ['act']
     act_pred['pred'] = model.predict(df_pivot.values)[treat_unit, :][0]
-    print(act_pred)
 
     return model, act_pred
 
