@@ -12,6 +12,9 @@ from statsmodels.tsa.stattools import adfuller
 from scipy.stats import shapiro
 
 
+tables_path_cor = f'{tables_path}methodology/'
+
+
 # # adfuller test for stationarity (unit-root test)
 # def adf_test(sign_level: str):
 #
@@ -72,7 +75,8 @@ def adf_test(df: object, country_col: str, time_col: str, sign_level: str):
     for country in df[country_col].unique():
         df_country = df[df['country'] == country].set_index(time_col, drop=True)
 
-        for series in df_country.drop(country_col, axis=1).columns:
+        # for series in df_country.drop(country_col, axis=1).columns:
+        for series in ['co2', 'gdp', 'pop']:
             df_country_series = df_country[series]
 
             for log in [0, 1]:
@@ -81,7 +85,8 @@ def adf_test(df: object, country_col: str, time_col: str, sign_level: str):
 
                 for diff_level in [0, 1, 2]:
 
-                    for reg in ['c', 'ct', 'ctt', 'n']:
+                    # for reg in ['c', 'ct', 'ctt', 'n']:
+                    for reg in ['c']:
 
                         # print(country, series, diff_level)
                         country_list.append(country)
@@ -114,8 +119,8 @@ def adf_test(df: object, country_col: str, time_col: str, sign_level: str):
         print(df_stat)
         print(df_stat_group)
     if save_results:
-        df_stat.to_csv(f'{tables_path}methodology/stationarity_results.csv')
-        df_stat_group.to_csv(f'{tables_path}methodology/stationarity_results_grouped.csv')
+        df_stat.to_csv(f'{tables_path_cor}stationarity_results.csv')
+        df_stat_group.to_csv(f'{tables_path_cor}stationarity_results_grouped.csv')
 
 
 def shapiro_wilk_test(df: object, target_impl_year: int, alpha: float):
@@ -136,5 +141,5 @@ def stat_test(x: list, sign_level: float):
 
 
 if __name__ == "__main__":
-    df = read_data(source_path=data_path, file_name='total')
-    adf_test(df=df, country_col='country', time_col='year', sign_level=sign_level)
+    df = read_data(source_path=data_path, file_name='total_m')
+    adf_test(df=df, country_col='country', time_col='date', sign_level=sign_level)

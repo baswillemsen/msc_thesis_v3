@@ -1,6 +1,7 @@
 ################################
 ### import relevant packages ###
 ################################
+import numpy as np
 import pandas as pd
 
 from definitions import target_var, data_path, incl_countries, incl_years, \
@@ -136,6 +137,28 @@ def upsample_quarter_to_month(df_q: object, var_name: str):
 
     return df_m
 
+
+def interpolate_series(series: object, method='linear'):
+    num_na = sum(series.isna())
+    series_no_na = series[~series.isna()]
+
+    if method == 'linear':
+        factor = np.mean(np.array(series_no_na.iloc[1:11]) / np.array(series_no_na.iloc[0:10]))
+
+        lst = [series_no_na.iloc[0]]
+        for i in range(num_na):
+            lst.append(lst[i] * (1 / factor))
+        lst = lst[1:][::-1]
+        new_series = np.array(lst + list(series_no_na))
+        return new_series
+
+    elif method == 'median':
+        factor = np.median(series_no_na)
+        new_series = series.fillna(factor)
+        return new_series
+
+    else:
+        raise ValueError('Please specify the interpolation method (median / linear)')
 
 # def pivot_target(df: object, target_country: str, target_var: str):
 #     return df[df['country'] == target_country][target_var]

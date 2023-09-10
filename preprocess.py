@@ -4,10 +4,11 @@
 import numpy as np
 import pandas as pd
 
-from definitions import data_source_path, data_path, corr_country_names, \
+from definitions import data_source_path, data_path, corr_country_names, stat, sign_level, fake_num, \
     country_col, year_col, quarter_col, month_col, date_col
 from helper_functions import read_data, select_country_year_measure, month_name_to_num, rename_order_scale, \
     downsample_month_to_quarter, quarter_to_month, upsample_quarter_to_month
+from statistical_tests import stat_test
 
 
 # Monthly CO2 data
@@ -94,6 +95,50 @@ def total_join(co2: object, pop: object, gdp: object, key_cols: list, time: str)
     return total
 
 
+def make_stat(df: object, trans: dict, time: str):
+    country_list = []
+    year_list = []
+    # cov = df.columns.drop(['country', 'year'])
+    vars = trans.keys()
+    for series in vars:
+        globals()[f"{series}_list"] = []
+
+    for country in df[country_col].unique():
+        df_country = df[df[country_col] == country]
+        country_list += list(df_country['country'])
+        year_list += list(df_country[year_col])
+        for series in vars:
+            df_country_series = df_country[series]
+            log, diff_level = trans[series]
+            if log:
+                df_country_series = np.log(df_country_series)
+
+            if diff_level == 0:
+                df_country_series_diff = df_country_series
+            else:
+                df_country_series_diff = df_country_series.diff(diff_level)
+
+            if stat == 'stat':
+                if stat_test(x=df_country_series_diff.dropna(), sign_level=sign_level):
+                    globals()[f"{series}_list"] += list(df_country_series_diff)
+                else:
+                    globals()[f"{series}_list"] += [fake_num]*len(df_country_series_diff)
+            elif stat == 'non_stat':
+                globals()[f"{series}_list"] += list(df_country_series_diff)
+            else:
+                raise ValueError('Define stat as being "stat" or "non_stat"')
+
+    total_stat = pd.DataFrame(list(zip(country_list, year_list)), columns=[country_col, year_col])
+    total_stat['co2_stat'] = co2_list
+    total_stat['gdp_stat'] = gdp_list
+    total_stat['pop_stat'] = pop_list
+
+    total_stat = total_stat.dropna(axis=0, how='any').reset_index(drop=True)
+    total_stat.to_csv(f'{data_path}total_{time}_stat.csv', header=True, index=False)
+
+    return total_stat
+
+
 if __name__ == "__main__":
     co2_m, co2_q = preprocess_co2_m(source_file='co2_m_2000_2021',
                                     source_country_col='Name',
@@ -117,7 +162,21 @@ if __name__ == "__main__":
                                    var_name='pop'
                                    )
 
+    # trans: 'var': (log, diff_level)
+    trans = {
+        'co2': (True, 1)
+        , 'gdp': (True, 1)
+        , 'pop': (True, 1)
+    }
+
+    # total monthly
+    time = 'm'
     total_m = total_join(co2=co2_m, pop=pop_m, gdp=gdp_m,
-                         key_cols=[country_col, date_col, year_col, month_col], time='m')
+                         key_cols=[country_col, date_col, year_col, month_col], time=time)
+    total_m_stat = make_stat(total_m, trans, time=time)
+
+    # total quarterly
+    time = 'q'
     total_q = total_join(co2=co2_q, pop=pop_q, gdp=gdp_q,
-                         key_cols=[country_col, date_col, year_col, quarter_col], time='q')
+                         key_cols=[country_col, date_col, year_col, quarter_col], time=time)
+    total_q_stat = make_stat(total_q, trans, time=time)

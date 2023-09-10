@@ -12,16 +12,22 @@ fig_size = (10, 6)
 save_results = True
 save_figs = True
 
-# TIMEFRAME DEFINITIONS
-timeframe = 'quarterly'
-timeframe_scale = 4
-
 # NON-STATIC DEFINITIONS
-stat = 'stat'
+stat = 'non_stat'
+target_var = 'co2'
+timeframe = 'quarterly'
+
+if timeframe == 'quarterly':
+    data_file = 'total_q'
+    timeframe_scale = 4
+elif timeframe == 'monthly':
+    data_file = 'total_m'
+    timeframe_scale = 12
+else:
+    ValueError('Assign a valid timeframe ("monthly" or "quarterly")')
+
 sign_level = 0.10
 fake_num = -99999
-data_file = 'total.csv'
-target_var = 'co2'
 
 country_col = 'country'
 year_col = 'year'
@@ -31,8 +37,10 @@ date_col = 'date'
 
 # COUNTRIES, YEARS INCLUDED
 target_countries = ['switzerland', 'ireland', 'france', 'portugal', 'united kingdom']  # 5x
-donor_countries = ['austria', 'belgium', 'bulgaria', 'croatia', 'czech republic', 'cyprus', 'germany', 'greece',
-                   'hungary', 'italy', 'lithuania', 'netherlands', 'romania', 'slovakia', 'spain']  # 15x
+donor_countries = ['austria', 'belgium', 'bulgaria', 'croatia', 'czech republic',
+                   # 'cyprus',
+                   'germany', 'greece', 'hungary', 'italy', 'lithuania', 'netherlands',
+                   'romania', 'slovakia', 'spain']  # 14x
 incl_countries = target_countries + donor_countries
 incl_countries.sort()
 incl_years = range(2000, 2020)

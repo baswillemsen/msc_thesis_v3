@@ -69,4 +69,4 @@ def main(target_country: str):
 
 
 if __name__ == "__main__":
-    main(target_country=sys.argv[2])
+    main(target_country=sys.argv[1])
