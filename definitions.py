@@ -5,26 +5,16 @@ figures_path = 'output/figures/'
 tables_path = 'output/tables/'
 
 # PRINTING, SHOWING PLOTS
-show_results = False
-show_plots = False
+show_results = True
+show_plots = True
 fig_size = (10, 6)
 
 save_results = True
 save_figs = True
 
 # NON-STATIC DEFINITIONS
-stat = 'non_stat'
+stat = 'stat'
 target_var = 'co2'
-timeframe = 'quarterly'
-
-if timeframe == 'quarterly':
-    data_file = 'total_q'
-    timeframe_scale = 4
-elif timeframe == 'monthly':
-    data_file = 'total_m'
-    timeframe_scale = 12
-else:
-    ValueError('Assign a valid timeframe ("monthly" or "quarterly")')
 
 sign_level = 0.10
 fake_num = -99999
@@ -55,10 +45,3 @@ corr_country_names = {'republic of cyprus': 'cyprus',
                       'italy, san marino and the holy see': 'italy',
                       'switzerland and liechtenstein': 'switzerland'
                       }
-
-# trans: 'var': (log, diff_level)
-trans = {
-    'co2': (True, 1)
-    , 'gdp': (True, 1)
-    , 'pop': (True, 1)
-}

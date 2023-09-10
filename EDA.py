@@ -9,9 +9,9 @@ plt.rcParams.update({'font.size': 15})
 
 from sklearn.preprocessing import StandardScaler
 
-from helper_functions import read_data, get_impl_year
-from definitions import data_path, show_plots, data_source_path, figures_path, trans, \
+from definitions import data_path, show_plots, data_source_path, figures_path, \
     target_countries, fig_size, show_plots, save_figs, show_results
+from helper_functions import read_data, get_impl_year, get_trans, get_timescale
 from plot_functions import plot_corr
 
 figures_path_cor = f'{figures_path}methodology/'
@@ -56,11 +56,9 @@ def co2_target_countries(df: object):
             plt.show()
 
 
-def all_series(df: object, period: str):
-    if period == 'm':
-        timescale = 12
-    elif period == 'q':
-        timescale = 4
+def all_series(df: object, timeframe: str):
+    timescale = get_timescale(timeframe=timeframe)
+    trans = get_trans(timeframe=timeframe)
 
     for series in trans.keys():
 
@@ -82,11 +80,9 @@ def all_series(df: object, period: str):
             plt.show()
 
 
-def all_series_stand(df: object, period: str):
-    if period == 'm':
-        timescale = 12
-    elif period == 'q':
-        timescale = 4
+def all_series_stand(df: object, timeframe: str):
+    timescale = get_timescale(timeframe=timeframe)
+    trans = get_trans(timeframe=timeframe)
 
     scaler = StandardScaler()
     for series in trans.keys():
@@ -121,8 +117,8 @@ def corr_matrix(df: object, target_country: str):
         plot_corr(matrix=cor_matrix)
 
 
-def eda(period: str):
-    data_file = f'total_{period}'
+def eda(timeframe: str):
+    data_file = f'total_{timeframe}'
     df = read_data(source_path=data_path, file_name=data_file)
     df_stat = read_data(source_path=data_path, file_name=data_file)
 
@@ -130,10 +126,10 @@ def eda(period: str):
     var_name = 'co2'
 
     descriptive_stats(df=df, var_name=var_name)
-    all_series(df=df, period=period)
-    all_series(df=df, period=period)
+    all_series(df=df, timeframe=timeframe)
+    all_series_stand(df=df, timeframe=timeframe)
     corr_matrix(df=df, target_country=target_country)
 
 
 if __name__ == "__main__":
-    eda(period=sys.argv[1])
+    eda(timeframe=sys.argv[1])

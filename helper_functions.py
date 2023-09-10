@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from definitions import target_var, data_path, incl_countries, incl_years, \
-    country_col, year_col, month_col, quarter_col, date_col
+    country_col, year_col, month_col, quarter_col, date_col, donor_countries
 
 
 def get_impl_year(target_country: str = None):
@@ -21,9 +21,62 @@ def get_impl_year(target_country: str = None):
         return target_countries_impl_years[target_country]
 
 
-def month_name_to_num(month_name: str):
-    return {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
-            'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12}[month_name]
+def get_timescale(timeframe: str = None):
+    timeframe_scale = {'q': 4,
+                       'm': 12
+                       }
+    if timeframe is None:
+        return timeframe_scale
+    else:
+        return timeframe_scale[timeframe]
+
+
+def get_timeframe_col(timeframe: str = None):
+    timeframe_col = {'q': 'quarter',
+                     'm': 'month'
+                     }
+    if timeframe is None:
+        return timeframe_col
+    else:
+        return timeframe_col[timeframe]
+
+
+def get_trans(timeframe: str):
+    # trans: 'var': (log, diff_level)
+    if timeframe == 'm':
+        trans = {
+            'co2': (True, 12, 1)
+            , 'gdp': (True, 12, 2)
+            , 'pop': (True, 24, 2)
+        }
+    elif timeframe == 'q':
+        trans = {
+            'co2': (True, 4, 2)
+            , 'gdp': (True, 4, 2)
+            , 'pop': (True, 4, 2)
+        }
+    else:
+        raise ValueError('Define timeframe as being "m" or "q"')
+
+    return trans
+
+def month_name_to_num(month_name: str = None):
+    month_num = {'Jan': 1,
+                 'Feb': 2,
+                 'Mar': 3,
+                 'Apr': 4,
+                 'May': 5,
+                 'Jun': 6,
+                 'Jul': 7,
+                 'Aug': 8,
+                 'Sep': 9,
+                 'Oct': 10,
+                 'Nov': 11,
+                 'Dec': 12}
+    if month_name is None:
+        return month_num
+    else:
+        return month_num[month_name]
 
 
 def quarter_to_month(quarter: int):
@@ -39,8 +92,8 @@ def flatten(lst):
     return [item for sublist in lst for item in sublist]
 
 
-def first_value(target_country: str):
-    df = read_data(source_path=data_path, file_name='total')
+def first_value(target_country: str, timeframe: str):
+    df = read_data(source_path=data_path, file_name=f'total_{timeframe}')
     orig_value = df[df['country'] == target_country].set_index('year')[target_var.replace('_stat', '')].iloc[0]
     return orig_value
 
@@ -65,18 +118,13 @@ def select_country_year_measure(df: object, country_col: str = None, year_col: s
     return df
 
 
-def rename_order_scale(df: object, source_country_col: str, source_year_col: str, period: str,
+def rename_order_scale(df: object, source_country_col: str, source_year_col: str, timeframe: str,
                        var_name: str, var_scale: float):
     df = df.rename(columns={source_country_col: country_col, source_year_col: year_col})
 
-    if period == 'monthly':
-        df = df[[country_col, date_col, year_col, month_col, var_name]]
-        df = df.sort_values(by=[country_col, year_col, month_col])
-    elif period == 'quarterly':
-        df = df[[country_col, date_col, year_col, quarter_col, var_name]]
-        df = df.sort_values(by=[country_col, year_col, quarter_col])
-    else:
-        ValueError('Select the period ("monthly" or "quarterly")')
+    period_col = get_timeframe_col(timeframe)
+    df = df[[country_col, date_col, year_col, period_col, var_name]]
+    df = df.sort_values(by=[country_col, year_col, period_col])
 
     df[var_name] = df[var_name].astype(float) * var_scale
     df = df.reset_index(drop=True)
@@ -160,41 +208,26 @@ def interpolate_series(series: object, method='linear'):
     else:
         raise ValueError('Please specify the interpolation method (median / linear)')
 
-# def pivot_target(df: object, target_country: str, target_var: str):
-#     return df[df['country'] == target_country][target_var]
-#
-#
-# def pivot_donors(df: object, donor_countries: list):
-#     donors = df.copy()
-#     donors = donors[donors['country'].isin(donor_countries)].reset_index(drop=True)
-#     donors = donors.pivot(index='date', columns=['country'], values=donors.columns[2:])
-#     donors.columns = donors.columns.to_flat_index()
-#     donors.columns = [str(col_name[1]) + ' ' + str(col_name[0]) for col_name in donors.columns]
-#     donors = donors.reindex(sorted(donors.columns), axis=1)
-#     donors = donors.dropna(axis=1)
-#     return donors
 
-
-def arco_pivot(df: object, country_col: str, time_col: str, target_country: str, target_var: str,
-               donor_countries: list):
-    target = df[df[country_col] == target_country].set_index(time_col)[target_var]
+def arco_pivot(df: object, target_country: str):
+    target = df[df[country_col] == target_country].set_index(date_col)[target_var]
 
     donors = df.copy()
     donors = donors[donors[country_col].isin(donor_countries)].reset_index(drop=True)
-    donors = donors.pivot(index=time_col, columns=[country_col], values=donors.columns[2:])
+    donors = donors.pivot(index=date_col, columns=[country_col], values=donors.columns[4:])
     donors.columns = donors.columns.to_flat_index()
     donors.columns = [str(col_name[1]) + ' ' + str(col_name[0]) for col_name in donors.columns]
     donors = donors.reindex(sorted(donors.columns), axis=1)
-    donors = donors.dropna(axis=1)
+    donors = donors.dropna(axis=0)
 
     return target, donors
 
 
-def sc_pivot(df: object, country_col: str, time_col: str, target_country: str, target_var: str, donor_countries: list):
+def sc_pivot(df: object, target_country: str):
 
     df = df[df[country_col].isin(donor_countries + [target_country])]
     df_pivot = df.copy()
-    df_pivot = df_pivot.pivot(index=country_col, columns=time_col, values=target_var)
+    df_pivot = df_pivot.pivot(index=country_col, columns=date_col, values=target_var)
     df_pivot = df_pivot.dropna(axis=1, how='any')
 
     pre_treat = df_pivot.iloc[:, df_pivot.columns <= get_impl_year(target_country)].values
