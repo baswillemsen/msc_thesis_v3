@@ -116,20 +116,21 @@ def corr_matrix(df: object, target_country: str):
         plot_corr(matrix=cor_matrix)
 
 
-def eda(timeframe: str):
-    data_file = f'total_{timeframe}'
+def eda(timeframe: str, stat: bool):
+    if stat:
+        data_file = f'total_{timeframe}_stat'
+    else:
+        data_file = f'total_{timeframe}'
     df = read_data(source_path=data_path, file_name=data_file)
-    df_stat = read_data(source_path=data_path, file_name=data_file)
 
-    target_country = 'france'
-    var_name = 'co2'
+    for var_name in get_trans():
+        descriptive_stats(df=df, var_name=var_name)
 
-    descriptive_stats(df=df, var_name=var_name)
     co2_target_countries(df=df)
     all_series(df=df, timeframe=timeframe)
     all_series_stand(df=df, timeframe=timeframe)
-    corr_matrix(df=df, target_country=target_country)
+    corr_matrix(df=df, target_country='united kingdom')
 
 
 if __name__ == "__main__":
-    eda(timeframe=sys.argv[1])
+    eda(timeframe=sys.argv[1], stat=sys.argv[2])

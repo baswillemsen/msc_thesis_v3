@@ -25,6 +25,9 @@ month_col = 'month'
 quarter_col = 'quarter'
 date_col = 'date'
 
+model_val = ['arco', 'sc']
+timeframe_val = ['m', 'q']
+
 # COUNTRIES, YEARS INCLUDED
 target_countries = ['switzerland', 'ireland', 'france', 'portugal', 'united kingdom']  # 5x
 donor_countries = ['austria', 'belgium', 'bulgaria', 'croatia', 'czech republic',

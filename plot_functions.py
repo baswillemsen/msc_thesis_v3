@@ -55,6 +55,7 @@ def plot_lasso_path(X: list, y: list, target_country: str,
 
 def plot_predictions(act_pred: object, target_country: str, timeframe: str):
     orig_value = first_value(target_country=target_country, timeframe=timeframe)
+    print(orig_value)
     # act = act_pred['act']
     # pred = act_pred['pred']
     act = np.exp(act_pred['act'].cumsum())*orig_value

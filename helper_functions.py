@@ -4,8 +4,8 @@
 import numpy as np
 import pandas as pd
 
-from definitions import target_var, data_path, incl_countries, incl_years, donor_countries, \
-    country_col, year_col, month_col, quarter_col, date_col
+from definitions import target_var, data_path, incl_countries, incl_years, donor_countries, target_countries, \
+    country_col, year_col, month_col, quarter_col, date_col, model_val, timeframe_val
 
 
 def get_impl_date(target_country: str = None):
@@ -45,7 +45,7 @@ def get_trans(timeframe: str = None):
     # trans: 'var': (log, diff_level)
     if timeframe == 'm':
         trans = {
-            'co2': (True, 12, 1)
+            'co2': (True, 1, 0)
             , 'gdp': (True, 12, 2)
             , 'pop': (True, 24, 2)
         }
@@ -95,7 +95,7 @@ def flatten(lst):
 
 def first_value(target_country: str, timeframe: str):
     df = read_data(source_path=data_path, file_name=f'total_{timeframe}')
-    orig_value = df[df['country'] == target_country].set_index('year')[target_var.replace('_stat', '')].iloc[0]
+    orig_value = df[df['country'] == target_country].set_index('date')[target_var.replace('_stat', '')].iloc[0]
     return orig_value
 
 
@@ -103,6 +103,20 @@ def read_data(source_path: str, file_name: str):
     df = pd.read_csv(f'{source_path}{file_name}.csv', delimiter=',', header=0, encoding='latin-1')
     df = df[df.columns.drop(list(df.filter(regex='Unnamed')))]
     return df
+
+
+def validate_input(model: str, timeframe: str, target_country: str):
+    if model not in model_val:
+        raise ValueError(f'Input a valid model argument: {model_val}')
+
+    elif timeframe not in timeframe_val:
+        raise ValueError(f'Input a valid timeframe argument: {timeframe_val}')
+
+    elif target_country not in target_countries:
+        raise ValueError(f'Input a valid target_country argument: {target_countries}')
+
+    else:
+        return True
 
 
 def select_country_year_measure(df: object, country_col: str = None, year_col: str = None,
