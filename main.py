@@ -42,13 +42,13 @@ def main(model: str, timeframe: str, target_country: str):
         else:
             raise ValueError('Select a valid model: "arco" or "sc"')
 
-        if model is None or act_pred_diff is None:
+        if model is None or act_pred_diff is None or act_pred is None:
             print("The GHG emissions series of the target country is non-stationary, ArCo method is not possible")
         else:
             # plot predictions versus actual
             if show_plots:
-                plot_predictions(act_pred_diff, target_country=target_country, timeframe=timeframe)
-                plot_diff(act_pred_diff, target_country=target_country, timeframe=timeframe)
+                plot_predictions(act_pred, target_country=target_country, timeframe=timeframe)
+                plot_diff(act_pred, target_country=target_country, timeframe=timeframe)
 
 
 if __name__ == "__main__":

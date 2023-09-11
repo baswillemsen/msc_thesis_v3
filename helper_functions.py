@@ -45,7 +45,7 @@ def get_trans(timeframe: str = None):
     # trans: 'var': (log, diff_level)
     if timeframe == 'm':
         trans = {
-            'co2': (True, 1, 0)
+            'co2': (True, 12, 2)
             , 'gdp': (True, 12, 2)
             , 'pop': (True, 24, 2)
         }
