@@ -124,24 +124,20 @@ def make_stat(df: object, timeframe: str):
             if log:
                 df_country_series = np.log(df_country_series)
 
-            if diff_level == 0:
-                df_country_series_diff = df_country_series
-                df_country_series_diff_diff = df_country_series_diff
-            else:
-                df_country_series_diff = df_country_series.diff(diff_level)
-
-                if diff_order == 1:
-                    df_country_series_diff_diff = df_country_series_diff
-                elif diff_order == 2:
-                    df_country_series_diff_diff = df_country_series_diff.diff(periods=diff_level)
+            i = 1
+            df_country_series_diff = df_country_series.copy()
+            if diff_level != 0:
+                while i <= diff_order:
+                    df_country_series_diff = df_country_series_diff.diff(periods=diff_level)
+                    i += 1
 
             if stat == 'stat':
-                if stat_test(x=df_country_series_diff_diff.dropna(), sign_level=sign_level):
-                    globals()[f"{series}_list"] += list(df_country_series_diff_diff)
+                if stat_test(x=df_country_series_diff.dropna(), sign_level=sign_level):
+                    globals()[f"{series}_list"] += list(df_country_series_diff)
                 else:
-                    globals()[f"{series}_list"] += [fake_num]*len(df_country_series_diff_diff)
+                    globals()[f"{series}_list"] += [fake_num]*len(df_country_series_diff)
             elif stat == 'non_stat':
-                globals()[f"{series}_list"] += list(df_country_series_diff_diff)
+                globals()[f"{series}_list"] += list(df_country_series_diff)
             else:
                 raise ValueError('Define stat as being "stat" or "non_stat"')
 
