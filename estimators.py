@@ -15,9 +15,9 @@ import SparseSC
 
 # custom functions
 from definitions import show_results, donor_countries, fake_num, country_col, date_col, tables_path, save_results, \
-    data_path, target_var, year_col
+    data_path, target_var, year_col, show_plots, sign_level
 from helper_functions import flatten, arco_pivot, sc_pivot, get_impl_date, read_data, get_trans
-from plot_functions import plot_lasso_path
+from plot_functions import plot_lasso_path, plot_predictions
 from statistical_tests import shapiro_wilk_test
 
 tables_path_cor = f'{tables_path}results/'
@@ -26,10 +26,11 @@ tables_path_cor = f'{tables_path}results/'
 ################################
 ### Arco method              ###
 ################################
-def arco(df: object, target_country: str, timeframe: str,
+def arco(df: object, df_stat: object, target_country: str, timeframe: str,
          alpha_min: float, alpha_max: float, alpha_step: float, lasso_iters: int):
+
     # pivot target and donors
-    target_diff, donors_diff = arco_pivot(df=df, target_country=target_country)
+    target_diff, donors_diff = arco_pivot(df=df_stat, target_country=target_country)
 
     if fake_num in list(target_diff):
         return None, None
@@ -37,25 +38,32 @@ def arco(df: object, target_country: str, timeframe: str,
         y_diff = np.array(target_diff).reshape(-1, 1)
         X_diff = np.array(donors_diff)
 
+        y_pre_diff = np.array(target_diff[target_diff.index <= get_impl_date(target_country=target_country)]).reshape(-1, 1)
+        X_pre_diff = np.array(donors_diff[donors_diff.index <= get_impl_date(target_country=target_country)])
+        # print(y_pre_diff)
+        # print(X_pre_diff)
+
         # Storing the fit object for later reference
         SS = StandardScaler()
-        SS_targetfit = SS.fit(y_diff)
+        SS_targetfit = SS.fit(y_pre_diff)
 
         # Generating the standardized values of X and y
         X_diff_stand = SS.fit_transform(X_diff)
-        y_diff_stand = SS.fit_transform(y_diff)
+        X_pre_diff_stand = SS.fit_transform(X_pre_diff)
+        y_pre_diff_stand = SS.fit_transform(y_pre_diff)
 
         # Split the data into training and testing set
-        X_train, X_test, y_train, y_test = train_test_split(X_diff_stand, y_diff_stand,
-                                                            test_size=0.25, random_state=42, shuffle=False)
+        # print(len(X_pre_diff_stand))
+        # print(len(y_pre_diff_stand))
+        X_pre_train, X_pre_test, y_pre_train, y_pre_test = train_test_split(X_pre_diff_stand, y_pre_diff_stand,
+                                                                            test_size=0.25, random_state=42,
+                                                                            shuffle=False)
 
         # Quick sanity check with the shapes of Training and testing datasets
-        # print(X_train)
-        # print(y_train)
-        # print(X_test.shape)
-        # print(y_test.shape)
+        # print(X_pre_train.shape)
+        # print(y_pre_train.shape)
 
-        plot_lasso_path(X=X_train, y=y_train, target_country=target_country,
+        plot_lasso_path(X=X_pre_train, y=y_pre_train, target_country=target_country,
                         alpha_min=alpha_min, alpha_max=alpha_max, alpha_step=alpha_step, lasso_iters=lasso_iters)
 
         # define model
@@ -72,29 +80,45 @@ def arco(df: object, target_country: str, timeframe: str,
         )
 
         # fit model
-        model.fit(X_train, y_train.ravel())
-        # summarize chosen configuration
-        act_diff = flatten(SS_targetfit.inverse_transform(y_diff_stand))
-        pred_diff = flatten(SS_targetfit.inverse_transform(model.predict(X_diff_stand).reshape(-1, 1)))
+        model.fit(X_pre_train, y_pre_train.ravel())
 
+        # summarize chosen configuration
+        act_diff = flatten(y_diff)
+        pred_diff = flatten(SS_targetfit.inverse_transform(model.predict(X_diff_stand).reshape(-1, 1)))
         act_pred_diff = pd.DataFrame(list(zip(act_diff, pred_diff)),
                                      columns=['act', 'pred']).set_index(target_diff.index)
-        shapiro_wilk_test(df=act_pred_diff, target_country=target_country, alpha=0.05)
-        act_pred_diff.to_csv(f'{tables_path_cor}{target_country}/{target_country}_act_pred_diff.csv')
+        act_pred_diff['error'] = act_pred_diff['pred'] - act_pred_diff['act']
+        if show_plots:
+            print('act_pred_errors')
+            plt.plot(act_pred_diff['error'])
+
+        shapiro_wilk_test(df=act_pred_diff, target_country=target_country, alpha=sign_level)
+        if save_results:
+            act_pred_diff.to_csv(f'{tables_path_cor}{target_country}/{target_country}_act_pred_diff.csv')
+        if show_plots:
+            print('act_pred_diff')
+            plot_predictions(df=act_pred_diff, target_country=target_country)
 
         # summarize chosen configuration
-        date_start = df['date'].iloc[0]
+        date_start = df_stat['date'].iloc[0]
         _, diff_level, diff_order = get_trans(timeframe=timeframe)[target_var]
 
-        orig_data = read_data(data_path, f'total_{timeframe}')
+        orig_data = df.copy()
         orig_data = orig_data[(orig_data[country_col] == target_country) &
                               (orig_data[date_col] >= date_start)].set_index(date_col)[target_var]
         orig_data_log = np.log(orig_data)
 
         if diff_order >= 1:
             orig_data_log_diff1 = orig_data_log.diff(diff_level)
-        if diff_order >= 2:
+            orig_data_log_diff2 = orig_data_log_diff1
+        if diff_order == 2:
             orig_data_log_diff2 = orig_data_log_diff1.diff(diff_level)
+        log_diff2 = pd.DataFrame(list(zip(orig_data_log_diff2, pred_diff)),
+                                 columns=['act', 'pred']).set_index(orig_data_log.index)
+        log_diff2.to_csv(f'{tables_path_cor}{target_country}/{target_country}_log_diff2.csv')
+        if show_plots:
+            print('log_diff2')
+            plot_predictions(df=log_diff2, target_country=target_country)
 
         if diff_order == 2:
             pred1 = np.zeros(len(orig_data_log_diff1))
@@ -109,12 +133,15 @@ def arco(df: object, target_country: str, timeframe: str,
                 pred2[i] = pred2[i - diff_level] + pred_diff[i]
             if diff_order == 2:
                 pred2[i] = pred2[i - diff_level] + pred1[i]
-        print(orig_data_log)
-        print(pred2)
 
         act_pred = pd.DataFrame(list(zip(orig_data_log, pred2)),
                                 columns=['act', 'pred']).set_index(orig_data_log.index)
-        act_pred.to_csv(f'{tables_path_cor}{target_country}/{target_country}_act_pred.csv')
+        act_pred['error'] = act_pred['pred'] - act_pred['act']
+        if save_results:
+            act_pred.to_csv(f'{tables_path_cor}{target_country}/{target_country}_act_pred.csv')
+        if show_plots:
+            print('act_pred')
+            plot_predictions(df=act_pred, target_country=target_country)
 
         if show_results:
             print('alpha: %f' % model.alpha_)
@@ -149,7 +176,9 @@ def sc(df: object, target_country: str):
     act_pred.columns = ['act']
     act_pred['pred'] = model.predict(df_pivot.values)[treat_unit, :][0]
 
-    return model, act_pred
+    act_pred_diff = []
+
+    return model, act_pred_diff, act_pred
 
 
 # def did():

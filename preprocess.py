@@ -104,8 +104,7 @@ def make_stat(df: object, timeframe: str):
     year_list = []
     period_list = []
     period_col = get_timeframe_col(timeframe=timeframe)
-
-    trans = get_trans(timeframe)
+    trans = get_trans(timeframe=timeframe)
 
     # cov = df.columns.drop(['country', 'year'])
     vars = trans.keys()
@@ -113,24 +112,43 @@ def make_stat(df: object, timeframe: str):
         globals()[f"{series}_list"] = []
 
     for country in df[country_col].unique():
+
         df_country = df[df[country_col] == country]
         country_list += list(df_country[country_col])
         date_list += list(df_country[date_col])
         year_list += list(df_country[year_col])
         period_list += list(df_country[period_col])
+
         for series in vars:
             df_country_series = df_country[series]
             log, diff_level, diff_order = trans[series]
-            if log:
-                df_country_series = np.log(df_country_series)
 
+            # log the series if necessary
+            if log:
+                df_country_series_log = np.log(df_country_series)
+            else:
+                df_country_series_log = df_country_series
+
+            # difference the series
             i = 1
-            df_country_series_diff = df_country_series.copy()
+            df_country_series_diff = df_country_series_log.copy()
             if diff_level != 0:
                 while i <= diff_order:
                     df_country_series_diff = df_country_series_diff.diff(periods=diff_level)
                     i += 1
 
+            # if diff_level == 0:
+            #     df_country_series_diff = df_country_series_log
+            #     df_country_series_diff_diff = df_country_series_diff
+            # else:
+            #     df_country_series_diff = df_country_series.diff(periods=diff_level)
+            #
+            #     if diff_order == 1:
+            #         df_country_series_diff_diff = df_country_series_diff
+            #     elif diff_order == 2:
+            #         df_country_series_diff_diff = df_country_series_diff.diff(periods=diff_level)
+
+            # if series is non-stationary input fake number -99999
             if stat == 'stat':
                 if stat_test(x=df_country_series_diff.dropna(), sign_level=sign_level):
                     globals()[f"{series}_list"] += list(df_country_series_diff)
@@ -141,14 +159,14 @@ def make_stat(df: object, timeframe: str):
             else:
                 raise ValueError('Define stat as being "stat" or "non_stat"')
 
+    # put together in dataframe
     total_stat = pd.DataFrame(list(zip(country_list, date_list, year_list, period_list)),
                               columns=[country_col, date_col, year_col, period_col])
     total_stat['co2'] = co2_list
     total_stat['gdp'] = gdp_list
     total_stat['pop'] = pop_list
-    # total_stat['co2_stat'] = co2_list
-    # total_stat['gdp_stat'] = gdp_list
-    # total_stat['pop_stat'] = pop_list
+    # total_stat['co2_cap'] = co2_cap_list
+    # total_stat['gdp_cap'] = gdp_cap_list
 
     total_stat = total_stat.dropna(axis=0, how='any').reset_index(drop=True)
     total_stat.to_csv(f'{data_path}total_{timeframe}_stat.csv', header=True, index=False)

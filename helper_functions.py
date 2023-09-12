@@ -5,7 +5,10 @@ import numpy as np
 import pandas as pd
 
 from definitions import target_var, data_path, incl_countries, incl_years, donor_countries, target_countries, \
-    country_col, year_col, month_col, quarter_col, date_col, model_val, timeframe_val
+    country_col, year_col, month_col, quarter_col, date_col, model_val, timeframe_val, tables_path, save_results
+
+
+tables_path_res = f'{tables_path}results/'
 
 
 def get_impl_date(target_country: str = None):
@@ -47,13 +50,17 @@ def get_trans(timeframe: str = None):
         trans = {
             'co2': (True, 12, 2)
             , 'gdp': (True, 12, 2)
-            , 'pop': (True, 24, 2)
+            , 'pop': (True, 24, 1)
+            # , 'co2_cap': (True, 12, 2)
+            # , 'gdp_cap': (True, 12, 2)
         }
     elif timeframe == 'q':
         trans = {
             'co2': (True, 4, 2)
             , 'gdp': (True, 4, 2)
             , 'pop': (True, 4, 2)
+            # , 'co2_cap': (True, 12, 2)
+            # , 'gdp_cap': (True, 12, 2)
         }
     else:
         trans = ['co2', 'gdp', 'pop']
@@ -229,11 +236,15 @@ def arco_pivot(df: object, target_country: str):
 
     donors = df.copy()
     donors = donors[donors[country_col].isin(donor_countries)].reset_index(drop=True)
-    donors = donors.pivot(index=date_col, columns=[country_col], values=donors.columns[4:])
+    donors = donors.pivot(index=date_col, columns=[country_col], values=get_trans())
     donors.columns = donors.columns.to_flat_index()
     donors.columns = [str(col_name[1]) + ' ' + str(col_name[0]) for col_name in donors.columns]
     donors = donors.reindex(sorted(donors.columns), axis=1)
     donors = donors.dropna(axis=0)
+
+    if save_results:
+        target.to_csv(f'{tables_path_res}{target_country}/{target_country}_target.csv')
+        donors.to_csv(f'{tables_path_res}{target_country}/{target_country}_donors.csv')
 
     return target, donors
 

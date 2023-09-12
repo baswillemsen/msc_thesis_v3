@@ -16,7 +16,7 @@ save_figs = True
 stat = 'stat'
 target_var = 'co2'
 
-sign_level = 0.10
+sign_level = 0.05
 fake_num = -99999
 
 country_col = 'country'

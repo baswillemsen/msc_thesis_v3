@@ -95,8 +95,7 @@ def adf_test(timeframe: str, sign_level: float = 0.05):
 
 
 def shapiro_wilk_test(df: object, target_country: str, alpha: float):
-    df['diff'] = df['pred'] - df['act']
-    shap = shapiro(df['diff'].loc[:get_impl_date(target_country)])
+    shap = shapiro(df['error'].loc[:get_impl_date(target_country)])
     if shap[1] > alpha:
         print(f"Shapiro-Wilk test: Errors are normally distributed (p-value={round(shap[1],3)})")
     else:
