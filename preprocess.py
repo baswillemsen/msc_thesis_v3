@@ -187,8 +187,8 @@ def make_stat(df: object, timeframe: str):
         total_stat['co2'] = co2_list
         total_stat['gdp'] = gdp_list
         total_stat['pop'] = pop_list
-        # total_stat['co2_cap'] = co2_cap_list
-        # total_stat['gdp_cap'] = gdp_cap_list
+        total_stat['co2_cap'] = co2_cap_list
+        total_stat['gdp_cap'] = gdp_cap_list
 
         total_stat = total_stat.dropna(axis=0, how='any').reset_index(drop=True)
         total_stat.to_csv(f'{get_data_path(timeframe=timeframe)}total_{timeframe}_{stat}.csv', header=True, index=False)

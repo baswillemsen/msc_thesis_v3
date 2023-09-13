@@ -9,7 +9,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 # custom functions
 from definitions import data_path, figures_path_meth, figures_path_res, tables_path_meth, tables_path_res, \
     country_col, year_col, stat, show_plots
-from helper_functions import read_data, validate_input, get_trans, get_data_path
+from helper_functions import read_data, validate_input, get_trans, get_data_path, get_impl_date
 from plot_functions import plot_predictions, plot_diff, plot_cumsum
 from estimators import arco, sc
 
@@ -31,8 +31,8 @@ def main(model: str, timeframe: str, target_country: str):
         df_log_diff = read_data(source_path=get_data_path(timeframe=timeframe), file_name=f'total_{timeframe}_{stat}')
 
         # See which countries are included
-        print(f'Target country: {target_country}')
-        print(f'Parameters included: {get_trans()}')
+        print(f'Target country: {target_country} ({get_impl_date(target_country=target_country)[:4]})')
+        print(f'Variables included: {get_trans()}')
         print(f'Countries included ({len(df[country_col].unique())}x): {df[country_col].unique()}')
         print(f'Years included ({len(df[country_col].unique())}x): {df[year_col].unique()}')
 

@@ -17,7 +17,7 @@ save_figs = True
 
 # NON-STATIC DEFINITIONS
 target_var = 'co2'
-stat = 'stat'
+stat = 'non_stat'
 sign_level = 0.05
 fake_num = -99999
 
@@ -31,10 +31,28 @@ model_val = ['arco', 'sc']
 timeframe_val = ['m', 'q']
 
 # COUNTRIES, YEARS INCLUDED
-target_countries = ['switzerland', 'ireland', 'france', 'portugal', 'united kingdom']  # 5x
-donor_countries = ['austria', 'belgium', 'bulgaria', 'croatia', 'czech republic',
-                   'germany', 'greece', 'hungary', 'italy', 'lithuania', 'netherlands',
-                   'romania', 'slovakia', 'spain']  # 14x
+target_countries = ['switzerland',
+                    'ireland',
+                    'united kingdom',
+                    'france',
+                    'portugal'
+                    ]  # 5x
+donor_countries = ['austria',
+                   'belgium',
+                   'bulgaria',
+                   'croatia',
+                   # 'cyprus',
+                   'czech republic',
+                   'germany',
+                   'greece',
+                   'hungary',
+                   'italy',
+                   'lithuania',
+                   'netherlands',
+                   'romania',
+                   'slovakia',
+                   'spain'
+                   ]  # 14x
 incl_countries = target_countries + donor_countries
 incl_countries.sort()
 incl_years = range(2000, 2020)

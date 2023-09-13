@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 
 from definitions import target_var, data_path, incl_countries, incl_years, donor_countries, target_countries, \
-    country_col, year_col, month_col, quarter_col, date_col, model_val, timeframe_val, tables_path_res, save_results
+    country_col, year_col, month_col, quarter_col, date_col, model_val, timeframe_val, tables_path_res, save_results, \
+    fake_num
 
 
 def get_data_path(timeframe: str):
@@ -14,6 +15,30 @@ def get_data_path(timeframe: str):
     if not os.path.exists(timeframe_path):
         os.makedirs(timeframe_path)
     return timeframe_path
+
+
+def get_trans(timeframe: str = None):
+    # trans: 'var': (log, diff_level)
+    if timeframe == 'm':
+        trans = {
+            'co2': (True, 12, 1)
+            , 'gdp': (True, 12, 1)
+            , 'pop': (True, 12, 1)
+            , 'co2_cap': (True, 12, 1)
+            , 'gdp_cap': (True, 12, 1)
+        }
+    elif timeframe == 'q':
+        trans = {
+            'co2': (True, 4, 1)
+            , 'gdp': (True, 4, 1)
+            , 'pop': (True, 4, 1)
+            , 'co2_cap': (True, 4, 1)
+            , 'gdp_cap': (True, 4, 1)
+        }
+    else:
+        trans = ['co2', 'gdp', 'pop', 'co2_cap', 'gdp_cap']
+
+    return trans
 
 
 def get_impl_date(target_country: str = None):
@@ -47,30 +72,6 @@ def get_timeframe_col(timeframe: str = None):
         return timeframe_col
     else:
         return timeframe_col[timeframe]
-
-
-def get_trans(timeframe: str = None):
-    # trans: 'var': (log, diff_level)
-    if timeframe == 'm':
-        trans = {
-            'co2': (True, 12, 1)
-            , 'gdp': (True, 12, 1)
-            , 'pop': (True, 12, 1)
-            # , 'co2_cap': (True, 12, 2)
-            # , 'gdp_cap': (True, 12, 2)
-        }
-    elif timeframe == 'q':
-        trans = {
-            'co2': (True, 4, 1)
-            , 'gdp': (True, 4, 1)
-            , 'pop': (True, 4, 1)
-            # , 'co2_cap': (True, 12, 2)
-            # , 'gdp_cap': (True, 12, 2)
-        }
-    else:
-        trans = ['co2', 'gdp', 'pop']
-
-    return trans
 
 
 def month_name_to_num(month_name: str = None):
@@ -267,6 +268,8 @@ def arco_pivot(df: object, target_country: str):
     donors.columns = [str(col_name[1]) + ' ' + str(col_name[0]) for col_name in donors.columns]
     donors = donors.reindex(sorted(donors.columns), axis=1)
     donors = donors.dropna(axis=0)
+
+    donors = donors.drop(columns=donors.columns[(donors == fake_num).any()])
 
     if save_results:
         target.to_csv(f'{tables_path_res}{target_country}/{target_country}_target.csv')

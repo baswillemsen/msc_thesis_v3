@@ -27,7 +27,9 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
          alpha_min: float, alpha_max: float, alpha_step: float, lasso_iters: int):
 
     # pivot target and donors
+    global orig_data_log_diff1, orig_data_act_pred_log_diff_check, pred1
     target_log_diff, donors_log_diff = arco_pivot(df=df_stat, target_country=target_country)
+    print(f'Nr of parameters included (d): {len(donors_log_diff.columns)}')
 
     if fake_num in list(target_log_diff):
         return None, None, None
@@ -37,6 +39,7 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
 
         y_log_diff_pre = np.array(target_log_diff[target_log_diff.index <= get_impl_date(target_country=target_country)]).reshape(-1, 1)
         X_log_diff_pre = np.array(donors_log_diff[donors_log_diff.index <= get_impl_date(target_country=target_country)])
+        print(f'Nr of timeframes to predict (n): {len(X_log_diff_pre)}')
 
         # Storing the fit object for later reference
         SS = StandardScaler()
@@ -48,10 +51,12 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
         y_log_diff_pre_stand = SS.fit_transform(y_log_diff_pre)
 
         # Split the data into training and testing set
-        X_log_diff_pre_stand_train, X_log_diff_pre_stand_test, \
-            y_log_diff_pre_stand_train, y_log_diff_pre_stand_test = train_test_split(X_log_diff_pre_stand, y_log_diff_pre_stand,
-                                                                         test_size=0.25, random_state=42,
-                                                                         shuffle=False)
+        X_log_diff_pre_stand_train, \
+            X_log_diff_pre_stand_test, \
+            y_log_diff_pre_stand_train, \
+            y_log_diff_pre_stand_test = train_test_split(X_log_diff_pre_stand, y_log_diff_pre_stand,
+                                                         test_size=0.25, random_state=42,
+                                                         shuffle=False)
 
         plot_lasso_path(X=X_log_diff_pre_stand_train, y=y_log_diff_pre_stand_train, target_country=target_country,
                         alpha_min=alpha_min, alpha_max=alpha_max, alpha_step=alpha_step, lasso_iters=lasso_iters)
@@ -84,9 +89,9 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
         if save_results:
             act_pred_log_diff.to_csv(f'{tables_path_res}{target_country}/{target_country}_act_pred_log_diff.csv')
         if show_plots:
-            print('act_pred_log_diff')
+            # print('act_pred_log_diff')
             plot_predictions(df=act_pred_log_diff, target_country=target_country)
-            print('act_pred_errors')
+            # print('act_pred_errors')
             plt.plot(act_pred_log_diff['error'])
 
         # summarize chosen configuration
@@ -130,7 +135,7 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
         if save_results:
             act_pred_log.to_csv(f'{tables_path_res}{target_country}/{target_country}_act_pred_log.csv')
         if show_plots:
-            print('act_pred')
+            # print('act_pred')
             plot_predictions(df=act_pred_log, target_country=target_country)
 
         if show_results:
@@ -143,11 +148,11 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
             coefs = list(model.coef_)
             coef_index = [i for i, val in enumerate(coefs) if val != 0]
 
-            print(len(donors_log_diff.columns[coef_index]))
-            print(donors_log_diff.columns[coef_index])
+            print(f'Parameters estimated{len(donors_log_diff.columns[coef_index])}: '
+                  f'{list(donors_log_diff.columns[coef_index])}')
 
-            coeffs = model.coef_
-            print(coeffs[coeffs != 0])
+            # coeffs = model.coef_
+            # print(coeffs[coeffs != 0])
 
         return model, act_pred_log_diff, act_pred_log
 
