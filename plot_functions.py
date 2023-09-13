@@ -9,11 +9,11 @@ from sklearn.linear_model import Lasso
 
 from definitions import data_path, figures_path_meth, figures_path_res, fig_size, show_plots, save_figs, stat, \
     date_col, country_col, year_col
-from helper_functions import read_data, first_value, get_impl_date, get_timescale
+from helper_functions import read_data, get_impl_date, get_data_path
 
 
 def plot_series(target_country: str, timeframe: str):
-    df = read_data(source_path=data_path, file_name=f'total_{timeframe}')
+    df = read_data(source_path=get_data_path(timeframe=timeframe), file_name=f'total_{timeframe}')
     df_target = df[df['country'] == target_country].set_index(date_col)
     print(df_target.columns.drop('country'))
     for series in df_target.columns.drop('country').sort_values():

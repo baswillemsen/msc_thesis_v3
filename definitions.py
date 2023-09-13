@@ -1,6 +1,7 @@
 # PATHS
 data_source_path = 'data/source/'
 data_path = 'data/'
+
 figures_path_meth = 'output/figures/methodology/'
 figures_path_res = 'output/figures/results/'
 tables_path_meth = 'output/tables/methodology/'
@@ -16,7 +17,7 @@ save_figs = True
 
 # NON-STATIC DEFINITIONS
 target_var = 'co2'
-stat = 'non_stat'
+stat = 'stat'
 sign_level = 0.05
 fake_num = -99999
 

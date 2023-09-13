@@ -6,9 +6,9 @@ import sys
 import pandas as pd
 import numpy as np
 
-from definitions import tables_path_meth, show_results, data_path, save_results, \
+from definitions import tables_path_meth, show_results, save_results, \
     country_col, date_col, timeframe_val, sign_level
-from helper_functions import read_data, get_timescale, get_trans, get_impl_date
+from helper_functions import read_data, get_timescale, get_trans, get_impl_date, get_data_path
 
 from statsmodels.tsa.stattools import adfuller
 from scipy.stats import shapiro
@@ -18,7 +18,7 @@ from scipy.stats import shapiro
 def adf_test(sign_level: float = sign_level):
 
     for timeframe in timeframe_val:
-        df = read_data(source_path=data_path, file_name=f'total_{timeframe}')
+        df = read_data(source_path=get_data_path(timeframe=timeframe), file_name=f'total_{timeframe}')
         trans = get_trans(timeframe=timeframe)
 
         country_list = []
@@ -67,8 +67,6 @@ def adf_test(sign_level: float = sign_level):
                                     elif diff_order == 2:
                                         df_country_series_diff_diff = df_country_series_diff.diff(periods=diff_level).dropna()
 
-                                print(timeframe, country, series, log, diff_level, diff_order, reg)
-                                print(df_country_series_diff_diff)
                                 adf_res = adfuller(x=df_country_series_diff_diff, regression=reg)
                                 p_value_list.append(adf_res[1])
                                 if adf_res[1] < sign_level:

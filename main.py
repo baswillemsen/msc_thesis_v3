@@ -9,7 +9,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 # custom functions
 from definitions import data_path, figures_path_meth, figures_path_res, tables_path_meth, tables_path_res, \
     country_col, year_col, stat, show_plots
-from helper_functions import read_data, validate_input, get_trans
+from helper_functions import read_data, validate_input, get_trans, get_data_path
 from plot_functions import plot_predictions, plot_diff, plot_cumsum
 from estimators import arco, sc
 
@@ -27,8 +27,8 @@ def main(model: str, timeframe: str, target_country: str):
     if validate_input(model, timeframe, target_country):
 
         # read data
-        df = read_data(source_path=data_path, file_name=f'total_{timeframe}')
-        df_stat = read_data(source_path=data_path, file_name=f'total_{timeframe}_{stat}')
+        df = read_data(source_path=get_data_path(timeframe=timeframe), file_name=f'total_{timeframe}')
+        df_log_diff = read_data(source_path=get_data_path(timeframe=timeframe), file_name=f'total_{timeframe}_{stat}')
 
         # See which countries are included
         print(f'Target country: {target_country}')
@@ -38,7 +38,7 @@ def main(model: str, timeframe: str, target_country: str):
 
         # run the model, get back actual and predicted values
         if model == 'arco':
-            model, act_pred_diff, act_pred = arco(df=df, df_stat=df_stat,
+            model, act_pred_diff, act_pred = arco(df=df, df_stat=df_log_diff,
                                                   target_country=target_country, timeframe=timeframe,
                                                   alpha_min=0.01, alpha_max=1.0, alpha_step=0.001, lasso_iters=100000)
         elif model == 'sc':

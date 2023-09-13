@@ -1,13 +1,15 @@
 ################################
 ### import relevant packages ###
 ################################
+import os
 import numpy as np
 import pandas as pd
 
-from definitions import data_source_path, data_path, corr_country_names, sign_level, fake_num, \
-    country_col, year_col, quarter_col, month_col, date_col
+from definitions import data_source_path, corr_country_names, sign_level, fake_num, \
+    country_col, year_col, quarter_col, month_col, date_col, incl_countries, show_results, target_countries, \
+    tables_path_res
 from helper_functions import read_data, select_country_year_measure, month_name_to_num, rename_order_scale, \
-    downsample_month_to_quarter, quarter_to_month, upsample_quarter_to_month, get_timeframe_col, get_trans
+    downsample_month_to_quarter, quarter_to_month, upsample_quarter_to_month, get_timeframe_col, get_trans, get_data_path
 from statistical_tests import stat_test
 
 
@@ -38,8 +40,8 @@ def preprocess_co2_m(source_file: str, source_country_col: str, source_year_col:
     co2_q = downsample_month_to_quarter(df_m=co2_m, var_name=var_name)
 
     # export to csv
-    co2_m.to_csv(f'{data_path}{var_name}_m.csv')
-    co2_q.to_csv(f'{data_path}{var_name}_q.csv')
+    co2_m.to_csv(f'{get_data_path(timeframe="m")}{var_name}_m.csv')
+    co2_q.to_csv(f'{get_data_path(timeframe="q")}{var_name}_q.csv')
 
     return co2_m, co2_q
 
@@ -76,8 +78,8 @@ def preprocess_WB_q(source_file: str, source_country_col: str, source_time_col: 
     df_q[date_col] = pd.to_datetime(dict(year=df_q[year_col], month=df_q[quarter_col].apply(quarter_to_month), day=1))
 
     # export to csv
-    df_q.to_csv(f'{data_path}{var_name}_q.csv')
-    df_m.to_csv(f'{data_path}{var_name}_m.csv')
+    df_q.to_csv(f'{get_data_path(timeframe="m")}{var_name}_q.csv')
+    df_m.to_csv(f'{get_data_path(timeframe="q")}{var_name}_m.csv')
 
     return df_m, df_q
 
@@ -92,7 +94,7 @@ def total_join(co2: object, pop: object, gdp: object, key_cols: list, timeframe:
     total[f'gdp_cap'] = total[f'gdp'] / total[f'pop']
 
     total = total.dropna(axis=0, how='any').reset_index(drop=True)
-    total.to_csv(f'{data_path}total_{timeframe}.csv', header=True, index=False)
+    total.to_csv(f'{get_data_path(timeframe=timeframe)}total_{timeframe}.csv', header=True, index=False)
 
     return total
 
@@ -113,7 +115,11 @@ def make_stat(df: object, timeframe: str):
         for series in vars:
             globals()[f"{series}_list"] = []
 
-        for country in df[country_col].unique():
+        for country in incl_countries:
+
+            country_path = f'{get_data_path(timeframe=timeframe)}{country}/'
+            if not os.path.exists(country_path):
+                os.makedirs(country_path)
 
             df_country = df[df[country_col] == country]
             country_list += list(df_country[country_col])
@@ -122,14 +128,22 @@ def make_stat(df: object, timeframe: str):
             period_list += list(df_country[period_col])
 
             for series in vars:
-                df_country_series = df_country[series]
+                df_country_series = df_country.set_index(date_col)[series]
+                df_country_series.to_csv(f'{country_path}{series}_{timeframe}.csv', header=True, index=True)
+                if country in target_countries:
+                    df_country_series.to_csv(f'{tables_path_res}{country}/{country}_act.csv')
+
                 log, diff_level, diff_order = trans[series]
 
                 # log the series if necessary
+
                 if log:
                     df_country_series_log = np.log(df_country_series)
                 else:
                     df_country_series_log = df_country_series
+                df_country_series_log.to_csv(f'{country_path}{series}_{timeframe}_log.csv', header=True, index=True)
+                if country in target_countries:
+                    df_country_series_log.to_csv(f'{tables_path_res}{country}/{country}_log_act.csv')
 
                 # difference the series
                 i = 1
@@ -137,9 +151,14 @@ def make_stat(df: object, timeframe: str):
                 if diff_level != 0:
                     while i <= diff_order:
                         df_country_series_diff = df_country_series_diff.diff(periods=diff_level)
+                        df_country_series_diff.to_csv(f'{country_path}{series}_{timeframe}_log_diff{i}.csv',
+                                                      header=True, index=True)
+                        if country in target_countries:
+                            df_country_series_diff.to_csv(f'{tables_path_res}{country}/{country}_log_diff{i}_act.csv')
                         i += 1
 
                 # if diff_level == 0:
+
                 #     df_country_series_diff = df_country_series_log
                 #     df_country_series_diff_diff = df_country_series_diff
                 # else:
@@ -172,7 +191,9 @@ def make_stat(df: object, timeframe: str):
         # total_stat['gdp_cap'] = gdp_cap_list
 
         total_stat = total_stat.dropna(axis=0, how='any').reset_index(drop=True)
-        total_stat.to_csv(f'{data_path}total_{timeframe}_{stat}.csv', header=True, index=False)
+        total_stat.to_csv(f'{get_data_path(timeframe=timeframe)}total_{timeframe}_{stat}.csv', header=True, index=False)
+        if show_results:
+            print(total_stat)
 
     return total_stat
 
@@ -204,15 +225,13 @@ def preprocess():
     timeframe = 'm'
     total_m = total_join(co2=co2_m, pop=pop_m, gdp=gdp_m,
                          key_cols=[country_col, date_col, year_col, month_col], timeframe=timeframe)
-    total_m_stat = make_stat(df=total_m, timeframe=timeframe)
-    print(total_m_stat)
+    make_stat(df=total_m, timeframe=timeframe)
 
     # total quarterly
     timeframe = 'q'
     total_q = total_join(co2=co2_q, pop=pop_q, gdp=gdp_q,
                          key_cols=[country_col, date_col, year_col, quarter_col], timeframe=timeframe)
-    total_q_stat = make_stat(df=total_q, timeframe=timeframe)
-    print(total_q_stat)
+    make_stat(df=total_q, timeframe=timeframe)
 
 
 if __name__ == "__main__":

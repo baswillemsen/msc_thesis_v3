@@ -8,9 +8,9 @@ plt.rcParams.update({'font.size': 15})
 
 from sklearn.preprocessing import StandardScaler
 
-from definitions import data_path, figures_path_meth, target_countries, fig_size, show_plots, save_figs, show_results, \
-    target_var, country_col, year_col, date_col
-from helper_functions import read_data, get_impl_date, get_trans, get_timescale
+from definitions import figures_path_meth, target_countries, fig_size, show_plots, save_figs, show_results, \
+    target_var, country_col, date_col
+from helper_functions import read_data, get_impl_date, get_trans, get_timescale, get_data_path
 from plot_functions import plot_corr
 
 
@@ -118,7 +118,7 @@ def eda(timeframe: str, stat: bool):
         data_file = f'total_{timeframe}_stat'
     else:
         data_file = f'total_{timeframe}'
-    df = read_data(source_path=data_path, file_name=data_file)
+    df = read_data(source_path=get_data_path(timeframe=timeframe), file_name=data_file)
 
     for var_name in get_trans():
         descriptive_stats(df=df, var_name=var_name)

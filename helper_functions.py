@@ -1,11 +1,19 @@
 ################################
 ### import relevant packages ###
 ################################
+import os
 import numpy as np
 import pandas as pd
 
 from definitions import target_var, data_path, incl_countries, incl_years, donor_countries, target_countries, \
     country_col, year_col, month_col, quarter_col, date_col, model_val, timeframe_val, tables_path_res, save_results
+
+
+def get_data_path(timeframe: str):
+    timeframe_path = f'{data_path}{timeframe}/'
+    if not os.path.exists(timeframe_path):
+        os.makedirs(timeframe_path)
+    return timeframe_path
 
 
 def get_impl_date(target_country: str = None):
@@ -45,17 +53,17 @@ def get_trans(timeframe: str = None):
     # trans: 'var': (log, diff_level)
     if timeframe == 'm':
         trans = {
-            'co2': (True, 12, 2)
-            , 'gdp': (True, 12, 2)
-            , 'pop': (True, 12, 2)
+            'co2': (True, 12, 1)
+            , 'gdp': (True, 12, 1)
+            , 'pop': (True, 12, 1)
             # , 'co2_cap': (True, 12, 2)
             # , 'gdp_cap': (True, 12, 2)
         }
     elif timeframe == 'q':
         trans = {
-            'co2': (True, 4, 2)
-            , 'gdp': (True, 4, 2)
-            , 'pop': (True, 4, 2)
+            'co2': (True, 4, 1)
+            , 'gdp': (True, 4, 1)
+            , 'pop': (True, 4, 1)
             # , 'co2_cap': (True, 12, 2)
             # , 'gdp_cap': (True, 12, 2)
         }
