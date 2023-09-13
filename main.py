@@ -7,13 +7,14 @@ import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 # custom functions
-from definitions import data_path, figures_path, tables_path, show_plots, country_col, year_col
+from definitions import data_path, figures_path_meth, figures_path_res, tables_path_meth, tables_path_res, \
+    country_col, year_col, stat, show_plots
 from helper_functions import read_data, validate_input, get_trans
 from plot_functions import plot_predictions, plot_diff, plot_cumsum
 from estimators import arco, sc
 
 ### define paths & static defs
-for path in [data_path, figures_path, tables_path]:
+for path in [data_path, figures_path_meth, figures_path_res, tables_path_meth, tables_path_res]:
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -27,7 +28,7 @@ def main(model: str, timeframe: str, target_country: str):
 
         # read data
         df = read_data(source_path=data_path, file_name=f'total_{timeframe}')
-        df_stat = read_data(source_path=data_path, file_name=f'total_{timeframe}_stat')
+        df_stat = read_data(source_path=data_path, file_name=f'total_{timeframe}_{stat}')
 
         # See which countries are included
         print(f'Target country: {target_country}')
@@ -37,7 +38,8 @@ def main(model: str, timeframe: str, target_country: str):
 
         # run the model, get back actual and predicted values
         if model == 'arco':
-            model, act_pred_diff, act_pred = arco(df=df, df_stat=df_stat, target_country=target_country, timeframe=timeframe,
+            model, act_pred_diff, act_pred = arco(df=df, df_stat=df_stat,
+                                                  target_country=target_country, timeframe=timeframe,
                                                   alpha_min=0.01, alpha_max=1.0, alpha_step=0.001, lasso_iters=100000)
         elif model == 'sc':
             model, act_pred_diff, act_pred = sc(df=df, target_country=target_country)
@@ -47,9 +49,10 @@ def main(model: str, timeframe: str, target_country: str):
         if model is None or act_pred_diff is None or act_pred is None:
             print("The GHG emissions series of the target country is non-stationary, ArCo method is not possible")
         else:
-            plot_predictions(df=act_pred, target_country=target_country)
-            plot_diff(df=act_pred, target_country=target_country)
-            plot_cumsum(df=act_pred, target_country=target_country)
+            if show_plots:
+                plot_predictions(df=act_pred, target_country=target_country)
+                # plot_diff(df=act_pred, target_country=target_country)
+                # plot_cumsum(df=act_pred, target_country=target_country)
 
 
 if __name__ == "__main__":

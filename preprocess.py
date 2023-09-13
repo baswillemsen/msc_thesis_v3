@@ -4,7 +4,7 @@
 import numpy as np
 import pandas as pd
 
-from definitions import data_source_path, data_path, corr_country_names, stat, sign_level, fake_num, \
+from definitions import data_source_path, data_path, corr_country_names, sign_level, fake_num, \
     country_col, year_col, quarter_col, month_col, date_col
 from helper_functions import read_data, select_country_year_measure, month_name_to_num, rename_order_scale, \
     downsample_month_to_quarter, quarter_to_month, upsample_quarter_to_month, get_timeframe_col, get_trans
@@ -99,77 +99,80 @@ def total_join(co2: object, pop: object, gdp: object, key_cols: list, timeframe:
 
 def make_stat(df: object, timeframe: str):
 
-    country_list = []
-    date_list = []
-    year_list = []
-    period_list = []
-    period_col = get_timeframe_col(timeframe=timeframe)
-    trans = get_trans(timeframe=timeframe)
+    for stat in ['stat', 'non_stat']:
 
-    # cov = df.columns.drop(['country', 'year'])
-    vars = trans.keys()
-    for series in vars:
-        globals()[f"{series}_list"] = []
+        country_list = []
+        date_list = []
+        year_list = []
+        period_list = []
+        period_col = get_timeframe_col(timeframe=timeframe)
+        trans = get_trans(timeframe=timeframe)
 
-    for country in df[country_col].unique():
-
-        df_country = df[df[country_col] == country]
-        country_list += list(df_country[country_col])
-        date_list += list(df_country[date_col])
-        year_list += list(df_country[year_col])
-        period_list += list(df_country[period_col])
-
+        # cov = df.columns.drop(['country', 'year'])
+        vars = trans.keys()
         for series in vars:
-            df_country_series = df_country[series]
-            log, diff_level, diff_order = trans[series]
+            globals()[f"{series}_list"] = []
 
-            # log the series if necessary
-            if log:
-                df_country_series_log = np.log(df_country_series)
-            else:
-                df_country_series_log = df_country_series
+        for country in df[country_col].unique():
 
-            # difference the series
-            i = 1
-            df_country_series_diff = df_country_series_log.copy()
-            if diff_level != 0:
-                while i <= diff_order:
-                    df_country_series_diff = df_country_series_diff.diff(periods=diff_level)
-                    i += 1
+            df_country = df[df[country_col] == country]
+            country_list += list(df_country[country_col])
+            date_list += list(df_country[date_col])
+            year_list += list(df_country[year_col])
+            period_list += list(df_country[period_col])
 
-            # if diff_level == 0:
-            #     df_country_series_diff = df_country_series_log
-            #     df_country_series_diff_diff = df_country_series_diff
-            # else:
-            #     df_country_series_diff = df_country_series.diff(periods=diff_level)
-            #
-            #     if diff_order == 1:
-            #         df_country_series_diff_diff = df_country_series_diff
-            #     elif diff_order == 2:
-            #         df_country_series_diff_diff = df_country_series_diff.diff(periods=diff_level)
+            for series in vars:
+                df_country_series = df_country[series]
+                log, diff_level, diff_order = trans[series]
 
-            # if series is non-stationary input fake number -99999
-            if stat == 'stat':
-                if stat_test(x=df_country_series_diff.dropna(), sign_level=sign_level):
+                # log the series if necessary
+                if log:
+                    df_country_series_log = np.log(df_country_series)
+                else:
+                    df_country_series_log = df_country_series
+
+                # difference the series
+                i = 1
+                df_country_series_diff = df_country_series_log.copy()
+                if diff_level != 0:
+                    while i <= diff_order:
+                        df_country_series_diff = df_country_series_diff.diff(periods=diff_level)
+                        i += 1
+
+                # if diff_level == 0:
+                #     df_country_series_diff = df_country_series_log
+                #     df_country_series_diff_diff = df_country_series_diff
+                # else:
+                #     df_country_series_diff = df_country_series.diff(periods=diff_level)
+                #
+                #     if diff_order == 1:
+                #         df_country_series_diff_diff = df_country_series_diff
+                #     elif diff_order == 2:
+                #         df_country_series_diff_diff = df_country_series_diff.diff(periods=diff_level)
+
+                # if series is non-stationary input fake number -99999
+                if stat == 'stat':
+                    if stat_test(x=df_country_series_diff.dropna(), sign_level=sign_level) == 'stationary':
+                        globals()[f"{series}_list"] += list(df_country_series_diff)
+                    elif stat_test(x=df_country_series_diff.dropna(), sign_level=sign_level) == 'non_stationary':
+                        globals()[f"{series}_list"] += [fake_num]*len(df_country_series_diff)
+
+                elif stat == 'non_stat':
                     globals()[f"{series}_list"] += list(df_country_series_diff)
                 else:
-                    globals()[f"{series}_list"] += [fake_num]*len(df_country_series_diff)
-            elif stat == 'non_stat':
-                globals()[f"{series}_list"] += list(df_country_series_diff)
-            else:
-                raise ValueError('Define stat as being "stat" or "non_stat"')
+                    raise ValueError('Define stat as being "stat" or "non_stat"')
 
-    # put together in dataframe
-    total_stat = pd.DataFrame(list(zip(country_list, date_list, year_list, period_list)),
-                              columns=[country_col, date_col, year_col, period_col])
-    total_stat['co2'] = co2_list
-    total_stat['gdp'] = gdp_list
-    total_stat['pop'] = pop_list
-    # total_stat['co2_cap'] = co2_cap_list
-    # total_stat['gdp_cap'] = gdp_cap_list
+        # put together in dataframe
+        total_stat = pd.DataFrame(list(zip(country_list, date_list, year_list, period_list)),
+                                  columns=[country_col, date_col, year_col, period_col])
+        total_stat['co2'] = co2_list
+        total_stat['gdp'] = gdp_list
+        total_stat['pop'] = pop_list
+        # total_stat['co2_cap'] = co2_cap_list
+        # total_stat['gdp_cap'] = gdp_cap_list
 
-    total_stat = total_stat.dropna(axis=0, how='any').reset_index(drop=True)
-    total_stat.to_csv(f'{data_path}total_{timeframe}_stat.csv', header=True, index=False)
+        total_stat = total_stat.dropna(axis=0, how='any').reset_index(drop=True)
+        total_stat.to_csv(f'{data_path}total_{timeframe}_{stat}.csv', header=True, index=False)
 
     return total_stat
 

@@ -1,8 +1,10 @@
 # PATHS
 data_source_path = 'data/source/'
 data_path = 'data/'
-figures_path = 'output/figures/'
-tables_path = 'output/tables/'
+figures_path_meth = 'output/figures/methodology/'
+figures_path_res = 'output/figures/results/'
+tables_path_meth = 'output/tables/methodology/'
+tables_path_res = 'output/tables/results/'
 
 # PRINTING, SHOWING PLOTS
 show_results = True
@@ -13,9 +15,8 @@ save_results = True
 save_figs = True
 
 # NON-STATIC DEFINITIONS
-stat = 'stat'
 target_var = 'co2'
-
+stat = 'non_stat'
 sign_level = 0.05
 fake_num = -99999
 
@@ -31,7 +32,6 @@ timeframe_val = ['m', 'q']
 # COUNTRIES, YEARS INCLUDED
 target_countries = ['switzerland', 'ireland', 'france', 'portugal', 'united kingdom']  # 5x
 donor_countries = ['austria', 'belgium', 'bulgaria', 'croatia', 'czech republic',
-                   'cyprus',
                    'germany', 'greece', 'hungary', 'italy', 'lithuania', 'netherlands',
                    'romania', 'slovakia', 'spain']  # 14x
 incl_countries = target_countries + donor_countries

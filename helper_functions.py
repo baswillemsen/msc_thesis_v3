@@ -5,10 +5,7 @@ import numpy as np
 import pandas as pd
 
 from definitions import target_var, data_path, incl_countries, incl_years, donor_countries, target_countries, \
-    country_col, year_col, month_col, quarter_col, date_col, model_val, timeframe_val, tables_path, save_results
-
-
-tables_path_res = f'{tables_path}results/'
+    country_col, year_col, month_col, quarter_col, date_col, model_val, timeframe_val, tables_path_res, save_results
 
 
 def get_impl_date(target_country: str = None):
@@ -25,7 +22,7 @@ def get_impl_date(target_country: str = None):
 
 
 def get_timescale(timeframe: str = None):
-    timeframe_scale = {'q': 12*4,
+    timeframe_scale = {'q': 4,
                        'm': 12
                        }
     if timeframe is None:
@@ -50,7 +47,7 @@ def get_trans(timeframe: str = None):
         trans = {
             'co2': (True, 12, 2)
             , 'gdp': (True, 12, 2)
-            , 'pop': (True, 24, 1)
+            , 'pop': (True, 12, 2)
             # , 'co2_cap': (True, 12, 2)
             # , 'gdp_cap': (True, 12, 2)
         }
@@ -88,12 +85,33 @@ def month_name_to_num(month_name: str = None):
 
 
 def quarter_to_month(quarter: int):
-    return {1: 1, 2: 4, 3: 7, 4: 10}[quarter]
+    month = {1: 1,
+             2: 4,
+             3: 7,
+             4: 10}
+    if quarter is None:
+        return month
+    else:
+        return month[quarter]
 
 
 def month_to_quarter(month: int):
-    return {1: 1, 2: 1, 3: 1, 4: 2, 5: 2, 6: 2,
-            7: 3, 8: 3, 9: 3, 10: 4, 11: 4, 12: 4}[month]
+    quarter = {1: 1,
+               2: 1,
+               3: 1,
+               4: 2,
+               5: 2,
+               6: 2,
+               7: 3,
+               8: 3,
+               9: 3,
+               10: 4,
+               11: 4,
+               12: 4}
+    if month is None:
+        return quarter
+    else:
+        return quarter[month]
 
 
 def flatten(lst):

@@ -14,13 +14,11 @@ from sklearn.linear_model import LassoCV
 import SparseSC
 
 # custom functions
-from definitions import show_results, donor_countries, fake_num, country_col, date_col, tables_path, save_results, \
+from definitions import show_results, donor_countries, fake_num, country_col, date_col, tables_path_res, save_results, \
     data_path, target_var, year_col, show_plots, sign_level
 from helper_functions import flatten, arco_pivot, sc_pivot, get_impl_date, read_data, get_trans
 from plot_functions import plot_lasso_path, plot_predictions
 from statistical_tests import shapiro_wilk_test
-
-tables_path_cor = f'{tables_path}results/'
 
 
 ################################
@@ -33,7 +31,7 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
     target_diff, donors_diff = arco_pivot(df=df_stat, target_country=target_country)
 
     if fake_num in list(target_diff):
-        return None, None
+        return None, None, None
     else:
         y_diff = np.array(target_diff).reshape(-1, 1)
         X_diff = np.array(donors_diff)
@@ -49,8 +47,8 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
 
         # Generating the standardized values of X and y
         X_diff_stand = SS.fit_transform(X_diff)
-        X_pre_diff_stand = SS.fit_transform(X_pre_diff)
-        y_pre_diff_stand = SS.fit_transform(y_pre_diff)
+        X_pre_diff_stand = SS.fit_transform(X_diff)
+        y_pre_diff_stand = SS.fit_transform(y_diff)
 
         # Split the data into training and testing set
         # print(len(X_pre_diff_stand))
@@ -94,7 +92,7 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
 
         shapiro_wilk_test(df=act_pred_diff, target_country=target_country, alpha=sign_level)
         if save_results:
-            act_pred_diff.to_csv(f'{tables_path_cor}{target_country}/{target_country}_act_pred_diff.csv')
+            act_pred_diff.to_csv(f'{tables_path_res}{target_country}/{target_country}_act_pred_diff.csv')
         if show_plots:
             print('act_pred_diff')
             plot_predictions(df=act_pred_diff, target_country=target_country)
@@ -115,7 +113,7 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
             orig_data_log_diff2 = orig_data_log_diff1.diff(diff_level)
         log_diff2 = pd.DataFrame(list(zip(orig_data_log_diff2, pred_diff)),
                                  columns=['act', 'pred']).set_index(orig_data_log.index)
-        log_diff2.to_csv(f'{tables_path_cor}{target_country}/{target_country}_log_diff2.csv')
+        log_diff2.to_csv(f'{tables_path_res}{target_country}/{target_country}_log_diff2.csv')
         if show_plots:
             print('log_diff2')
             plot_predictions(df=log_diff2, target_country=target_country)
@@ -138,7 +136,7 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
                                 columns=['act', 'pred']).set_index(orig_data_log.index)
         act_pred['error'] = act_pred['pred'] - act_pred['act']
         if save_results:
-            act_pred.to_csv(f'{tables_path_cor}{target_country}/{target_country}_act_pred.csv')
+            act_pred.to_csv(f'{tables_path_res}{target_country}/{target_country}_act_pred.csv')
         if show_plots:
             print('act_pred')
             plot_predictions(df=act_pred, target_country=target_country)
@@ -149,12 +147,12 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
             # print(model.intercept_)
             # print(model.score)
             # print(model.get_params)
-            #
-            # coefs = list(model.coef_)
-            # coef_index = [i for i, val in enumerate(coefs) if val != 0]
-            #
-            # print(len(donors.columns[coef_index]))
-            # print(donors.columns[coef_index])
+
+            coefs = list(model.coef_)
+            coef_index = [i for i, val in enumerate(coefs) if val != 0]
+
+            print(len(donors_diff.columns[coef_index]))
+            print(donors_diff.columns[coef_index])
 
             coeffs = model.coef_
             print(coeffs[coeffs != 0])

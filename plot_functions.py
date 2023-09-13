@@ -7,11 +7,9 @@ import seaborn as sns
 
 from sklearn.linear_model import Lasso
 
-from definitions import data_path, figures_path, fig_size, show_plots, save_figs, stat, \
+from definitions import data_path, figures_path_meth, figures_path_res, fig_size, show_plots, save_figs, stat, \
     date_col, country_col, year_col
 from helper_functions import read_data, first_value, get_impl_date, get_timescale
-
-figures_path_res = f'{figures_path}results/'
 
 
 def plot_series(target_country: str, timeframe: str):
@@ -22,7 +20,7 @@ def plot_series(target_country: str, timeframe: str):
         df_target[series].plot(figsize=fig_size)
         plt.title(series)
         if save_figs:
-            plt.savefig(f'{figures_path_cor}{target_country}/{target_country}_test.png',
+            plt.savefig(f'{figures_path_meth}{target_country}/{target_country}_test.png',
                         bbox_inches='tight', pad_inches=0)
         if show_plots:
             plt.show()

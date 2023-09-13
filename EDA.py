@@ -2,19 +2,16 @@
 ### import relevant packages ###
 ################################
 import sys
-import numpy as np
 import matplotlib.pyplot as plt
 
 plt.rcParams.update({'font.size': 15})
 
 from sklearn.preprocessing import StandardScaler
 
-from definitions import data_path, figures_path, target_countries, fig_size, show_plots, save_figs, show_results, \
+from definitions import data_path, figures_path_meth, target_countries, fig_size, show_plots, save_figs, show_results, \
     target_var, country_col, year_col, date_col
 from helper_functions import read_data, get_impl_date, get_trans, get_timescale
 from plot_functions import plot_corr
-
-figures_path_cor = f'{figures_path}methodology/'
 
 
 def descriptive_stats(df: object, var_name: str):
@@ -50,7 +47,7 @@ def co2_target_countries(df: object):
         plt.tight_layout()
         plt.axvline(get_impl_date(country), color='black')
         if save_figs:
-            plt.savefig(f"{figures_path_cor}co2_{country}.png")
+            plt.savefig(f"{figures_path_meth}co2_{country}.png")
         if show_plots:
             plt.show()
 
@@ -74,7 +71,7 @@ def all_series(df: object, timeframe: str):
             plt.legend(loc='center left', bbox_to_anchor=(1.1, 0.5))
         plt.tight_layout()
         if save_figs:
-            plt.savefig(f"{figures_path}methodology/{series}.png")
+            plt.savefig(f"{figures_path_meth}{series}.png")
         if show_plots:
             plt.show()
 
@@ -100,7 +97,7 @@ def all_series_stand(df: object, timeframe: str):
             plt.legend(loc='center left', bbox_to_anchor=(1.1, 0.5))
         plt.tight_layout()
         if save_figs:
-            plt.savefig(f"{figures_path}methodology/{series}_stand.png")
+            plt.savefig(f"{figures_path_meth}{series}_stand.png")
         if show_plots:
             plt.show()
 
@@ -111,7 +108,7 @@ def corr_matrix(df: object, target_country: str):
     df_cor = df_cor[get_trans()]
     cor_matrix = df_cor.corr()
     if save_figs:
-        plt.savefig(f"{figures_path_cor}corr_matrix.png")
+        plt.savefig(f"{figures_path_meth}corr_matrix.png")
     if show_plots:
         plot_corr(matrix=cor_matrix)
 
