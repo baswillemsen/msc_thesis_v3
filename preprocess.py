@@ -87,7 +87,6 @@ def preprocess_WB_q(source_file: str, source_country_col: str, source_time_col: 
 def total_join(co2: object, pop: object, gdp: object, key_cols: list, timeframe: str):
     total = co2.copy()
     total = total.merge(gdp, how='left', on=key_cols)
-
     total = total.merge(pop, how='left', on=key_cols)
 
     total[f'co2_cap'] = total[f'co2'] / total[f'pop']
@@ -129,7 +128,7 @@ def make_stat(df: object, timeframe: str):
 
             for series in vars:
                 df_country_series = df_country.set_index(date_col)[series]
-                df_country_series.to_csv(f'{country_path}{series}_{timeframe}.csv', header=True, index=True)
+                df_country_series.to_csv(f'{country_path}{series}_{timeframe}.csv')
                 if country in target_countries:
                     df_country_series.to_csv(f'{tables_path_res}{country}/{country}_act.csv')
 
@@ -141,7 +140,7 @@ def make_stat(df: object, timeframe: str):
                     df_country_series_log = np.log(df_country_series)
                 else:
                     df_country_series_log = df_country_series
-                df_country_series_log.to_csv(f'{country_path}{series}_{timeframe}_log.csv', header=True, index=True)
+                df_country_series_log.to_csv(f'{country_path}{series}_{timeframe}_log.csv')
                 if country in target_countries:
                     df_country_series_log.to_csv(f'{tables_path_res}{country}/{country}_log_act.csv')
 
@@ -151,23 +150,10 @@ def make_stat(df: object, timeframe: str):
                 if diff_level != 0:
                     while i <= diff_order:
                         df_country_series_diff = df_country_series_diff.diff(periods=diff_level)
-                        df_country_series_diff.to_csv(f'{country_path}{series}_{timeframe}_log_diff{i}.csv',
-                                                      header=True, index=True)
+                        df_country_series_diff.to_csv(f'{country_path}{series}_{timeframe}_log_diff{i}.csv')
                         if country in target_countries:
                             df_country_series_diff.to_csv(f'{tables_path_res}{country}/{country}_log_diff{i}_act.csv')
                         i += 1
-
-                # if diff_level == 0:
-
-                #     df_country_series_diff = df_country_series_log
-                #     df_country_series_diff_diff = df_country_series_diff
-                # else:
-                #     df_country_series_diff = df_country_series.diff(periods=diff_level)
-                #
-                #     if diff_order == 1:
-                #         df_country_series_diff_diff = df_country_series_diff
-                #     elif diff_order == 2:
-                #         df_country_series_diff_diff = df_country_series_diff.diff(periods=diff_level)
 
                 # if series is non-stationary input fake number -99999
                 if stat == 'stat':
