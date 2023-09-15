@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 
 import warnings
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -28,7 +29,6 @@ from statistical_tests import shapiro_wilk_test
 ################################
 def arco(df: object, df_stat: object, target_country: str, timeframe: str,
          alpha_min: float, alpha_max: float, alpha_step: float, lasso_iters: int):
-
     # pivot target and donors
     target_log_diff, donors_log_diff = arco_pivot(df=df_stat, target_country=target_country)
     print(f'Nr of parameters included (d): {len(donors_log_diff.columns)}')
@@ -39,8 +39,10 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
         y_log_diff = np.array(target_log_diff).reshape(-1, 1)
         X_log_diff = np.array(donors_log_diff)
 
-        y_log_diff_pre = np.array(target_log_diff[target_log_diff.index <= get_impl_date(target_country=target_country)]).reshape(-1, 1)
-        X_log_diff_pre = np.array(donors_log_diff[donors_log_diff.index <= get_impl_date(target_country=target_country)])
+        y_log_diff_pre = np.array(
+            target_log_diff[target_log_diff.index <= get_impl_date(target_country=target_country)]).reshape(-1, 1)
+        X_log_diff_pre = np.array(
+            donors_log_diff[donors_log_diff.index <= get_impl_date(target_country=target_country)])
         print(f'Nr of timeframes to predict (n): {len(X_log_diff_pre)}')
 
         # Storing the fit object for later reference
@@ -110,15 +112,16 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
             orig_data_act_pred_log_diff_check = orig_data_log_diff1.diff(diff_level)
         act_pred_log_diff_check = pd.DataFrame(list(zip(orig_data_act_pred_log_diff_check, pred_log_diff)),
                                                columns=['act', 'pred']).set_index(orig_data_log.index)
-        act_pred_log_diff_check.to_csv(f'{tables_path_res}{target_country}/{target_country}_act_pred_log_diff_check.csv')
-        if show_plots:
-            print('act_pred_log_diff_check')
-            plot_predictions(df=act_pred_log_diff_check, target_country=target_country)
+        act_pred_log_diff_check.to_csv(
+            f'{tables_path_res}{target_country}/{target_country}_act_pred_log_diff_check.csv')
+        # if show_plots:
+        #     print('act_pred_log_diff_check')
+        #     plot_predictions(df=act_pred_log_diff_check, target_country=target_country)
 
         if diff_order == 2:
             pred1 = np.zeros(len(orig_data_log_diff1))
             pred1[diff_level:2 * diff_level] = orig_data_log_diff1[diff_level:2 * diff_level]
-            for i in range(2*diff_level, len(orig_data_log_diff1)):
+            for i in range(2 * diff_level, len(orig_data_log_diff1)):
                 pred1[i] = pred1[i - diff_level] + pred_log_diff[i]
 
         pred2 = np.zeros(len(orig_data_log))
@@ -134,25 +137,19 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
         act_pred_log['error'] = act_pred_log['pred'] - act_pred_log['act']
         if save_results:
             act_pred_log.to_csv(f'{tables_path_res}{target_country}/{target_country}_act_pred_log.csv')
-        if show_plots:
-            print('act_pred')
-            plot_predictions(df=act_pred_log, target_country=target_country)
+        # if show_plots:
+        #     print('act_pred')
+        #     plot_predictions(df=act_pred_log, target_country=target_country)
 
-        if show_results:
-            print('alpha: %f' % model.alpha_)
-            # print(model.coef_)
-            # print(model.intercept_)
-            # print(model.score)
-            # print(model.get_params)
+        print('alpha: %f' % model.alpha_)
 
-            coefs = list(model.coef_)
-            coef_index = [i for i, val in enumerate(coefs) if val != 0]
+        coefs = list(model.coef_)
+        coef_index = [i for i, val in enumerate(coefs) if val != 0]
+        print(f'Parameters estimated ({len(donors_log_diff.columns[coef_index])}x): '
+              f'{list(donors_log_diff.columns[coef_index])}')
 
-            print(f'Parameters estimated{len(donors_log_diff.columns[coef_index])}: '
-                  f'{list(donors_log_diff.columns[coef_index])}')
-
-            # coeffs = model.coef_
-            # print(coeffs[coeffs != 0])
+        # coeffs = model.coef_
+        # print(coeffs[coeffs != 0])
 
         return model, act_pred_log_diff, act_pred_log
 
@@ -174,7 +171,6 @@ def sc(df: object, target_country: str):
     act_pred_log_diff = []
 
     return model, act_pred_log_diff, act_pred
-
 
 # def did():
 #     pass

@@ -6,8 +6,7 @@ import numpy as np
 import pandas as pd
 
 from definitions import data_source_path, corr_country_names, sign_level, fake_num, \
-    country_col, year_col, quarter_col, month_col, date_col, incl_countries, show_results, target_countries, \
-    tables_path_res, target_var
+    country_col, year_col, quarter_col, month_col, date_col, incl_countries, show_results
 from helper_functions import read_data, select_country_year_measure, month_name_to_num, rename_order_scale, \
     downsample_month_to_quarter, quarter_to_month, upsample_quarter_to_month, get_timeframe_col, get_trans, \
     get_data_path, get_fig_path
@@ -205,6 +204,7 @@ def make_stat(df: object, timeframe: str):
         total_stat = total_stat.dropna(axis=0, how='any').reset_index(drop=True)
         total_stat.to_csv(f'{get_data_path(timeframe=timeframe)}total_{timeframe}_{stat}.csv', header=True, index=False)
         if show_results:
+            print(f'Timeframe: {timeframe}; Stat: {stat}')
             print(total_stat)
 
     return total_stat

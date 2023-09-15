@@ -6,28 +6,28 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 import warnings
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 from sklearn.linear_model import Lasso
 
-from definitions import data_path, figures_path_meth, figures_path_res, fig_size, show_plots, save_figs, stat, \
-    date_col, country_col, year_col, target_countries
+from definitions import figures_path_meth, figures_path_res, fig_size, show_plots, save_figs, date_col, target_countries
 from helper_functions import read_data, get_impl_date, get_data_path, get_impl_date_dt
 
 
-# def plot_total(target_country: str, timeframe: str):
-#     df = read_data(source_path=get_data_path(timeframe=timeframe), file_name=f'total_{timeframe}')
-#     df_target = df[df['country'] == target_country].set_index(date_col)
-#     print(df_target.columns.drop('country'))
-#     for series in df_target.columns.drop('country').sort_values():
-#         df_target[series].plot(figsize=fig_size)
-#         plt.title(series)
-#         if save_figs:
-#             plt.savefig(f'{figures_path_meth}{target_country}/{target_country}_test.png',
-#                         bbox_inches='tight', pad_inches=0)
-#         if show_plots:
-#             plt.show()
+def plot_total(target_country: str, timeframe: str):
+    df = read_data(source_path=get_data_path(timeframe=timeframe), file_name=f'total_{timeframe}')
+    df_target = df[df['country'] == target_country].set_index(date_col)
+    print(df_target.columns.drop('country'))
+    for series in df_target.columns.drop('country').sort_values():
+        df_target[series].plot(figsize=fig_size)
+        plt.title(series)
+        if save_figs:
+            plt.savefig(f'{figures_path_meth}{target_country}/{target_country}_test.png',
+                        bbox_inches='tight', pad_inches=0)
+        if show_plots:
+            plt.show()
 
 
 def plot_series(i: int, series: object, country_path: str, target_country: str, var_name: str):
@@ -70,11 +70,14 @@ def plot_lasso_path(X: list, y: list, target_country: str,
         plt.show()
 
 
-def plot_predictions(df: object, target_country: str):
-    act = df['act']
-    pred = df['pred']
-    # act = np.exp(df['act'])
-    # pred = np.exp(df['pred'])
+def plot_predictions(df: object, target_country: str, log: str):
+    global act, pred
+    if log == 'log':
+        act = df['act']
+        pred = df['pred']
+    elif log == 'exp':
+        act = np.exp(df['act'])
+        pred = np.exp(df['pred'])
 
     plt.figure(figsize=fig_size)
     plt.plot(act, label='actual')
@@ -82,7 +85,7 @@ def plot_predictions(df: object, target_country: str):
     plt.axvline(x=list(act.index).index(get_impl_date(target_country)), c='black')
     plt.legend()
     if save_figs:
-        plt.savefig(f'{figures_path_res}{target_country}/{target_country}_act_pred.png',
+        plt.savefig(f'{figures_path_res}{target_country}/{target_country}_act_pred_{log}.png',
                     bbox_inches='tight', pad_inches=0)
     if show_plots:
         plt.show()
@@ -97,7 +100,7 @@ def plot_diff(df: object, target_country: str):
     plt.tight_layout()
     plt.legend()
     if save_figs:
-        plt.savefig(f'{figures_path_res}{target_country}/{target_country}_act_pred_diff.png',
+        plt.savefig(f'{figures_path_res}{target_country}/{target_country}_act_pred_Log_diff.png',
                     bbox_inches='tight', pad_inches=0)
     if show_plots:
         plt.show()
@@ -126,5 +129,5 @@ def plot_corr(matrix: object):
     plt.show()
 
 
-# if __name__ == "__main__":
-#     plot_total(target_country='france', timeframe='m')
+if __name__ == "__main__":
+    plot_total(target_country='france', timeframe='m')

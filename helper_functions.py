@@ -29,11 +29,11 @@ def get_trans(timeframe: str = None):
     # trans: 'var': (log, diff_level)
     if timeframe == 'm':
         trans = {
-            'co2': (True, 12, 2)
-            , 'gdp': (True, 12, 2)
-            , 'pop': (True, 12, 2)
-            , 'co2_cap': (True, 12, 2)
-            , 'gdp_cap': (True, 12, 2)
+            'co2': (True, 12, 1)
+            , 'gdp': (True, 12, 1)
+            , 'pop': (True, 12, 1)
+            , 'co2_cap': (True, 12, 1)
+            , 'gdp_cap': (True, 12, 1)
         }
     elif timeframe == 'q':
         trans = {

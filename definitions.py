@@ -9,9 +9,13 @@ figures_path_res = 'output/figures/results/'
 tables_path_meth = 'output/tables/methodology/'
 tables_path_res = 'output/tables/results/'
 
+all_paths = [data_source_path, data_path,
+             figures_path_data, figures_path_meth, figures_path_res,
+             tables_path_meth, tables_path_res]
+
 # PRINTING, SHOWING PLOTS
-show_results = True
-show_plots = True
+show_results = False
+show_plots = False
 fig_size = (10, 6)
 
 save_results = True
@@ -19,7 +23,7 @@ save_figs = True
 
 # NON-STATIC DEFINITIONS
 target_var = 'co2'
-stat = 'stat'
+stat = 'non_stat'
 sign_level = 0.05
 fake_num = -99999
 
