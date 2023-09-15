@@ -2,8 +2,10 @@
 data_source_path = 'data/source/'
 data_path = 'data/'
 
+figures_path_data = 'output/figures/data/'
 figures_path_meth = 'output/figures/methodology/'
 figures_path_res = 'output/figures/results/'
+
 tables_path_meth = 'output/tables/methodology/'
 tables_path_res = 'output/tables/results/'
 
@@ -17,7 +19,7 @@ save_figs = True
 
 # NON-STATIC DEFINITIONS
 target_var = 'co2'
-stat = 'non_stat'
+stat = 'stat'
 sign_level = 0.05
 fake_num = -99999
 
@@ -41,7 +43,6 @@ donor_countries = ['austria',
                    'belgium',
                    'bulgaria',
                    'croatia',
-                   # 'cyprus',
                    'czech republic',
                    'germany',
                    'greece',

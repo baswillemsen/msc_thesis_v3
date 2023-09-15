@@ -4,36 +4,44 @@
 import os
 import numpy as np
 import pandas as pd
+import datetime as dt
 
 from definitions import target_var, data_path, incl_countries, incl_years, donor_countries, target_countries, \
     country_col, year_col, month_col, quarter_col, date_col, model_val, timeframe_val, tables_path_res, save_results, \
-    fake_num
+    fake_num, figures_path_data
 
 
 def get_data_path(timeframe: str):
-    timeframe_path = f'{data_path}{timeframe}/'
-    if not os.path.exists(timeframe_path):
-        os.makedirs(timeframe_path)
-    return timeframe_path
+    data_path_cor = f'{data_path}{timeframe}/'
+    if not os.path.exists(data_path_cor):
+        os.makedirs(data_path_cor)
+    return data_path_cor
+
+
+def get_fig_path(timeframe: str):
+    fig_path_cor = f'{figures_path_data}{timeframe}/'
+    if not os.path.exists(fig_path_cor):
+        os.makedirs(fig_path_cor)
+    return fig_path_cor
 
 
 def get_trans(timeframe: str = None):
     # trans: 'var': (log, diff_level)
     if timeframe == 'm':
         trans = {
-            'co2': (True, 12, 1)
-            , 'gdp': (True, 12, 1)
-            , 'pop': (True, 12, 1)
-            , 'co2_cap': (True, 12, 1)
-            , 'gdp_cap': (True, 12, 1)
+            'co2': (True, 12, 2)
+            , 'gdp': (True, 12, 2)
+            , 'pop': (True, 12, 2)
+            , 'co2_cap': (True, 12, 2)
+            , 'gdp_cap': (True, 12, 2)
         }
     elif timeframe == 'q':
         trans = {
-            'co2': (True, 4, 1)
-            , 'gdp': (True, 4, 1)
-            , 'pop': (True, 4, 1)
-            , 'co2_cap': (True, 4, 1)
-            , 'gdp_cap': (True, 4, 1)
+            'co2': (True, 4, 2)
+            , 'gdp': (True, 4, 2)
+            , 'pop': (True, 4, 2)
+            , 'co2_cap': (True, 4, 2)
+            , 'gdp_cap': (True, 4, 2)
         }
     else:
         trans = ['co2', 'gdp', 'pop', 'co2_cap', 'gdp_cap']
@@ -47,6 +55,19 @@ def get_impl_date(target_country: str = None):
                                    'united kingdom': '2013-01-01',
                                    'france': '2014-01-01',
                                    'portugal': '2015-01-01'
+                                   }
+    if target_country is None:
+        return target_countries_impl_dates
+    else:
+        return target_countries_impl_dates[target_country]
+
+
+def get_impl_date_dt(target_country: str = None):
+    target_countries_impl_dates = {'switzerland': dt.date(2008, 1, 1),
+                                   'ireland': dt.date(2010, 1, 1),
+                                   'united kingdom': dt.date(2013, 1, 1),
+                                   'france': dt.date(2014, 1, 1),
+                                   'portugal': dt.date(2015, 1, 1)
                                    }
     if target_country is None:
         return target_countries_impl_dates

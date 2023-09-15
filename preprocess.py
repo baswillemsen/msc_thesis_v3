@@ -7,10 +7,12 @@ import pandas as pd
 
 from definitions import data_source_path, corr_country_names, sign_level, fake_num, \
     country_col, year_col, quarter_col, month_col, date_col, incl_countries, show_results, target_countries, \
-    tables_path_res
+    tables_path_res, target_var
 from helper_functions import read_data, select_country_year_measure, month_name_to_num, rename_order_scale, \
-    downsample_month_to_quarter, quarter_to_month, upsample_quarter_to_month, get_timeframe_col, get_trans, get_data_path
+    downsample_month_to_quarter, quarter_to_month, upsample_quarter_to_month, get_timeframe_col, get_trans, \
+    get_data_path, get_fig_path
 from statistical_tests import stat_test
+from plot_functions import plot_series
 
 
 # Monthly CO2 data
@@ -62,7 +64,6 @@ def preprocess_WB_q(source_file: str, source_country_col: str, source_time_col: 
     df_q[quarter_col] = df_q[source_time_col].str[6:].astype(int)
     df_q[month_col] = df_q.apply(lambda row: quarter_to_month(row.quarter), axis=1)
     df_q[date_col] = pd.to_datetime(dict(year=df_q[year_col], month=df_q[month_col], day=1)).dt.to_period('M')
-    # df_q[date_col] = pd.to_datetime(dict(year=df_q[year_col], month=df_q[month_col], day=1))
     df_q[var_name] = df_q['Value']
 
     # select countries and year
@@ -99,7 +100,7 @@ def total_join(co2: object, pop: object, gdp: object, key_cols: list, timeframe:
 
 
 def make_stat(df: object, timeframe: str):
-
+    i = 1
     for stat in ['stat', 'non_stat']:
 
         country_list = []
@@ -119,6 +120,9 @@ def make_stat(df: object, timeframe: str):
             country_path = f'{get_data_path(timeframe=timeframe)}{country}/'
             if not os.path.exists(country_path):
                 os.makedirs(country_path)
+            country_path_fig = f'{get_fig_path(timeframe=timeframe)}{country}/'
+            if not os.path.exists(country_path_fig):
+                os.makedirs(country_path_fig)
 
             df_country = df[df[country_col] == country]
             country_list += list(df_country[country_col])
@@ -128,39 +132,61 @@ def make_stat(df: object, timeframe: str):
 
             for series in vars:
                 df_country_series = df_country.set_index(date_col)[series]
-                df_country_series.to_csv(f'{country_path}{series}_{timeframe}.csv')
-                if country in target_countries:
-                    df_country_series.to_csv(f'{tables_path_res}{country}/{country}_act.csv')
+                var_name = f'{series}_{timeframe}_act'
+                df_country_series.to_csv(f'{country_path}{var_name}.csv')
+                plot_series(i=i, series=df_country_series, country_path=country_path_fig,
+                            target_country=country, var_name=var_name)
+                i += 1
+                # if country in target_countries:
+                #     df_country_series.to_csv(f'{tables_path_res}{country}/{country}_act.csv')
+                #     if series == target_var:
+                #         plot_series(series=df_country_series, target_country=country, timeframe=timeframe,
+                #                     var_name=f'{series}_act')
 
                 log, diff_level, diff_order = trans[series]
 
                 # log the series if necessary
-
                 if log:
                     df_country_series_log = np.log(df_country_series)
                 else:
                     df_country_series_log = df_country_series
-                df_country_series_log.to_csv(f'{country_path}{series}_{timeframe}_log.csv')
-                if country in target_countries:
-                    df_country_series_log.to_csv(f'{tables_path_res}{country}/{country}_log_act.csv')
+                var_name = f'{series}_{timeframe}_act_log'
+                df_country_series_log.to_csv(f'{country_path}{var_name}.csv')
+                plot_series(i=i, series=df_country_series_log, country_path=country_path_fig,
+                            target_country=country, var_name=var_name)
+                i += 1
+                # if country in target_countries:
+                #     df_country_series_log.to_csv(f'{tables_path_res}{country}/{country}_log_act.csv')
+                # if series == target_var:
+                #     plot_series(series=df_country_series_log, target_country=country, timeframe=timeframe,
+                #                 var_name=f'{series}_log_act')
 
                 # difference the series
-                i = 1
+                j = 1
                 df_country_series_diff = df_country_series_log.copy()
                 if diff_level != 0:
-                    while i <= diff_order:
+                    while j <= diff_order:
                         df_country_series_diff = df_country_series_diff.diff(periods=diff_level)
-                        df_country_series_diff.to_csv(f'{country_path}{series}_{timeframe}_log_diff{i}.csv')
-                        if country in target_countries:
-                            df_country_series_diff.to_csv(f'{tables_path_res}{country}/{country}_log_diff{i}_act.csv')
+                        var_name = f'{series}_{timeframe}_act_log_diff_{j}'
+                        df_country_series_diff.to_csv(f'{country_path}{var_name}.csv')
+                        plot_series(i=i, series=df_country_series_diff, country_path=country_path_fig,
+                                    target_country=country, var_name=var_name)
                         i += 1
+                        j += 1
+
+                        # df_country_series_diff.to_csv(f'{country_path}{series}_{timeframe}_log_diff{i}.csv')
+                        # if country in target_countries:
+                        #     df_country_series_diff.to_csv(f'{tables_path_res}{country}/{country}_log_diff{i}_act.csv')
+                        # if series == target_var:
+                        #     plot_series(series=df_country_series_diff, target_country=country,
+                        #                 timeframe=timeframe, var_name=f'{series}_log_diff{i}_act')
 
                 # if series is non-stationary input fake number -99999
                 if stat == 'stat':
                     if stat_test(x=df_country_series_diff.dropna(), sign_level=sign_level) == 'stationary':
                         globals()[f"{series}_list"] += list(df_country_series_diff)
                     elif stat_test(x=df_country_series_diff.dropna(), sign_level=sign_level) == 'non_stationary':
-                        globals()[f"{series}_list"] += [fake_num]*len(df_country_series_diff)
+                        globals()[f"{series}_list"] += [fake_num] * len(df_country_series_diff)
 
                 elif stat == 'non_stat':
                     globals()[f"{series}_list"] += list(df_country_series_diff)

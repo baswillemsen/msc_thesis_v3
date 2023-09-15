@@ -3,8 +3,10 @@
 ################################
 import os
 import sys
+
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # custom functions
 from definitions import data_path, figures_path_meth, figures_path_res, tables_path_meth, tables_path_res, \
@@ -51,8 +53,8 @@ def main(model: str, timeframe: str, target_country: str):
         else:
             if show_plots:
                 plot_predictions(df=act_pred, target_country=target_country)
-                # plot_diff(df=act_pred, target_country=target_country)
-                # plot_cumsum(df=act_pred, target_country=target_country)
+                plot_diff(df=act_pred, target_country=target_country)
+                plot_cumsum(df=act_pred, target_country=target_country)
 
 
 if __name__ == "__main__":

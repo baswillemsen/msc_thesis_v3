@@ -3,7 +3,10 @@
 ################################
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
@@ -27,7 +30,6 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
          alpha_min: float, alpha_max: float, alpha_step: float, lasso_iters: int):
 
     # pivot target and donors
-    global orig_data_log_diff1, orig_data_act_pred_log_diff_check, pred1
     target_log_diff, donors_log_diff = arco_pivot(df=df_stat, target_country=target_country)
     print(f'Nr of parameters included (d): {len(donors_log_diff.columns)}')
 
@@ -86,13 +88,11 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
         act_pred_log_diff['error'] = act_pred_log_diff['pred'] - act_pred_log_diff['act']
 
         shapiro_wilk_test(df=act_pred_log_diff, target_country=target_country, alpha=sign_level)
+
         if save_results:
             act_pred_log_diff.to_csv(f'{tables_path_res}{target_country}/{target_country}_act_pred_log_diff.csv')
         if show_plots:
-            # print('act_pred_log_diff')
             plot_predictions(df=act_pred_log_diff, target_country=target_country)
-            # print('act_pred_errors')
-            plt.plot(act_pred_log_diff['error'])
 
         # summarize chosen configuration
         date_start = df_stat['date'].iloc[0]
@@ -130,12 +130,12 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
                 pred2[i] = pred2[i - diff_level] + pred1[i]
 
         act_pred_log = pd.DataFrame(list(zip(orig_data_log, pred2)),
-                                columns=['act', 'pred']).set_index(orig_data_log.index)
+                                    columns=['act', 'pred']).set_index(orig_data_log.index)
         act_pred_log['error'] = act_pred_log['pred'] - act_pred_log['act']
         if save_results:
             act_pred_log.to_csv(f'{tables_path_res}{target_country}/{target_country}_act_pred_log.csv')
         if show_plots:
-            # print('act_pred')
+            print('act_pred')
             plot_predictions(df=act_pred_log, target_country=target_country)
 
         if show_results:
