@@ -30,10 +30,10 @@ def get_trans(timeframe: str = None):
     if timeframe == 'm':
         trans = {
             'co2': (True, 12, 1)
-            , 'gdp': (True, 12, 1)
-            , 'pop': (True, 12, 1)
-            , 'co2_cap': (True, 12, 1)
-            , 'gdp_cap': (True, 12, 1)
+            , 'gdp': (True, 12, 2)
+            , 'pop': (True, 12, 2)
+            , 'co2_cap': (True, 12, 2)
+            , 'gdp_cap': (True, 12, 2)
         }
     elif timeframe == 'q':
         trans = {
@@ -45,30 +45,27 @@ def get_trans(timeframe: str = None):
         }
     else:
         trans = ['co2', 'gdp', 'pop', 'co2_cap', 'gdp_cap']
+        # trans = ['co2', 'gdp', 'pop']
+        # trans = ['gdp', 'pop']
 
     return trans
 
 
-def get_impl_date(target_country: str = None):
-    target_countries_impl_dates = {'switzerland': '2008-01-01',
-                                   'ireland': '2010-01-01',
-                                   'united kingdom': '2013-01-01',
-                                   'france': '2014-01-01',
-                                   'portugal': '2015-01-01'
-                                   }
-    if target_country is None:
-        return target_countries_impl_dates
+def get_impl_date(target_country: str = None, input: str = None):
+    if input == 'dt':
+        target_countries_impl_dates = {'switzerland': dt.date(2008, 1, 1),
+                                       'ireland': dt.date(2010, 1, 1),
+                                       'united kingdom': dt.date(2013, 1, 1),
+                                       'france': dt.date(2014, 1, 1),
+                                       'portugal': dt.date(2015, 1, 1)
+                                       }
     else:
-        return target_countries_impl_dates[target_country]
-
-
-def get_impl_date_dt(target_country: str = None):
-    target_countries_impl_dates = {'switzerland': dt.date(2008, 1, 1),
-                                   'ireland': dt.date(2010, 1, 1),
-                                   'united kingdom': dt.date(2013, 1, 1),
-                                   'france': dt.date(2014, 1, 1),
-                                   'portugal': dt.date(2015, 1, 1)
-                                   }
+        target_countries_impl_dates = {'switzerland': '2008-01-01',
+                                       'ireland': '2010-01-01',
+                                       'united kingdom': '2013-01-01',
+                                       'france': '2014-01-01',
+                                       'portugal': '2015-01-01'
+                                       }
     if target_country is None:
         return target_countries_impl_dates
     else:

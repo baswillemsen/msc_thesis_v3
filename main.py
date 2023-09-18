@@ -35,7 +35,7 @@ def main(model: str, timeframe: str, target_country: str):
         print(f'Target country: {target_country} ({get_impl_date(target_country=target_country)[:4]})')
         print(f'Variables included ({len(get_trans())}x): {get_trans()}')
         print(f'Countries included ({len(df[country_col].unique())}x): {df[country_col].unique()}')
-        print(f'Years included ({len(df[country_col].unique())}x): {df[year_col].unique()}')
+        print(f'Years included ({len(df[year_col].unique())}x): {df[year_col].unique()}')
 
         # run the model, get back actual and predicted values
         if model == 'arco':

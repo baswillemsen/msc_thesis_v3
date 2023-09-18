@@ -78,8 +78,8 @@ def preprocess_WB_q(source_file: str, source_country_col: str, source_time_col: 
     df_q[date_col] = pd.to_datetime(dict(year=df_q[year_col], month=df_q[quarter_col].apply(quarter_to_month), day=1))
 
     # export to csv
-    df_q.to_csv(f'{get_data_path(timeframe="m")}{var_name}_q.csv')
-    df_m.to_csv(f'{get_data_path(timeframe="q")}{var_name}_m.csv')
+    df_q.to_csv(f'{get_data_path(timeframe="q")}{var_name}_q.csv')
+    df_m.to_csv(f'{get_data_path(timeframe="m")}{var_name}_m.csv')
 
     return df_m, df_q
 
@@ -198,8 +198,10 @@ def make_stat(df: object, timeframe: str):
         total_stat['co2'] = co2_list
         total_stat['gdp'] = gdp_list
         total_stat['pop'] = pop_list
-        total_stat['co2_cap'] = co2_cap_list
-        total_stat['gdp_cap'] = gdp_cap_list
+        if 'co2_cap' in trans:
+            total_stat['co2_cap'] = co2_cap_list
+        if 'gdp_cap' in trans:
+            total_stat['gdp_cap'] = gdp_cap_list
 
         total_stat = total_stat.dropna(axis=0, how='any').reset_index(drop=True)
         total_stat.to_csv(f'{get_data_path(timeframe=timeframe)}total_{timeframe}_{stat}.csv', header=True, index=False)

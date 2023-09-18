@@ -13,7 +13,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 from sklearn.linear_model import Lasso
 
 from definitions import figures_path_meth, figures_path_res, fig_size, show_plots, save_figs, date_col, target_countries
-from helper_functions import read_data, get_impl_date, get_data_path, get_impl_date_dt
+from helper_functions import read_data, get_impl_date, get_data_path
 
 
 def plot_total(target_country: str, timeframe: str):
@@ -34,7 +34,7 @@ def plot_series(i: int, series: object, country_path: str, target_country: str, 
     plt.figure(i)
     series.plot(figsize=fig_size)
     if target_country in target_countries:
-        plt.axvline(x=list(series.index).index(get_impl_date_dt(target_country)), c='black')
+        plt.axvline(x=list(series.index).index(get_impl_date(target_country=target_country, input='dt')), c='black')
     plt.title(f'{target_country}')
     plt.xlabel('Date')
     plt.ylabel(f'{var_name}')
@@ -71,7 +71,6 @@ def plot_lasso_path(X: list, y: list, target_country: str,
 
 
 def plot_predictions(df: object, target_country: str, log: str):
-    global act, pred
     if log == 'log':
         act = df['act']
         pred = df['pred']
