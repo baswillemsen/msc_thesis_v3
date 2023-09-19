@@ -236,7 +236,10 @@ def make_stat(df: object, timeframe: str):
                         globals()[f"{series}_list"] += [fake_num] * len(df_country_series_diff)
 
                 elif stat == 'non_stat':
-                    globals()[f"{series}_list"] += list(df_country_series_diff)
+                    if sum(df_country_series_diff.dropna() == 0) == len(df_country_series_diff.dropna()):
+                        globals()[f"{series}_list"] += [fake_num] * len(df_country_series_diff)
+                    else:
+                        globals()[f"{series}_list"] += list(df_country_series_diff)
                 else:
                     raise ValueError('Define stat as being "stat" or "non_stat"')
 

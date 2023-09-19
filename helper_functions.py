@@ -316,6 +316,7 @@ def arco_pivot(df: object, target_country: str):
     donors.columns = donors.columns.to_flat_index()
     donors.columns = [str(col_name[1]) + ' ' + str(col_name[0]) for col_name in donors.columns]
     donors = donors.reindex(sorted(donors.columns), axis=1)
+
     donors = donors.T.drop_duplicates().T
     donors = donors.dropna(axis=0)
 

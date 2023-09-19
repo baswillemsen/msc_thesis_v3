@@ -40,8 +40,8 @@ def plot_series(i: int, series: object, country_path: str, target_country: str, 
     plt.ylabel(f'{var_name}')
     if save_figs:
         plt.savefig(f'{country_path}{var_name}.png', bbox_inches='tight', pad_inches=0)
-    # if show_plots:
-    #     plt.show()
+    if show_plots:
+        plt.show()
     plt.cla()
 
 
@@ -99,7 +99,7 @@ def plot_diff(df: object, target_country: str):
     plt.tight_layout()
     plt.legend()
     if save_figs:
-        plt.savefig(f'{figures_path_res}{target_country}/{target_country}_act_pred_Log_diff.png',
+        plt.savefig(f'{figures_path_res}{target_country}/{target_country}_act_pred_log_diff.png',
                     bbox_inches='tight', pad_inches=0)
     if show_plots:
         plt.show()
@@ -125,7 +125,8 @@ def plot_corr(matrix: object):
     plt.figure(figsize=fig_size)
     plt.tight_layout()
     sns.heatmap(matrix, annot=True)
-    plt.show()
+    if show_plots:
+        plt.show()
 
 
 if __name__ == "__main__":
