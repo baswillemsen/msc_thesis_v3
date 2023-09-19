@@ -41,8 +41,8 @@ def preprocess_co2_m(source_file: str, source_country_col: str, source_year_col:
     co2_q = downsample_month_to_quarter(df_m=co2_m, var_name=var_name, agg='sum')
 
     # export to csv
-    co2_m.to_csv(f'{get_data_path(timeframe="m")}{var_name}_m.csv')
-    co2_q.to_csv(f'{get_data_path(timeframe="q")}{var_name}_q.csv')
+    co2_m.to_csv(f'{get_data_path(timeframe="m")}/{var_name}_m.csv')
+    co2_q.to_csv(f'{get_data_path(timeframe="q")}/{var_name}_q.csv')
 
     return co2_m, co2_q
 
@@ -68,8 +68,8 @@ def preprocess_brent_m(source_file: str, source_date_col: str, source_measure_co
     brent_q = downsample_month_to_quarter(df_m=brent_m, var_name=var_name, agg='mean')
 
     # export to csv
-    brent_m.to_csv(f'{get_data_path(timeframe="m")}{var_name}_m.csv')
-    brent_q.to_csv(f'{get_data_path(timeframe="q")}{var_name}_q.csv')
+    brent_m.to_csv(f'{get_data_path(timeframe="m")}/{var_name}_m.csv')
+    brent_q.to_csv(f'{get_data_path(timeframe="q")}/{var_name}_q.csv')
 
     return brent_m, brent_q
 
@@ -102,8 +102,8 @@ def preprocess_infl_m(source_file: str, source_country_col: str, var_name: str):
     infl_q = downsample_month_to_quarter(df_m=infl_m, var_name=var_name, agg='mean')
 
     # export to csv
-    infl_m.to_csv(f'{get_data_path(timeframe="m")}{var_name}_m.csv')
-    infl_q.to_csv(f'{get_data_path(timeframe="q")}{var_name}_q.csv')
+    infl_m.to_csv(f'{get_data_path(timeframe="m")}/{var_name}_m.csv')
+    infl_q.to_csv(f'{get_data_path(timeframe="q")}/{var_name}_q.csv')
 
     return infl_m, infl_q
 
@@ -139,8 +139,8 @@ def preprocess_WB_q(source_file: str, source_country_col: str, source_time_col: 
     df_q[date_col] = pd.to_datetime(dict(year=df_q[year_col], month=df_q[quarter_col].apply(quarter_to_month), day=1))
 
     # export to csv
-    df_q.to_csv(f'{get_data_path(timeframe="q")}{var_name}_q.csv')
-    df_m.to_csv(f'{get_data_path(timeframe="m")}{var_name}_m.csv')
+    df_m.to_csv(f'{get_data_path(timeframe="m")}/{var_name}_m.csv')
+    df_q.to_csv(f'{get_data_path(timeframe="q")}/{var_name}_q.csv')
 
     return df_m, df_q
 
@@ -157,7 +157,7 @@ def total_join(co2: object, pop: object, gdp: object, infl: object, brent: objec
 
     total = total.dropna(axis=0, how='any', subset=total.columns.drop('infl'))
     total = total.fillna(fake_num).reset_index(drop=True)
-    total.to_csv(f'{get_data_path(timeframe=timeframe)}total_{timeframe}.csv', header=True, index=False)
+    total.to_csv(f'{get_data_path(timeframe=timeframe)}/total_{timeframe}.csv', header=True, index=False)
 
     return total
 
@@ -179,13 +179,8 @@ def make_stat(df: object, timeframe: str):
             globals()[f"{series}_list"] = []
 
         for country in incl_countries:
-
-            country_path = f'{get_data_path(timeframe=timeframe)}{country}/'
-            if not os.path.exists(country_path):
-                os.makedirs(country_path)
-            country_path_fig = f'{get_fig_path(timeframe=timeframe)}{country}/'
-            if not os.path.exists(country_path_fig):
-                os.makedirs(country_path_fig)
+            data_path_cor = get_data_path(timeframe=timeframe, country=country)
+            fig_path_cor = get_fig_path(timeframe=timeframe, folder='data', country=country)
 
             df_country = df[df[country_col] == country]
             country_list += list(df_country[country_col])
@@ -196,9 +191,9 @@ def make_stat(df: object, timeframe: str):
             for series in vars:
                 print(timeframe, stat, country, series)
                 df_country_series = df_country.set_index(date_col)[series]
-                var_name = f'{series}_{timeframe}_act'
-                df_country_series.to_csv(f'{country_path}{var_name}.csv')
-                plot_series(i=i, series=df_country_series, country_path=country_path_fig,
+                var_name = f'{country}_{timeframe}_{series}_act'
+                df_country_series.to_csv(f'{data_path_cor}{var_name}.csv')
+                plot_series(i=i, series=df_country_series, timeframe=timeframe,
                             target_country=country, var_name=var_name)
                 i += 1
 
@@ -209,9 +204,9 @@ def make_stat(df: object, timeframe: str):
                     df_country_series_log = np.log(df_country_series)
                 else:
                     df_country_series_log = df_country_series
-                var_name = f'{series}_{timeframe}_act_log'
-                df_country_series_log.to_csv(f'{country_path}{var_name}.csv')
-                plot_series(i=i, series=df_country_series_log, country_path=country_path_fig,
+                var_name = f'{country}_{timeframe}_{series}_act_log'
+                df_country_series_log.to_csv(f'{data_path_cor}{var_name}.csv')
+                plot_series(i=i, series=df_country_series_log, timeframe=timeframe,
                             target_country=country, var_name=var_name)
                 i += 1
 
@@ -221,9 +216,9 @@ def make_stat(df: object, timeframe: str):
                 if diff_level != 0:
                     while j <= diff_order:
                         df_country_series_diff = df_country_series_diff.diff(periods=diff_level)
-                        var_name = f'{series}_{timeframe}_act_log_diff_{j}'
-                        df_country_series_diff.to_csv(f'{country_path}{var_name}.csv')
-                        plot_series(i=i, series=df_country_series_diff, country_path=country_path_fig,
+                        var_name = f'{country}_{timeframe}_{series}_act_log_diff_{j}'
+                        df_country_series_diff.to_csv(f'{data_path_cor}{var_name}.csv')
+                        plot_series(i=i, series=df_country_series_diff, timeframe=timeframe,
                                     target_country=country, var_name=var_name)
                         i += 1
                         j += 1
@@ -258,7 +253,7 @@ def make_stat(df: object, timeframe: str):
             total_stat['gdp_cap'] = gdp_cap_list
 
         total_stat = total_stat.dropna(axis=0, how='any').reset_index(drop=True)
-        total_stat.to_csv(f'{get_data_path(timeframe=timeframe)}total_{timeframe}_{stat}.csv', header=True, index=False)
+        total_stat.to_csv(f'{get_data_path(timeframe=timeframe)}/total_{timeframe}_{stat}.csv', header=True, index=False)
         if show_results:
             print(f'Timeframe: {timeframe}; Stat: {stat}')
             print(total_stat)

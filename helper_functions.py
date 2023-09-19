@@ -7,22 +7,61 @@ import pandas as pd
 import datetime as dt
 
 from definitions import target_var, data_path, incl_countries, incl_years, donor_countries, target_countries, \
-    country_col, year_col, month_col, quarter_col, date_col, model_val, timeframe_val, tables_path_res, save_results, \
-    fake_num, figures_path_data, agg_val, interpolation_val
+    country_col, year_col, month_col, quarter_col, date_col, model_val, timeframe_val, save_results, \
+    fake_num, output_path, agg_val, interpolation_val, folder_val
 
 
-def get_data_path(timeframe: str):
-    data_path_cor = f'{data_path}{timeframe}/'
-    if not os.path.exists(data_path_cor):
-        os.makedirs(data_path_cor)
-    return data_path_cor
+def get_data_path(timeframe: str,  country: str = None):
+    if country is not None:
+        if country not in incl_countries:
+            raise ValueError(f'Input a valid country argument: {incl_countries}')
+
+    if country is not None:
+        path_cor = f'{data_path}/{timeframe}/{country}/'
+    else:
+        path_cor = f'{data_path}/{timeframe}/'
+
+    if not os.path.exists(path_cor):
+        os.makedirs(path_cor)
+    return path_cor
 
 
-def get_fig_path(timeframe: str):
-    fig_path_cor = f'{figures_path_data}{timeframe}/'
-    if not os.path.exists(fig_path_cor):
-        os.makedirs(fig_path_cor)
-    return fig_path_cor
+def get_fig_path(timeframe: str, folder: str, country: str = None):
+    if timeframe not in timeframe_val:
+        raise ValueError(f'Input a valid timeframe argument: {timeframe_val}')
+    if folder not in folder_val:
+        raise ValueError(f'Input a valid folder argument: {folder_val}')
+    if country is not None:
+        if country not in incl_countries:
+            raise ValueError(f'Input a valid country argument: {incl_countries}')
+
+    if country is not None:
+        path_cor = f'{output_path}/{timeframe}/figures/{folder}/{country}/'
+    else:
+        path_cor = f'{output_path}/{timeframe}/figures/{folder}/'
+
+    if not os.path.exists(path_cor):
+        os.makedirs(path_cor)
+    return path_cor
+
+
+def get_table_path(timeframe: str, folder: str, country: str = None):
+    if timeframe not in timeframe_val:
+        raise ValueError(f'Input a valid timeframe argument: {timeframe_val}')
+    if folder not in folder_val:
+        raise ValueError(f'Input a valid folder argument: {folder_val}')
+    if country is not None:
+        if country not in incl_countries:
+            raise ValueError(f'Input a valid country argument: {incl_countries}')
+
+    if country is not None:
+        path_cor = f'{output_path}/{timeframe}/tables/{folder}/{country}/'
+    else:
+        path_cor = f'{output_path}/{timeframe}/tables/{folder}/'
+
+    if not os.path.exists(path_cor):
+        os.makedirs(path_cor)
+    return path_cor
 
 
 def get_trans(timeframe: str = None):
@@ -57,14 +96,14 @@ def get_impl_date(target_country: str = None, input: str = None):
     if input == 'dt':
         target_countries_impl_dates = {'switzerland': dt.date(2008, 1, 1),
                                        'ireland': dt.date(2010, 1, 1),
-                                       'united kingdom': dt.date(2013, 1, 1),
+                                       'united_kingdom': dt.date(2013, 1, 1),
                                        'france': dt.date(2014, 1, 1),
                                        'portugal': dt.date(2015, 1, 1)
                                        }
     else:
         target_countries_impl_dates = {'switzerland': '2008-01-01',
                                        'ireland': '2010-01-01',
-                                       'united kingdom': '2013-01-01',
+                                       'united_kingdom': '2013-01-01',
                                        'france': '2014-01-01',
                                        'portugal': '2015-01-01'
                                        }
@@ -154,7 +193,7 @@ def first_value(target_country: str, timeframe: str):
 
 
 def read_data(source_path: str, file_name: str):
-    df = pd.read_csv(f'{source_path}{file_name}.csv', delimiter=',', header=0, encoding='latin-1')
+    df = pd.read_csv(f'{source_path}/{file_name}.csv', delimiter=',', header=0, encoding='latin-1')
     df = df[df.columns.drop(list(df.filter(regex='Unnamed')))]
     return df
 
@@ -307,7 +346,9 @@ def interpolate_series(series: object, method='linear'):
         raise ValueError(f'Input a valid method argument: {interpolation_val}')
 
 
-def arco_pivot(df: object, target_country: str, model: str):
+def arco_pivot(df: object, target_country: str, timeframe: str, model: str):
+    tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=target_country)
+
     target = df[df[country_col] == target_country].set_index(date_col)[target_var]
 
     donors = df.copy()
@@ -323,13 +364,14 @@ def arco_pivot(df: object, target_country: str, model: str):
     donors = donors.drop(columns=donors.columns[(donors == fake_num).any()])
 
     if save_results:
-        target.to_csv(f'{tables_path_res}{target_country}/{model}_{target_country}_target.csv')
-        donors.to_csv(f'{tables_path_res}{target_country}/{model}_{target_country}_donors.csv')
+        target.to_csv(f'{tables_path_res}/{model}_{target_country}_{timeframe}_target.csv')
+        donors.to_csv(f'{tables_path_res}/{model}_{target_country}_{timeframe}_donors.csv')
 
     return target, donors
 
 
-def sc_pivot(df: object, target_country: str, model: str):
+def sc_pivot(df: object, target_country: str, timeframe: str, model: str):
+    tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=target_country)
 
     df = df[df[country_col].isin(donor_countries + [target_country])]
     df_pivot = df.copy()
@@ -340,8 +382,8 @@ def sc_pivot(df: object, target_country: str, model: str):
     post_treat = df_pivot.iloc[:, df_pivot.columns > get_impl_date(target_country)]
     treat_unit = [idx for idx, val in enumerate(df_pivot.index.values) if val == target_country]
     if save_results:
-        pre_treat.to_csv(f'{tables_path_res}{target_country}/{model}_{target_country}_pre_treat.csv')
-        post_treat.to_csv(f'{tables_path_res}{target_country}/{model}_{target_country}_post_treat.csv')
+        pre_treat.to_csv(f'{tables_path_res}/{model}_{target_country}_{timeframe}_pre_treat.csv')
+        post_treat.to_csv(f'{tables_path_res}/{model}_{target_country}_{timeframe}_post_treat.csv')
 
     return df_pivot, pre_treat, post_treat, treat_unit
 
@@ -351,6 +393,8 @@ def did_pivot():
 
 
 def transform_back(df: object, df_stat: object, pred_log_diff: object, timeframe: str, target_country: str, model: str):
+    tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=target_country)
+
     # summarize chosen configuration
     date_start = df_stat['date'].iloc[0]
     date_end = df_stat['date'].iloc[-1]
@@ -370,7 +414,7 @@ def transform_back(df: object, df_stat: object, pred_log_diff: object, timeframe
     act_pred_log_diff_check = pd.DataFrame(list(zip(orig_data_act_pred_log_diff_check, pred_log_diff)),
                                            columns=['act', 'pred']).set_index(orig_data_log.index)
     act_pred_log_diff_check.to_csv(
-        f'{tables_path_res}{target_country}/{model}_{target_country}_act_pred_log_diff_check.csv')
+        f'{tables_path_res}/{model}_{target_country}_{timeframe}_act_pred_log_diff_check.csv')
 
     if diff_order == 2:
         pred1 = np.zeros(len(orig_data_log_diff1))
@@ -390,6 +434,6 @@ def transform_back(df: object, df_stat: object, pred_log_diff: object, timeframe
                                 columns=['act', 'pred']).set_index(orig_data_log.index)
     act_pred_log['error'] = act_pred_log['pred'] - act_pred_log['act']
     if save_results:
-        act_pred_log.to_csv(f'{tables_path_res}{target_country}/{model}_{target_country}_act_pred_log.csv')
+        act_pred_log.to_csv(f'{tables_path_res}/{model}_{target_country}_{timeframe}_act_pred_log.csv')
 
     return act_pred_log

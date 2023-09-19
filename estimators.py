@@ -17,8 +17,8 @@ from sklearn.linear_model import LassoCV
 import SparseSC
 
 # custom functions
-from definitions import fake_num, tables_path_res, save_results, show_plots, sign_level
-from helper_functions import flatten, arco_pivot, sc_pivot, get_impl_date, transform_back
+from definitions import fake_num, save_results, show_plots, sign_level, save_figs
+from helper_functions import flatten, arco_pivot, sc_pivot, get_impl_date, transform_back, get_table_path, get_fig_path
 from plot_functions import plot_lasso_path, plot_predictions
 from statistical_tests import shapiro_wilk_test
 
@@ -29,12 +29,15 @@ from statistical_tests import shapiro_wilk_test
 def arco(df: object, df_stat: object, target_country: str, timeframe: str,
          alpha_min: float, alpha_max: float, alpha_step: float, lasso_iters: int, model: str):
     # pivot target and donors
-    target_log_diff, donors_log_diff = arco_pivot(df=df_stat, target_country=target_country, model=model)
+    target_log_diff, donors_log_diff = arco_pivot(df=df_stat, target_country=target_country,
+                                                  timeframe=timeframe, model=model)
     print(f'Nr of parameters included ({len(donors_log_diff.columns)}x): {donors_log_diff.columns}')
 
     if fake_num in list(target_log_diff):
         return None, None
     else:
+        tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=target_country)
+
         y_log_diff = np.array(target_log_diff).reshape(-1, 1)
         X_log_diff = np.array(donors_log_diff)
 
@@ -61,10 +64,10 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
             y_log_diff_pre_stand_test = train_test_split(X_log_diff_pre_stand, y_log_diff_pre_stand,
                                                          test_size=0.25, random_state=42,
                                                          shuffle=False)
-
-        plot_lasso_path(X=X_log_diff_pre_stand_train, y=y_log_diff_pre_stand_train, target_country=target_country,
-                        alpha_min=alpha_min, alpha_max=alpha_max, alpha_step=alpha_step, lasso_iters=lasso_iters,
-                        model=model)
+        if show_plots or save_figs:
+            plot_lasso_path(X=X_log_diff_pre_stand_train, y=y_log_diff_pre_stand_train, target_country=target_country,
+                            alpha_min=alpha_min, alpha_max=alpha_max, alpha_step=alpha_step, lasso_iters=lasso_iters,
+                            model=model, timeframe=timeframe)
 
         # define model
         ts_split = TimeSeriesSplit(n_splits=5)
@@ -93,9 +96,10 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
         shapiro_wilk_test(df=act_pred_log_diff, target_country=target_country, alpha=sign_level)
 
         if save_results:
-            act_pred_log_diff.to_csv(f'{tables_path_res}{target_country}/{model}_{target_country}_act_pred_log_diff.csv')
-        if show_plots:
-            plot_predictions(df=act_pred_log_diff, target_country=target_country, log='exp', model=model)
+            act_pred_log_diff.to_csv(f'{tables_path_res}/{model}_{target_country}_{timeframe}_act_pred_log_diff.csv')
+        if show_plots or save_figs:
+            plot_predictions(df=act_pred_log_diff, target_country=target_country, timeframe=timeframe,
+                             log='exp', model=model)
 
         act_pred_log = transform_back(df=df, df_stat=df_stat, target_country=target_country,
                                       timeframe=timeframe, pred_log_diff=pred_log_diff, model=model)
@@ -116,20 +120,17 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
 
 
 def sc(df: object, df_stat: object, target_country: str, timeframe: str, model: str):
+    tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=target_country)
+
     # pivot target and donors
-    df_pivot, pre_treat, post_treat, treat_unit = sc_pivot(df=df_stat, target_country=target_country, model=model)
+    df_pivot, pre_treat, post_treat, treat_unit = sc_pivot(df=df_stat, target_country=target_country,
+                                                           timeframe=timeframe, model=model)
 
     sc = SparseSC.fit(
         features=np.array(pre_treat),
         targets=np.array(post_treat),
         treated_units=treat_unit
     )
-
-    # summarize chosen configuration
-    # act_log_diff = df_pivot.loc[df_pivot.index == target_country].T
-    # pred_log_diff = sc.predict(df_pivot.values)[treat_unit, :][0]
-    # act_pred_log_diff = pd.DataFrame(list(zip(act_log_diff, pred_log_diff)),
-    #                                  columns=['act', 'pred']).set_index(act_log_diff.index)
 
     act_pred_log_diff = df_pivot.loc[df_pivot.index == target_country].T
     act_pred_log_diff.columns = ['act']
@@ -140,14 +141,16 @@ def sc(df: object, df_stat: object, target_country: str, timeframe: str, model: 
     shapiro_wilk_test(df=act_pred_log_diff, target_country=target_country, alpha=sign_level)
 
     if save_results:
-        act_pred_log_diff.to_csv(f'{tables_path_res}{target_country}/{model}_{target_country}_act_pred_log_diff.csv')
-    if show_plots:
-        plot_predictions(df=act_pred_log_diff, target_country=target_country, log='exp', model=model)
+        act_pred_log_diff.to_csv(f'{tables_path_res}/{model}_{target_country}_{timeframe}_act_pred_log_diff.csv')
+    if show_plots or save_figs:
+        plot_predictions(df=act_pred_log_diff, target_country=target_country, timeframe=timeframe,
+                         log='exp', model=model)
 
     act_pred_log = transform_back(df=df, df_stat=df_stat, target_country=target_country,
                                   timeframe=timeframe, pred_log_diff=pred_log_diff, model=model)
 
     return act_pred_log_diff, act_pred_log
 
-# def did():
-#     pass
+
+def did():
+    pass

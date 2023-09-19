@@ -6,9 +6,9 @@ import sys
 import pandas as pd
 import numpy as np
 
-from definitions import tables_path_meth, show_results, save_results, \
+from definitions import show_results, save_results, \
     country_col, date_col, timeframe_val, sign_level
-from helper_functions import read_data, get_timescale, get_trans, get_impl_date, get_data_path
+from helper_functions import read_data, get_timescale, get_trans, get_impl_date, get_data_path, get_table_path
 
 from statsmodels.tsa.stattools import adfuller
 from scipy.stats import shapiro
@@ -18,6 +18,8 @@ from scipy.stats import shapiro
 def adf_test(sign_level: float = sign_level):
 
     for timeframe in timeframe_val:
+        table_path_meth = get_table_path(timeframe=timeframe, folder='methodology')
+
         df = read_data(source_path=get_data_path(timeframe=timeframe), file_name=f'total_{timeframe}')
         trans = get_trans(timeframe=timeframe)
 
@@ -87,8 +89,8 @@ def adf_test(sign_level: float = sign_level):
             print(df_stat)
             print(df_stat_group)
         if save_results:
-            df_stat.to_csv(f'{tables_path_meth}{timeframe}_stat_results.csv')
-            df_stat_group.to_csv(f'{tables_path_meth}{timeframe}_stat_results_grouped.csv')
+            df_stat.to_csv(f'{table_path_meth}/{timeframe}_stat_results.csv')
+            df_stat_group.to_csv(f'{table_path_meth}/{timeframe}_stat_results_grouped.csv')
 
 
 def shapiro_wilk_test(df: object, target_country: str, alpha: float):

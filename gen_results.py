@@ -11,11 +11,11 @@ from definitions import target_countries
 
 def gen_results(timeframe: str):
 
-    # preprocess()
-    for model in ['arco']:
+    preprocess()
+
+    for model in ['arco', 'sc']:
 
         for target_country in target_countries:
-
             print('============================================================')
             main(model=model, timeframe=timeframe, target_country=target_country)
             print("\n")

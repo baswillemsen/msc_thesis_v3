@@ -9,7 +9,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # custom functions
-from definitions import all_paths, country_col, year_col, stat
+from definitions import all_paths, country_col, year_col, stat, show_plots, save_figs
 from helper_functions import read_data, validate_input, get_trans, get_data_path, get_impl_date
 from plot_functions import plot_predictions, plot_diff, plot_cumsum
 from estimators import arco, sc
@@ -52,10 +52,12 @@ def main(model: str, timeframe: str, target_country: str):
         if act_pred_log_diff is None or act_pred_log is None:
             print("The GHG emissions series of the target country is non-stationary, ArCo method is not possible")
 
-        for log in ['log', 'exp']:
-            plot_predictions(df=act_pred_log, target_country=target_country, log=log, model=model)
-        plot_diff(df=act_pred_log, target_country=target_country, model=model)
-        plot_cumsum(df=act_pred_log_diff, target_country=target_country, model=model)
+        if show_plots or save_figs:
+            for log in ['log', 'exp']:
+                plot_predictions(df=act_pred_log, target_country=target_country, timeframe=timeframe,
+                                 log=log, model=model)
+            plot_diff(df=act_pred_log, target_country=target_country, timeframe=timeframe, model=model)
+            plot_cumsum(df=act_pred_log_diff, target_country=target_country, timeframe=timeframe, model=model)
 
 
 if __name__ == "__main__":

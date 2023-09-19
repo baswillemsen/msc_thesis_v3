@@ -12,11 +12,13 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 from sklearn.linear_model import Lasso
 
-from definitions import figures_path_meth, figures_path_res, fig_size, show_plots, save_figs, date_col, target_countries
-from helper_functions import read_data, get_impl_date, get_data_path
+from definitions import fig_size, show_plots, save_figs, date_col, target_countries
+from helper_functions import read_data, get_impl_date, get_data_path, get_fig_path, get_table_path
 
 
 def plot_total(target_country: str, timeframe: str):
+    figures_path_meth = get_fig_path(timeframe=timeframe, folder='methodology', country=target_country)
+
     df = read_data(source_path=get_data_path(timeframe=timeframe), file_name=f'total_{timeframe}')
     df_target = df[df['country'] == target_country].set_index(date_col)
     print(df_target.columns.drop('country'))
@@ -24,13 +26,15 @@ def plot_total(target_country: str, timeframe: str):
         df_target[series].plot(figsize=fig_size)
         plt.title(series)
         if save_figs:
-            plt.savefig(f'{figures_path_meth}{target_country}/{target_country}_test.png',
+            plt.savefig(f'{figures_path_meth}/{target_country}_test.png',
                         bbox_inches='tight', pad_inches=0)
         if show_plots:
             plt.show()
 
 
-def plot_series(i: int, series: object, country_path: str, target_country: str, var_name: str):
+def plot_series(i: int, series: object, timeframe: str, target_country: str, var_name: str):
+    figures_path_data = get_fig_path(timeframe=timeframe, folder='data', country=target_country)
+
     plt.figure(i)
     series.plot(figsize=fig_size)
     if target_country in target_countries:
@@ -39,15 +43,17 @@ def plot_series(i: int, series: object, country_path: str, target_country: str, 
     plt.xlabel('Date')
     plt.ylabel(f'{var_name}')
     if save_figs:
-        plt.savefig(f'{country_path}{var_name}.png', bbox_inches='tight', pad_inches=0)
+        plt.savefig(f'{figures_path_data}/{var_name}.png', bbox_inches='tight', pad_inches=0)
     if show_plots:
         plt.show()
     plt.cla()
 
 
 # print lasso path for given alphas and LASSO solution
-def plot_lasso_path(X: list, y: list, target_country: str, model: str,
+def plot_lasso_path(X: list, y: list, target_country: str, model: str, timeframe: str,
                     alpha_min: float, alpha_max: float, alpha_step: float, lasso_iters: int):
+    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=target_country)
+
     alphas = np.arange(alpha_min, alpha_max, alpha_step)
     lasso = Lasso(max_iter=lasso_iters)
     coefs = []
@@ -64,13 +70,15 @@ def plot_lasso_path(X: list, y: list, target_country: str, model: str,
     plt.xlabel('alpha')
     plt.ylabel('weights')
     if save_figs:
-        plt.savefig(f'{figures_path_res}{target_country}/{model}_{target_country}_lasso_path.png',
+        plt.savefig(f'{figures_path_res}/{model}_{target_country}_{timeframe}_lasso_path.png',
                     bbox_inches='tight', pad_inches=0)
     if show_plots:
         plt.show()
 
 
-def plot_predictions(df: object, target_country: str, log: str, model: str):
+def plot_predictions(df: object, target_country: str, timeframe: str, log: str, model: str):
+    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=target_country)
+
     if log == 'log':
         act = df['act']
         pred = df['pred']
@@ -84,13 +92,15 @@ def plot_predictions(df: object, target_country: str, log: str, model: str):
     plt.axvline(x=list(act.index).index(get_impl_date(target_country)), c='black')
     plt.legend()
     if save_figs:
-        plt.savefig(f'{figures_path_res}{target_country}/{model}_{target_country}_act_pred_{log}.png',
+        plt.savefig(f'{figures_path_res}/{model}_{target_country}_{timeframe}_act_pred_{log}.png',
                     bbox_inches='tight', pad_inches=0)
     if show_plots:
         plt.show()
 
 
-def plot_diff(df: object, target_country: str, model: str):
+def plot_diff(df: object, target_country: str, timeframe: str, model: str):
+    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=target_country)
+
     diff = df['error']
 
     plt.figure(figsize=fig_size)
@@ -99,13 +109,15 @@ def plot_diff(df: object, target_country: str, model: str):
     plt.tight_layout()
     plt.legend()
     if save_figs:
-        plt.savefig(f'{figures_path_res}{target_country}/{model}_{target_country}_act_pred_log_diff.png',
+        plt.savefig(f'{figures_path_res}/{model}_{target_country}_{timeframe}_act_pred_log_diff.png',
                     bbox_inches='tight', pad_inches=0)
     if show_plots:
         plt.show()
 
 
-def plot_cumsum(df: object, target_country: str, model: str):
+def plot_cumsum(df: object, target_country: str, timeframe: str, model: str):
+    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=target_country)
+
     act = df['act'].cumsum()
     pred = df['pred'].cumsum()
 
@@ -115,7 +127,7 @@ def plot_cumsum(df: object, target_country: str, model: str):
     plt.axvline(x=list(act.index).index(get_impl_date(target_country)), c='black')
     plt.legend()
     if save_figs:
-        plt.savefig(f'{figures_path_res}{target_country}/{model}_{target_country}_cumsum.png',
+        plt.savefig(f'{figures_path_res}/{model}_{target_country}_{timeframe}_cumsum.png',
                     bbox_inches='tight', pad_inches=0)
     if show_plots:
         plt.show()
@@ -125,6 +137,9 @@ def plot_corr(matrix: object):
     plt.figure(figsize=fig_size)
     plt.tight_layout()
     sns.heatmap(matrix, annot=True)
+    # if save_figs:
+    #     plt.savefig(f'{figures_path_meth}{target_country}/{model}_{target_country}_cumsum.png',
+    #                 bbox_inches='tight', pad_inches=0)
     if show_plots:
         plt.show()
 
