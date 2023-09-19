@@ -307,7 +307,7 @@ def interpolate_series(series: object, method='linear'):
         raise ValueError(f'Input a valid method argument: {interpolation_val}')
 
 
-def arco_pivot(df: object, target_country: str):
+def arco_pivot(df: object, target_country: str, model: str):
     target = df[df[country_col] == target_country].set_index(date_col)[target_var]
 
     donors = df.copy()
@@ -323,26 +323,25 @@ def arco_pivot(df: object, target_country: str):
     donors = donors.drop(columns=donors.columns[(donors == fake_num).any()])
 
     if save_results:
-        target.to_csv(f'{tables_path_res}{target_country}/{target_country}_target.csv')
-        donors.to_csv(f'{tables_path_res}{target_country}/{target_country}_donors.csv')
+        target.to_csv(f'{tables_path_res}{target_country}/{model}_{target_country}_target.csv')
+        donors.to_csv(f'{tables_path_res}{target_country}/{model}_{target_country}_donors.csv')
 
     return target, donors
 
 
-def sc_pivot(df: object, target_country: str):
+def sc_pivot(df: object, target_country: str, model: str):
 
     df = df[df[country_col].isin(donor_countries + [target_country])]
     df_pivot = df.copy()
     df_pivot = df_pivot.pivot(index=country_col, columns=date_col, values=target_var)
     df_pivot = df_pivot.dropna(axis=1, how='any')
 
-    pre_treat = df_pivot.iloc[:, df_pivot.columns <= get_impl_date(target_country)].values
-    post_treat = df_pivot.iloc[:, df_pivot.columns > get_impl_date(target_country)].values
+    pre_treat = df_pivot.iloc[:, df_pivot.columns <= get_impl_date(target_country)]
+    post_treat = df_pivot.iloc[:, df_pivot.columns > get_impl_date(target_country)]
     treat_unit = [idx for idx, val in enumerate(df_pivot.index.values) if val == target_country]
-
-    series = [df_pivot, pre_treat, post_treat, treat_unit]
-    for i in range(0, len(series)):
-        pd.DataFrame(series[i]).to_csv(f'series_{i}.csv')
+    if save_results:
+        pre_treat.to_csv(f'{tables_path_res}{target_country}/{model}_{target_country}_pre_treat.csv')
+        post_treat.to_csv(f'{tables_path_res}{target_country}/{model}_{target_country}_post_treat.csv')
 
     return df_pivot, pre_treat, post_treat, treat_unit
 
@@ -350,3 +349,47 @@ def sc_pivot(df: object, target_country: str):
 def did_pivot():
     pass
 
+
+def transform_back(df: object, df_stat: object, pred_log_diff: object, timeframe: str, target_country: str, model: str):
+    # summarize chosen configuration
+    date_start = df_stat['date'].iloc[0]
+    date_end = df_stat['date'].iloc[-1]
+    _, diff_level, diff_order = get_trans(timeframe=timeframe)[target_var]
+
+    orig_data = df.copy()
+    orig_data = orig_data[(orig_data[country_col] == target_country) &
+                          (orig_data[date_col] >= date_start) &
+                          (orig_data[date_col] <= date_end)].set_index(date_col)[target_var]
+    orig_data_log = np.log(orig_data)
+
+    if diff_order >= 1:
+        orig_data_log_diff1 = orig_data_log.diff(diff_level)
+        orig_data_act_pred_log_diff_check = orig_data_log_diff1
+    if diff_order == 2:
+        orig_data_act_pred_log_diff_check = orig_data_log_diff1.diff(diff_level)
+    act_pred_log_diff_check = pd.DataFrame(list(zip(orig_data_act_pred_log_diff_check, pred_log_diff)),
+                                           columns=['act', 'pred']).set_index(orig_data_log.index)
+    act_pred_log_diff_check.to_csv(
+        f'{tables_path_res}{target_country}/{model}_{target_country}_act_pred_log_diff_check.csv')
+
+    if diff_order == 2:
+        pred1 = np.zeros(len(orig_data_log_diff1))
+        pred1[diff_level:2 * diff_level] = orig_data_log_diff1[diff_level:2 * diff_level]
+        for i in range(2 * diff_level, len(orig_data_log_diff1)):
+            pred1[i] = pred1[i - diff_level] + pred_log_diff[i]
+
+    pred2 = np.zeros(len(orig_data_log))
+    pred2[:diff_level] = orig_data_log[:diff_level]
+    for i in range(diff_level, len(orig_data_log)):
+        if diff_order == 1:
+            pred2[i] = pred2[i - diff_level] + pred_log_diff[i]
+        if diff_order == 2:
+            pred2[i] = pred2[i - diff_level] + pred1[i]
+
+    act_pred_log = pd.DataFrame(list(zip(orig_data_log, pred2)),
+                                columns=['act', 'pred']).set_index(orig_data_log.index)
+    act_pred_log['error'] = act_pred_log['pred'] - act_pred_log['act']
+    if save_results:
+        act_pred_log.to_csv(f'{tables_path_res}{target_country}/{model}_{target_country}_act_pred_log.csv')
+
+    return act_pred_log

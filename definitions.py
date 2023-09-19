@@ -15,7 +15,7 @@ all_paths = [data_source_path, data_path,
 
 # PRINTING, SHOWING PLOTS
 show_results = True
-show_plots = True
+show_plots = False
 fig_size = (10, 6)
 
 save_results = True

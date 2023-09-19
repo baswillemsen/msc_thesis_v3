@@ -46,7 +46,7 @@ def plot_series(i: int, series: object, country_path: str, target_country: str, 
 
 
 # print lasso path for given alphas and LASSO solution
-def plot_lasso_path(X: list, y: list, target_country: str,
+def plot_lasso_path(X: list, y: list, target_country: str, model: str,
                     alpha_min: float, alpha_max: float, alpha_step: float, lasso_iters: int):
     alphas = np.arange(alpha_min, alpha_max, alpha_step)
     lasso = Lasso(max_iter=lasso_iters)
@@ -64,13 +64,13 @@ def plot_lasso_path(X: list, y: list, target_country: str,
     plt.xlabel('alpha')
     plt.ylabel('weights')
     if save_figs:
-        plt.savefig(f'{figures_path_res}{target_country}/{target_country}_lasso_path.png',
+        plt.savefig(f'{figures_path_res}{target_country}/{model}_{target_country}_lasso_path.png',
                     bbox_inches='tight', pad_inches=0)
     if show_plots:
         plt.show()
 
 
-def plot_predictions(df: object, target_country: str, log: str):
+def plot_predictions(df: object, target_country: str, log: str, model: str):
     if log == 'log':
         act = df['act']
         pred = df['pred']
@@ -84,13 +84,13 @@ def plot_predictions(df: object, target_country: str, log: str):
     plt.axvline(x=list(act.index).index(get_impl_date(target_country)), c='black')
     plt.legend()
     if save_figs:
-        plt.savefig(f'{figures_path_res}{target_country}/{target_country}_act_pred_{log}.png',
+        plt.savefig(f'{figures_path_res}{target_country}/{model}_{target_country}_act_pred_{log}.png',
                     bbox_inches='tight', pad_inches=0)
     if show_plots:
         plt.show()
 
 
-def plot_diff(df: object, target_country: str):
+def plot_diff(df: object, target_country: str, model: str):
     diff = df['error']
 
     plt.figure(figsize=fig_size)
@@ -99,13 +99,13 @@ def plot_diff(df: object, target_country: str):
     plt.tight_layout()
     plt.legend()
     if save_figs:
-        plt.savefig(f'{figures_path_res}{target_country}/{target_country}_act_pred_log_diff.png',
+        plt.savefig(f'{figures_path_res}{target_country}/{model}_{target_country}_act_pred_log_diff.png',
                     bbox_inches='tight', pad_inches=0)
     if show_plots:
         plt.show()
 
 
-def plot_cumsum(df: object, target_country: str):
+def plot_cumsum(df: object, target_country: str, model: str):
     act = df['act'].cumsum()
     pred = df['pred'].cumsum()
 
@@ -115,7 +115,7 @@ def plot_cumsum(df: object, target_country: str):
     plt.axvline(x=list(act.index).index(get_impl_date(target_country)), c='black')
     plt.legend()
     if save_figs:
-        plt.savefig(f'{figures_path_res}{target_country}/{target_country}_cumsum.png',
+        plt.savefig(f'{figures_path_res}{target_country}/{model}_{target_country}_cumsum.png',
                     bbox_inches='tight', pad_inches=0)
     if show_plots:
         plt.show()

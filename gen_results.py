@@ -9,15 +9,17 @@ from main import main
 from definitions import target_countries
 
 
-def gen_results(model: str, timeframe: str):
+def gen_results(timeframe: str):
 
     # preprocess()
+    for model in ['arco']:
 
-    for target_country in target_countries:
-        print('============================================================')
-        main(model=model, timeframe=timeframe, target_country=target_country)
-        print("\n")
+        for target_country in target_countries:
+
+            print('============================================================')
+            main(model=model, timeframe=timeframe, target_country=target_country)
+            print("\n")
 
 
 if __name__ == "__main__":
-    gen_results(model=sys.argv[1], timeframe=sys.argv[2])
+    gen_results(timeframe=sys.argv[1])

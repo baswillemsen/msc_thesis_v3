@@ -274,8 +274,8 @@ def preprocess():
                                     )
 
     infl_m, infl_q = preprocess_infl_m(source_file='infl_m_2000_2023',
-                                      source_country_col='Country',
-                                      var_name='infl'
+                                       source_country_col='Country',
+                                       var_name='infl'
                                       )
 
     gdp_m, gdp_q = preprocess_WB_q(source_file='gdp_q_1990_2022',
