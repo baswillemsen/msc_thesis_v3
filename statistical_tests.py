@@ -6,8 +6,7 @@ import sys
 import pandas as pd
 import numpy as np
 
-from definitions import show_results, save_results, \
-    country_col, date_col, timeframe_val, sign_level
+from definitions import show_results, save_results, country_col, date_col, timeframe_val, sign_level
 from helper_functions import read_data, get_timescale, get_trans, get_impl_date, get_data_path, get_table_path
 
 from statsmodels.tsa.stattools import adfuller
@@ -38,46 +37,48 @@ def adf_test(sign_level: float = sign_level):
 
             for series in trans.keys():
                 df_country_series = df_country[series]
+                if sum(df_country_series <= 0) != 0:
+                    continue
+                else:
+                    for log in [0, 1]:
+                        if log == 1:
+                            df_country_series = np.log(df_country_series)
 
-                for log in [0, 1]:
-                    if (log == 1) and (sum(df_country_series <= 0) == 0):
-                        df_country_series = np.log(df_country_series)
+                        diff_timescope = get_timescale(timeframe)
+                        for diff_level in [0, 1, 2, diff_timescope, 2*diff_timescope]:
 
-                    diff_timescope = get_timescale(timeframe)
-                    for diff_level in [0, 1, 2, diff_timescope, 2*diff_timescope]:
+                            for diff_order in [1, 2]:
 
-                        for diff_order in [1, 2]:
+                                for reg in ['c', 'ct', 'ctt', 'n']:
 
-                            for reg in ['c', 'ct', 'ctt', 'n']:
+                                    print(timeframe, country, series, diff_level, diff_order)
+                                    country_list.append(country)
+                                    series_list.append(series)
+                                    log_list.append(log)
+                                    diff_level_list.append(diff_level)
+                                    diff_order_list.append(diff_order)
+                                    reg_list.append(reg)
 
-                                # print(country, series, diff_level)
-                                country_list.append(country)
-                                series_list.append(series)
-                                log_list.append(log)
-                                diff_level_list.append(diff_level)
-                                diff_order_list.append(diff_order)
-                                reg_list.append(reg)
-
-                                if diff_level == 0:
-                                    df_country_series_diff = df_country_series.dropna()
-                                    df_country_series_diff_diff = df_country_series_diff.dropna()
-                                else:
-                                    df_country_series_diff = df_country_series.diff(periods=diff_level).dropna()
-
-                                    if diff_order == 1:
+                                    if diff_level == 0:
+                                        df_country_series_diff = df_country_series.dropna()
                                         df_country_series_diff_diff = df_country_series_diff.dropna()
-                                    elif diff_order == 2:
-                                        df_country_series_diff_diff = df_country_series_diff.diff(periods=diff_level).dropna()
+                                    else:
+                                        df_country_series_diff = df_country_series.diff(periods=diff_level).dropna()
 
-                                adf_res = adfuller(x=df_country_series_diff_diff, regression=reg)
-                                p_value_list.append(adf_res[1])
-                                if adf_res[1] < sign_level:
-                                    stat_list.append(1)
-                                    break
-                                elif adf_res[1] >= sign_level:
-                                    stat_list.append(0)
-                                else:
-                                    raise ValueError('Adf-test not performed')
+                                        if diff_order == 1:
+                                            df_country_series_diff_diff = df_country_series_diff.dropna()
+                                        elif diff_order == 2:
+                                            df_country_series_diff_diff = df_country_series_diff.diff(periods=diff_level).dropna()
+
+                                    adf_res = adfuller(x=df_country_series_diff_diff, regression=reg)
+                                    p_value_list.append(adf_res[1])
+                                    if adf_res[1] < sign_level:
+                                        stat_list.append(1)
+                                        break
+                                    elif adf_res[1] >= sign_level:
+                                        stat_list.append(0)
+                                    else:
+                                        raise ValueError('Adf-test not performed')
 
         df_stat = pd.DataFrame(list(zip(country_list, series_list, log_list, diff_level_list, diff_order_list,
                                         reg_list, stat_list, p_value_list)),

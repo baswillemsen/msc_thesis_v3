@@ -11,9 +11,9 @@ from definitions import target_countries
 
 def gen_results(timeframe: str):
 
-    preprocess()
+    # preprocess()
 
-    for model in ['arco', 'sc']:
+    for model in ['arco']:
 
         for target_country in target_countries:
             print('============================================================')
