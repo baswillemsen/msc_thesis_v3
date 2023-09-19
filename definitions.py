@@ -15,7 +15,7 @@ all_paths = [data_source_path, data_path,
 
 # PRINTING, SHOWING PLOTS
 show_results = True
-show_plots = False
+show_plots = True
 fig_size = (10, 6)
 
 save_results = True
@@ -23,7 +23,7 @@ save_figs = True
 
 # NON-STATIC DEFINITIONS
 target_var = 'co2'
-stat = 'non_stat'
+stat = 'stat'
 sign_level = 0.05
 fake_num = -99999
 
@@ -35,6 +35,9 @@ date_col = 'date'
 
 model_val = ['arco', 'sc']
 timeframe_val = ['m', 'q']
+
+interpolation_val = ['median', 'linear']
+agg_val = ['sum', 'mean']
 
 # COUNTRIES, YEARS INCLUDED
 target_countries = ['switzerland',

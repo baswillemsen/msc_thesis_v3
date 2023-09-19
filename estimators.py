@@ -99,11 +99,13 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
 
         # summarize chosen configuration
         date_start = df_stat['date'].iloc[0]
+        date_end = df_stat['date'].iloc[-1]
         _, diff_level, diff_order = get_trans(timeframe=timeframe)[target_var]
 
         orig_data = df.copy()
         orig_data = orig_data[(orig_data[country_col] == target_country) &
-                              (orig_data[date_col] >= date_start)].set_index(date_col)[target_var]
+                              (orig_data[date_col] >= date_start) &
+                              (orig_data[date_col] <= date_end)].set_index(date_col)[target_var]
         orig_data_log = np.log(orig_data)
 
         if diff_order >= 1:

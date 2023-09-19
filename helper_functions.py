@@ -8,7 +8,7 @@ import datetime as dt
 
 from definitions import target_var, data_path, incl_countries, incl_years, donor_countries, target_countries, \
     country_col, year_col, month_col, quarter_col, date_col, model_val, timeframe_val, tables_path_res, save_results, \
-    fake_num, figures_path_data
+    fake_num, figures_path_data, agg_val, interpolation_val
 
 
 def get_data_path(timeframe: str):
@@ -31,22 +31,24 @@ def get_trans(timeframe: str = None):
         trans = {
             'co2': (True, 12, 1)
             , 'gdp': (True, 12, 2)
+            , 'infl': (False, 12, 1)
             , 'pop': (True, 12, 2)
+            , 'brent': (True, 12, 2)
             , 'co2_cap': (True, 12, 2)
             , 'gdp_cap': (True, 12, 2)
         }
     elif timeframe == 'q':
         trans = {
-            'co2': (True, 4, 2)
+            'co2': (True, 4, 1)
             , 'gdp': (True, 4, 2)
+            , 'infl': (False, 4, 1)
             , 'pop': (True, 4, 2)
+            , 'brent': (True, 4, 2)
             , 'co2_cap': (True, 4, 2)
             , 'gdp_cap': (True, 4, 2)
         }
     else:
-        trans = ['co2', 'gdp', 'pop', 'co2_cap', 'gdp_cap']
-        # trans = ['co2', 'gdp', 'pop']
-        # trans = ['gdp', 'pop']
+        trans = ['co2', 'gdp', 'infl', 'pop', 'brent', 'co2_cap', 'gdp_cap']
 
     return trans
 
@@ -185,13 +187,22 @@ def select_country_year_measure(df: object, country_col: str = None, year_col: s
     return df
 
 
-def rename_order_scale(df: object, source_country_col: str, source_year_col: str, timeframe: str,
-                       var_name: str, var_scale: float):
-    df = df.rename(columns={source_country_col: country_col, source_year_col: year_col})
+def rename_order_scale(df: object, source_country_col: str = None, source_year_col: str = None, source_date_col: str = None,
+                       timeframe: str = None, var_name: str = None, var_scale: float = None):
+    if source_country_col is not None:
+        df = df.rename(columns={source_country_col: country_col})
+    if source_year_col is not None:
+        df = df.rename(columns={source_year_col: year_col})
+    if source_date_col is not None:
+        df = df.rename(columns={source_date_col: date_col})
 
     period_col = get_timeframe_col(timeframe)
-    df = df[[country_col, date_col, year_col, period_col, var_name]]
-    df = df.sort_values(by=[country_col, year_col, period_col])
+    if country_col in df.columns:
+        df = df[[country_col, date_col, year_col, period_col, var_name]]
+        df = df.sort_values(by=[country_col, year_col, period_col])
+    else:
+        df = df[[date_col, year_col, quarter_col, var_name]]
+        df = df.sort_values(by=[year_col, quarter_col])
 
     df[var_name] = df[var_name].astype(float) * var_scale
     df = df.reset_index(drop=True)
@@ -199,19 +210,35 @@ def rename_order_scale(df: object, source_country_col: str, source_year_col: str
     return df
 
 
-def downsample_month_to_quarter(df_m: object, var_name: str):
-    df_q = pd.DataFrame({var_name: [],
-                         country_col: []}
-                        )
+def downsample_month_to_quarter(df_m: object, var_name: str, agg: str):
+    if country_col in df_m.columns:
+        df_q = pd.DataFrame({var_name: [],
+                             country_col: []}
+                            )
 
-    for country in df_m[country_col].unique():
-        df_country = df_m.copy()
-        df_country = df_country[df_country[country_col] == country]
-        df_country = df_country.set_index(date_col)[var_name]
-        df_country = df_country.resample('Q', convention='start').sum().to_frame()
-        df_country[country_col] = [country] * len(df_country)
+        for country in df_m[country_col].unique():
+            df_country = df_m.copy()
+            df_country = df_country[df_country[country_col] == country]
+            df_country = df_country.set_index(date_col)[var_name]
+            if agg == 'sum':
+                df_country = df_country.resample('Q', convention='start').sum().to_frame()
+            elif agg == 'mean':
+                df_country = df_country.resample('Q', convention='start').mean().to_frame()
+            else:
+                raise ValueError(f'Input a valid agg argument: {agg_val}')
+            df_country[country_col] = [country] * len(df_country)
 
-        df_q = pd.concat([df_q, df_country], axis=0)
+            df_q = pd.concat([df_q, df_country], axis=0)
+
+    else:
+        df_q = df_m.copy()
+        df_q = df_q.set_index(date_col)[var_name]
+        if agg == 'sum':
+            df_q = df_q.resample('Q', convention='start').sum().to_frame()
+        elif agg == 'mean':
+            df_q = df_q.resample('Q', convention='start').mean().to_frame()
+        else:
+            raise ValueError(f'Input a valid agg argument: {agg_val}')
 
     df_q = df_q.reset_index()
     df_q = df_q.rename(columns={'index': date_col})
@@ -220,8 +247,12 @@ def downsample_month_to_quarter(df_m: object, var_name: str):
     df_q[year_col] = df_q[date_col].dt.year
     df_q[quarter_col] = df_q[date_col].dt.quarter
 
-    df_q = df_q[[country_col, date_col, year_col, quarter_col, var_name]]
-    df_q = df_q.sort_values(by=[country_col, year_col, quarter_col])
+    if country_col in df_m.columns:
+        df_q = df_q[[country_col, date_col, year_col, quarter_col, var_name]]
+        df_q = df_q.sort_values(by=[country_col, year_col, quarter_col])
+    else:
+        df_q = df_q[[date_col, year_col, quarter_col, var_name]]
+        df_q = df_q.sort_values(by=[year_col, quarter_col])
 
     return df_q
 
@@ -273,7 +304,7 @@ def interpolate_series(series: object, method='linear'):
         return new_series
 
     else:
-        raise ValueError('Please specify the interpolation method (median / linear)')
+        raise ValueError(f'Input a valid method argument: {interpolation_val}')
 
 
 def arco_pivot(df: object, target_country: str):
@@ -285,6 +316,7 @@ def arco_pivot(df: object, target_country: str):
     donors.columns = donors.columns.to_flat_index()
     donors.columns = [str(col_name[1]) + ' ' + str(col_name[0]) for col_name in donors.columns]
     donors = donors.reindex(sorted(donors.columns), axis=1)
+    donors = donors.T.drop_duplicates().T
     donors = donors.dropna(axis=0)
 
     donors = donors.drop(columns=donors.columns[(donors == fake_num).any()])
