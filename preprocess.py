@@ -9,7 +9,7 @@ from definitions import data_source_path, corr_country_names, sign_level, fake_n
         country_col, year_col, quarter_col, month_col, date_col, incl_countries, show_results
 from helper_functions import read_data, select_country_year_measure, month_name_to_num, rename_order_scale, \
     downsample_month_to_quarter, quarter_to_month, upsample_quarter_to_month, get_timeframe_col, get_trans, \
-    get_data_path, get_fig_path
+    get_data_path, get_fig_path, interpolate_series
 from statistical_tests import stat_test
 from plot_functions import plot_series
 
@@ -108,6 +108,38 @@ def preprocess_infl_m(source_file: str, source_country_col: str, var_name: str):
     return infl_m, infl_q
 
 
+def preprocess_ind_prod_m(source_file: str, source_country_col: str, var_name: str):
+    ind_prod_m = read_data(source_path=data_source_path, file_name=source_file)
+
+    # lowercase, replace country names
+    ind_prod_m[source_country_col] = ind_prod_m[source_country_col].str.lower()
+    ind_prod_m = ind_prod_m.replace({source_country_col: corr_country_names})
+
+    ind_prod_m = ind_prod_m.melt(id_vars=[source_country_col],
+                                 value_vars=ind_prod_m.drop([source_country_col], axis=1),
+                                 value_name=var_name)
+
+    ind_prod_m[date_col] = pd.to_datetime(ind_prod_m['variable'])
+    ind_prod_m[year_col] = ind_prod_m[date_col].dt.year
+    ind_prod_m[month_col] = ind_prod_m[date_col].dt.month
+    ind_prod_m = ind_prod_m.drop('variable', axis=1)
+
+    ind_prod_m = select_country_year_measure(df=ind_prod_m, year_col=year_col, country_col=source_country_col)
+    ind_prod_m = ind_prod_m.replace({':': np.nan})
+
+    ind_prod_m = rename_order_scale(df=ind_prod_m, source_country_col=source_country_col,
+                                    var_name=var_name, var_scale=1e-2, timeframe='m')
+    ind_prod_m['ind_prod'] = interpolate_series(series=ind_prod_m['ind_prod'], method='median')
+
+    ind_prod_q = downsample_month_to_quarter(df_m=ind_prod_m, var_name=var_name, agg='mean')
+
+    # export to csv
+    ind_prod_m.to_csv(f'{get_data_path(timeframe="m")}/{var_name}_m.csv')
+    ind_prod_q.to_csv(f'{get_data_path(timeframe="q")}/{var_name}_q.csv')
+
+    return ind_prod_m, ind_prod_q
+
+
 # Quarterly GDP data
 def preprocess_WB_q(source_file: str, source_country_col: str, source_time_col: str,
                     source_measure_col: str, source_incl_measure: list, var_name: str):
@@ -145,9 +177,11 @@ def preprocess_WB_q(source_file: str, source_country_col: str, source_time_col: 
     return df_m, df_q
 
 
-def total_join(co2: object, pop: object, gdp: object, infl: object, brent: object, key_cols: list, timeframe: str):
+def total_join(co2: object, pop: object, gdp: object, ind_prod: object,
+               infl: object, brent: object, key_cols: list, timeframe: str):
     total = co2.copy()
     total = total.merge(gdp, how='left', on=key_cols)
+    total = total.merge(ind_prod, how='left', on=key_cols)
     total = total.merge(infl, how='left', on=key_cols)
     total = total.merge(pop, how='left', on=key_cols)
     total = total.merge(brent, how='left', on=key_cols.remove(country_col))
@@ -155,7 +189,7 @@ def total_join(co2: object, pop: object, gdp: object, infl: object, brent: objec
     total[f'co2_cap'] = total[f'co2'] / total[f'pop']
     total[f'gdp_cap'] = total[f'gdp'] / total[f'pop']
 
-    total = total.dropna(axis=0, how='any', subset=total.columns.drop('infl'))
+    total = total.dropna(axis=0, how='any', subset=total.columns.drop(['infl', 'ind_prod']))
     total = total.fillna(fake_num).reset_index(drop=True)
     total.to_csv(f'{get_data_path(timeframe=timeframe)}/total_{timeframe}.csv', header=True, index=False)
 
@@ -243,6 +277,7 @@ def make_stat(df: object, timeframe: str):
                                   columns=[country_col, date_col, year_col, period_col])
         total_stat['co2'] = co2_list
         total_stat['gdp'] = gdp_list
+        total_stat['ind_prod'] = ind_prod_list
         total_stat['infl'] = infl_list
         total_stat['pop'] = pop_list
         total_stat['brent'] = brent_list
@@ -271,7 +306,12 @@ def preprocess():
     infl_m, infl_q = preprocess_infl_m(source_file='infl_m_2000_2023',
                                        source_country_col='Country',
                                        var_name='infl'
-                                      )
+                                       )
+
+    ind_prod_m, ind_prod_q = preprocess_ind_prod_m(source_file='ind_prod_m_1953_2023',
+                                                   source_country_col='Country',
+                                                   var_name='ind_prod'
+                                                   )
 
     gdp_m, gdp_q = preprocess_WB_q(source_file='gdp_q_1990_2022',
                                    source_country_col='Country',
@@ -297,13 +337,13 @@ def preprocess():
 
     # total monthly
     timeframe = 'm'
-    total_m = total_join(co2=co2_m, pop=pop_m, gdp=gdp_m, brent=brent_m, infl=infl_m,
+    total_m = total_join(co2=co2_m, pop=pop_m, gdp=gdp_m, brent=brent_m, infl=infl_m, ind_prod=ind_prod_m,
                          key_cols=[country_col, date_col, year_col, month_col], timeframe=timeframe)
     make_stat(df=total_m, timeframe=timeframe)
 
     # total quarterly
     timeframe = 'q'
-    total_q = total_join(co2=co2_q, pop=pop_q, gdp=gdp_q, brent=brent_q, infl=infl_q,
+    total_q = total_join(co2=co2_q, pop=pop_q, gdp=gdp_q, brent=brent_q, infl=infl_q, ind_prod=ind_prod_q,
                          key_cols=[country_col, date_col, year_col, quarter_col], timeframe=timeframe)
     make_stat(df=total_q, timeframe=timeframe)
 

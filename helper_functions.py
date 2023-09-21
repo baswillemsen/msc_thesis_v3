@@ -70,6 +70,7 @@ def get_trans(timeframe: str = None):
         trans = {
             'co2': (True, 12, 1)
             , 'gdp': (True, 12, 2)
+            , 'ind_prod': (False, 12, 1)
             , 'infl': (False, 12, 1)
             , 'pop': (True, 12, 2)
             , 'brent': (True, 12, 2)
@@ -80,6 +81,7 @@ def get_trans(timeframe: str = None):
         trans = {
             'co2': (True, 4, 1)
             , 'gdp': (True, 4, 2)
+            , 'ind_prod': (False, 4, 1)
             , 'infl': (False, 4, 1)
             , 'pop': (True, 4, 2)
             , 'brent': (True, 4, 2)
@@ -87,7 +89,15 @@ def get_trans(timeframe: str = None):
             , 'gdp_cap': (True, 4, 2)
         }
     else:
-        trans = ['co2', 'gdp', 'infl', 'pop', 'brent', 'co2_cap', 'gdp_cap']
+        trans = ['co2'
+                 , 'gdp'
+                 , 'ind_prod'
+                 , 'infl'
+                 , 'pop'
+                 , 'brent'
+                 , 'co2_cap'
+                 , 'gdp_cap'
+                 ]
 
     return trans
 

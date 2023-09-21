@@ -53,7 +53,7 @@ donor_countries = ['austria',
                    'netherlands',
                    'romania',
                    'slovakia',
-                   'spain'
+                   'spain',
                    ]  # 14x
 incl_countries = target_countries + donor_countries
 incl_countries.sort()
