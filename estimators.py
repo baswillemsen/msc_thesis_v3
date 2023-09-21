@@ -18,16 +18,17 @@ import SparseSC
 
 # custom functions
 from definitions import fake_num, save_results, show_plots, sign_level, save_figs
-from helper_functions import flatten, arco_pivot, sc_pivot, get_impl_date, transform_back, get_table_path, get_fig_path
-from plot_functions import plot_lasso_path, plot_predictions
+from helper_functions import flatten, arco_pivot, sc_pivot, get_impl_date, transform_back, get_table_path
+from plot_functions import plot_lasso_path, plot_predictions_exp
 from statistical_tests import shapiro_wilk_test
 
 
 ################################
 ### Arco method              ###
 ################################
-def arco(df: object, df_stat: object, target_country: str, timeframe: str,
-         alpha_min: float, alpha_max: float, alpha_step: float, lasso_iters: int, model: str):
+def arco(df: object, df_stat: object, target_country: str, timeframe: str, ts_splits: int,
+         alpha_min: float, alpha_max: float, alpha_step: float, tol: float, lasso_iters: int,
+         model: str):
     # pivot target and donors
     target_log_diff, donors_log_diff = arco_pivot(df=df_stat, target_country=target_country,
                                                   timeframe=timeframe, model=model)
@@ -71,20 +72,26 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
 
         # define model
         ts_split = TimeSeriesSplit(n_splits=5)
+        # print(ts_split)
+        # for i, (train_index, test_index) in enumerate(ts_split.split(X_log_diff_pre_stand)):
+        #     print(f"Fold {i}:")
+        #     print(f"  Train: index={train_index}")
+        #     print(f"  Test:  index={test_index}")
+
         lasso = LassoCV(
-            alphas=np.arange(0.001, 1, 0.001),
+            alphas=np.arange(alpha_min, alpha_max, alpha_step),
             fit_intercept=True,
             cv=ts_split,
-            max_iter=1000000,
-            tol=0.00001,
+            max_iter=lasso_iters,
+            tol=tol,
             n_jobs=-1,
             random_state=0,
             selection='random'
         )
 
         # fit model
-        # model.fit(X_log_diff_pre_stand, y_log_diff_pre_stand.ravel())  # very good results
-        lasso.fit(X_log_diff_pre_stand_train, y_log_diff_pre_stand_train.ravel())  # very wack results
+        # lasso.fit(X_log_diff_pre_stand, y_log_diff_pre_stand.ravel())  # very good results
+        lasso.fit(X_log_diff_pre_stand_train, y_log_diff_pre_stand_train.ravel())  # very good results
 
         # summarize chosen configuration
         act_log_diff = flatten(y_log_diff)
@@ -98,15 +105,15 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
         if save_results:
             act_pred_log_diff.to_csv(f'{tables_path_res}/{model}_{target_country}_{timeframe}_act_pred_log_diff.csv')
         if show_plots or save_figs:
-            plot_predictions(df=act_pred_log_diff, target_country=target_country, timeframe=timeframe,
-                             log='exp', model=model)
+            plot_predictions_exp(df=act_pred_log_diff, target_country=target_country, timeframe=timeframe, model=model)
 
         act_pred_log = transform_back(df=df, df_stat=df_stat, target_country=target_country,
                                       timeframe=timeframe, pred_log_diff=pred_log_diff, model=model)
 
-        print(f'R2: {lasso.score(X_log_diff_pre_stand, y_log_diff_pre_stand)}')
+        print(f'R2 pre-stand: {lasso.score(X_log_diff_pre_stand, y_log_diff_pre_stand)}')
+        print(f'R2 pre-stand-train: {lasso.score(X_log_diff_pre_stand_train, y_log_diff_pre_stand_train)}')
         print(f'alpha: {lasso.alpha_}')
-        print(f'mse path: {lasso.mse_path_}')
+        # print(f'mse path: {lasso.mse_path_}')
 
         coefs = list(lasso.coef_)
         coef_index = [i for i, val in enumerate(coefs) if val != 0]
@@ -143,8 +150,7 @@ def sc(df: object, df_stat: object, target_country: str, timeframe: str, model: 
     if save_results:
         act_pred_log_diff.to_csv(f'{tables_path_res}/{model}_{target_country}_{timeframe}_act_pred_log_diff.csv')
     if show_plots or save_figs:
-        plot_predictions(df=act_pred_log_diff, target_country=target_country, timeframe=timeframe,
-                         log='exp', model=model)
+        plot_predictions_exp(df=act_pred_log_diff, target_country=target_country, timeframe=timeframe, model=model)
 
     act_pred_log = transform_back(df=df, df_stat=df_stat, target_country=target_country,
                                   timeframe=timeframe, pred_log_diff=pred_log_diff, model=model)

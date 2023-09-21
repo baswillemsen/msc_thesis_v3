@@ -11,7 +11,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 # custom functions
 from definitions import all_paths, country_col, year_col, stat, show_plots, save_figs
 from helper_functions import read_data, validate_input, get_trans, get_data_path, get_impl_date
-from plot_functions import plot_predictions, plot_diff, plot_cumsum
+from plot_functions import plot_predictions_log, plot_predictions_exp, plot_diff, plot_cumsum, plot_cumsum_real
 from estimators import arco, sc
 
 ### define paths & static defs
@@ -40,8 +40,8 @@ def main(model: str, timeframe: str, target_country: str):
         if model == 'arco':
             act_pred_log_diff, act_pred_log = arco(df=df, df_stat=df_log_diff,
                                                    target_country=target_country, timeframe=timeframe,
-                                                   alpha_min=0.001, alpha_max=1.0, alpha_step=0.001,
-                                                   lasso_iters=100000, model=model)
+                                                   alpha_min=0.001, alpha_max=1.0, alpha_step=0.001, ts_splits=10,
+                                                   lasso_iters=1000000, tol=0.00001, model=model)
         elif model == 'sc':
             act_pred_log_diff, act_pred_log = sc(df=df, df_stat=df_log_diff,
                                                  target_country=target_country, timeframe=timeframe,
@@ -53,11 +53,11 @@ def main(model: str, timeframe: str, target_country: str):
             print("The GHG emissions series of the target country is non-stationary, ArCo method is not possible")
 
         if show_plots or save_figs:
-            for log in ['log', 'exp']:
-                plot_predictions(df=act_pred_log, target_country=target_country, timeframe=timeframe,
-                                 log=log, model=model)
+            # plot_predictions_log(df=act_pred_log, target_country=target_country, timeframe=timeframe, model=model)
+            plot_predictions_exp(df=act_pred_log, target_country=target_country, timeframe=timeframe, model=model)
             plot_diff(df=act_pred_log, target_country=target_country, timeframe=timeframe, model=model)
             plot_cumsum(df=act_pred_log_diff, target_country=target_country, timeframe=timeframe, model=model)
+            # plot_cumsum_real(df=act_pred_log_diff, target_country=target_country, timeframe=timeframe, model=model)
 
 
 if __name__ == "__main__":

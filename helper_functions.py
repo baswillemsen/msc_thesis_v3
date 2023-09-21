@@ -32,7 +32,7 @@ def get_fig_path(timeframe: str, folder: str, country: str = None):
     if folder not in folder_val:
         raise ValueError(f'Input a valid folder argument: {folder_val}')
     if country is not None:
-        if country not in incl_countries:
+        if country not in incl_countries + ['EDA']:
             raise ValueError(f'Input a valid country argument: {incl_countries}')
 
     if country is not None:
@@ -51,7 +51,7 @@ def get_table_path(timeframe: str, folder: str, country: str = None):
     if folder not in folder_val:
         raise ValueError(f'Input a valid folder argument: {folder_val}')
     if country is not None:
-        if country not in incl_countries:
+        if country not in incl_countries + ['EDA']:
             raise ValueError(f'Input a valid country argument: {incl_countries}')
 
     if country is not None:
@@ -95,8 +95,8 @@ def get_trans(timeframe: str = None):
                  , 'infl'
                  , 'pop'
                  , 'brent'
-                 , 'co2_cap'
-                 , 'gdp_cap'
+                 # , 'co2_cap'
+                 # , 'gdp_cap'
                  ]
 
     return trans
@@ -197,8 +197,10 @@ def flatten(lst):
 
 
 def first_value(target_country: str, timeframe: str):
-    df = read_data(source_path=data_path, file_name=f'total_{timeframe}')
-    orig_value = df[df['country'] == target_country].set_index('date')[target_var.replace('_stat', '')].iloc[0]
+    df = read_data(source_path=get_data_path(timeframe=timeframe), file_name=f'total_{timeframe}')
+    _, diff_level, diff_order = get_trans(timeframe=timeframe)[target_var]
+    i = diff_level * diff_order
+    orig_value = df[df[country_col] == target_country].set_index(date_col)[target_var].iloc[i]
     return orig_value
 
 
