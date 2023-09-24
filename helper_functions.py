@@ -8,7 +8,7 @@ import datetime as dt
 
 from definitions import target_var, data_path, incl_countries, incl_years, donor_countries, target_countries, \
     country_col, year_col, month_col, quarter_col, date_col, model_val, timeframe_val, save_results, \
-    fake_num, output_path, agg_val, interpolation_val, folder_val
+    fake_num, output_path, agg_val, interpolation_val, folder_val, show_plots, save_figs
 
 
 def get_data_path(timeframe: str,  country: str = None):
@@ -17,9 +17,9 @@ def get_data_path(timeframe: str,  country: str = None):
             raise ValueError(f'Input a valid country argument: {incl_countries}')
 
     if country is not None:
-        path_cor = f'{data_path}/{timeframe}/{country}/'
+        path_cor = f'{data_path}/{timeframe}/{country}'
     else:
-        path_cor = f'{data_path}/{timeframe}/'
+        path_cor = f'{data_path}/{timeframe}'
 
     if not os.path.exists(path_cor):
         os.makedirs(path_cor)
@@ -36,9 +36,9 @@ def get_fig_path(timeframe: str, folder: str, country: str = None):
             raise ValueError(f'Input a valid country argument: {incl_countries}')
 
     if country is not None:
-        path_cor = f'{output_path}/{timeframe}/figures/{folder}/{country}/'
+        path_cor = f'{output_path}/{timeframe}/figures/{folder}/{country}'
     else:
-        path_cor = f'{output_path}/{timeframe}/figures/{folder}/'
+        path_cor = f'{output_path}/{timeframe}/figures/{folder}'
 
     if not os.path.exists(path_cor):
         os.makedirs(path_cor)
@@ -55,9 +55,9 @@ def get_table_path(timeframe: str, folder: str, country: str = None):
             raise ValueError(f'Input a valid country argument: {incl_countries}')
 
     if country is not None:
-        path_cor = f'{output_path}/{timeframe}/tables/{folder}/{country}/'
+        path_cor = f'{output_path}/{timeframe}/tables/{folder}/{country}'
     else:
-        path_cor = f'{output_path}/{timeframe}/tables/{folder}/'
+        path_cor = f'{output_path}/{timeframe}/tables/{folder}'
 
     if not os.path.exists(path_cor):
         os.makedirs(path_cor)
@@ -74,8 +74,8 @@ def get_trans(timeframe: str = None):
             , 'infl': (False, 12, 1)
             , 'pop': (True, 12, 2)
             , 'brent': (True, 12, 2)
-            # , 'co2_cap': (True, 12, 2)
-            # , 'gdp_cap': (True, 12, 2)
+            , 'co2_cap': (True, 12, 2)
+            , 'gdp_cap': (True, 12, 2)
         }
     elif timeframe == 'q':
         trans = {
@@ -85,8 +85,8 @@ def get_trans(timeframe: str = None):
             , 'infl': (False, 4, 1)
             , 'pop': (True, 4, 2)
             , 'brent': (True, 4, 2)
-            # , 'co2_cap': (True, 4, 2)
-            # , 'gdp_cap': (True, 4, 2)
+            , 'co2_cap': (True, 4, 2)
+            , 'gdp_cap': (True, 4, 2)
         }
     else:
         trans = ['co2'
@@ -95,8 +95,8 @@ def get_trans(timeframe: str = None):
                  , 'infl'
                  , 'pop'
                  , 'brent'
-                 # , 'co2_cap'
-                 # , 'gdp_cap'
+                 , 'co2_cap'
+                 , 'gdp_cap'
                  ]
 
     return trans
@@ -423,10 +423,11 @@ def transform_back(df: object, df_stat: object, pred_log_diff: object, timeframe
         orig_data_act_pred_log_diff_check = orig_data_log_diff1
     if diff_order == 2:
         orig_data_act_pred_log_diff_check = orig_data_log_diff1.diff(diff_level)
+
+    # save act_pred_log_diff_check
     act_pred_log_diff_check = pd.DataFrame(list(zip(orig_data_act_pred_log_diff_check, pred_log_diff)),
                                            columns=['act', 'pred']).set_index(orig_data_log.index)
-    act_pred_log_diff_check.to_csv(
-        f'{tables_path_res}/{model}_{target_country}_{timeframe}_act_pred_log_diff_check.csv')
+    act_pred_log_diff_check['error'] = act_pred_log_diff_check['act'] - act_pred_log_diff_check['pred']
 
     if diff_order == 2:
         pred1 = np.zeros(len(orig_data_log_diff1))
@@ -442,10 +443,14 @@ def transform_back(df: object, df_stat: object, pred_log_diff: object, timeframe
         if diff_order == 2:
             pred2[i] = pred2[i - diff_level] + pred1[i]
 
+    # act_pred_log
     act_pred_log = pd.DataFrame(list(zip(orig_data_log, pred2)),
                                 columns=['act', 'pred']).set_index(orig_data_log.index)
-    act_pred_log['error'] = act_pred_log['pred'] - act_pred_log['act']
-    if save_results:
-        act_pred_log.to_csv(f'{tables_path_res}/{model}_{target_country}_{timeframe}_act_pred_log.csv')
+    act_pred_log['error'] = act_pred_log['act'] - act_pred_log['pred']
 
-    return act_pred_log
+    # act_pred
+    act_pred = pd.DataFrame(list(zip(np.exp(orig_data_log), np.exp(pred2))),
+                            columns=['act', 'pred']).set_index(orig_data_log.index)
+    act_pred['error'] = act_pred['act'] - act_pred['pred']
+
+    return act_pred_log_diff_check, act_pred_log, act_pred

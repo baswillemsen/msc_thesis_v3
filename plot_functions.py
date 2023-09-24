@@ -77,22 +77,22 @@ def plot_lasso_path(X: list, y: list, target_country: str, model: str, timeframe
         plt.show()
 
 
-def plot_predictions_exp(df: object, target_country: str, timeframe: str, model: str):
-    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=target_country)
-
-    act = np.exp(df['act'])
-    pred = np.exp(df['pred'])
-    var_name = f'{model}_{target_country}_{timeframe}_act_pred_exp'
-
-    plt.figure(figsize=fig_size)
-    plt.plot(act, label='actual')
-    plt.plot(pred, label='predicted')
-    plt.axvline(x=list(act.index).index(get_impl_date(target_country)), c='black')
-    plt.legend()
-    if save_figs:
-        plt.savefig(f'{figures_path_res}/{var_name}.png', bbox_inches='tight', pad_inches=0)
-    if show_plots:
-        plt.show()
+# def plot_predictions_exp(df: object, target_country: str, timeframe: str, model: str):
+#     figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=target_country)
+#
+#     act = np.exp(df['act'])
+#     pred = np.exp(df['pred'])
+#     var_name = f'{model}_{target_country}_{timeframe}_act_pred_exp'
+#
+#     plt.figure(figsize=fig_size)
+#     plt.plot(act, label='actual')
+#     plt.plot(pred, label='predicted')
+#     plt.axvline(x=list(act.index).index(get_impl_date(target_country)), c='black')
+#     plt.legend()
+#     if save_figs:
+#         plt.savefig(f'{figures_path_res}/{var_name}.png', bbox_inches='tight', pad_inches=0)
+#     if show_plots:
+#         plt.show()
 
 
 def plot_predictions_log(df: object, target_country: str, timeframe: str, model: str):
@@ -113,30 +113,11 @@ def plot_predictions_log(df: object, target_country: str, timeframe: str, model:
         plt.show()
 
 
-def plot_diff(df: object, target_country: str, timeframe: str, model: str):
+def plot_predictions(df: object, target_country: str, timeframe: str, var_name: str):
     figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=target_country)
 
-    diff = df['error']
-    var_name = f'{model}_{target_country}_{timeframe}_act_pred_log_diff'
-
-    plt.figure(figsize=fig_size)
-    plt.plot(diff, label='diff')
-    plt.axvline(x=list(diff.index).index(get_impl_date(target_country)), c='black')
-    plt.tight_layout()
-    plt.legend()
-    if save_figs:
-        plt.savefig(f'{figures_path_res}/{var_name}.png',
-                    bbox_inches='tight', pad_inches=0)
-    if show_plots:
-        plt.show()
-
-
-def plot_cumsum(df: object, target_country: str, timeframe: str, model: str):
-    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=target_country)
-
-    act = df['act'].cumsum()
-    pred = df['pred'].cumsum()
-    var_name = f'{model}_{target_country}_{timeframe}_cumsum'
+    act = df['act']
+    pred = df['pred']
 
     plt.figure(figsize=fig_size)
     plt.plot(act, label='actual')
@@ -144,7 +125,41 @@ def plot_cumsum(df: object, target_country: str, timeframe: str, model: str):
     plt.axvline(x=list(act.index).index(get_impl_date(target_country)), c='black')
     plt.legend()
     if save_figs:
-        plt.savefig(f'{figures_path_res}/{var_name}.png',
+        plt.savefig(f'{figures_path_res}/{var_name}.png', bbox_inches='tight', pad_inches=0)
+    if show_plots:
+        plt.show()
+
+
+def plot_diff(df: object, target_country: str, timeframe: str, var_name: str):
+    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=target_country)
+
+    diff = df['error']
+
+    plt.figure(figsize=fig_size)
+    plt.plot(diff, label='diff')
+    plt.axvline(x=list(diff.index).index(get_impl_date(target_country)), c='black')
+    plt.tight_layout()
+    plt.legend()
+    if save_figs:
+        plt.savefig(f'{figures_path_res}/{var_name}_error.png',
+                    bbox_inches='tight', pad_inches=0)
+    if show_plots:
+        plt.show()
+
+
+def plot_cumsum(df: object, target_country: str, timeframe: str, var_name: str):
+    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=target_country)
+
+    act = df['act'].cumsum()
+    pred = df['pred'].cumsum()
+
+    plt.figure(figsize=fig_size)
+    plt.plot(act, label='actual')
+    plt.plot(pred, label='predicted')
+    plt.axvline(x=list(act.index).index(get_impl_date(target_country)), c='black')
+    plt.legend()
+    if save_figs:
+        plt.savefig(f'{figures_path_res}/{var_name}_cumsum.png',
                     bbox_inches='tight', pad_inches=0)
     if show_plots:
         plt.show()

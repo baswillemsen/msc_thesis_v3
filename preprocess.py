@@ -2,6 +2,7 @@
 ### import relevant packages ###
 ################################
 import os
+import sys
 import numpy as np
 import pandas as pd
 
@@ -215,7 +216,6 @@ def make_stat(df: object, timeframe: str):
 
         for country in incl_countries:
             data_path_cor = get_data_path(timeframe=timeframe, country=country)
-            fig_path_cor = get_fig_path(timeframe=timeframe, folder='data', country=country)
 
             df_country = df[df[country_col] == country]
             country_list += list(df_country[country_col])
@@ -227,7 +227,7 @@ def make_stat(df: object, timeframe: str):
                 print(timeframe, stat, country, series)
                 df_country_series = df_country.set_index(date_col)[series]
                 var_name = f'{country}_{timeframe}_{series}_act'
-                df_country_series.to_csv(f'{data_path_cor}{var_name}.csv')
+                df_country_series.to_csv(f'{data_path_cor}/{var_name}.csv')
                 plot_series(i=i, series=df_country_series, timeframe=timeframe,
                             target_country=country, var_name=var_name)
                 i += 1
@@ -240,7 +240,7 @@ def make_stat(df: object, timeframe: str):
                 else:
                     df_country_series_log = df_country_series
                 var_name = f'{country}_{timeframe}_{series}_act_log'
-                df_country_series_log.to_csv(f'{data_path_cor}{var_name}.csv')
+                df_country_series_log.to_csv(f'{data_path_cor}/{var_name}.csv')
                 plot_series(i=i, series=df_country_series_log, timeframe=timeframe,
                             target_country=country, var_name=var_name)
                 i += 1
@@ -252,7 +252,7 @@ def make_stat(df: object, timeframe: str):
                     while j <= diff_order:
                         df_country_series_diff = df_country_series_diff.diff(periods=diff_level)
                         var_name = f'{country}_{timeframe}_{series}_act_log_diff_{j}'
-                        df_country_series_diff.to_csv(f'{data_path_cor}{var_name}.csv')
+                        df_country_series_diff.to_csv(f'{data_path_cor}/{var_name}.csv')
                         plot_series(i=i, series=df_country_series_diff, timeframe=timeframe,
                                     target_country=country, var_name=var_name)
                         i += 1
@@ -297,7 +297,7 @@ def make_stat(df: object, timeframe: str):
     return total_stat
 
 
-def preprocess():
+def preprocess(timeframes: list):
     co2_m, co2_q = preprocess_co2_m(source_file='co2_m_2000_2021',
                                     source_country_col='Name',
                                     source_year_col='Year',
@@ -338,18 +338,20 @@ def preprocess():
                                           var_name='brent'
                                           )
 
-    # total monthly
-    timeframe = 'm'
-    total_m = total_join(co2=co2_m, pop=pop_m, gdp=gdp_m, brent=brent_m, infl=infl_m, ind_prod=ind_prod_m,
-                         key_cols=[country_col, date_col, year_col, month_col], timeframe=timeframe)
-    make_stat(df=total_m, timeframe=timeframe)
+    if 'm' in timeframes:
+        # total monthly
+        timeframe = 'm'
+        total_m = total_join(co2=co2_m, pop=pop_m, gdp=gdp_m, brent=brent_m, infl=infl_m, ind_prod=ind_prod_m,
+                             key_cols=[country_col, date_col, year_col, month_col], timeframe=timeframe)
+        make_stat(df=total_m, timeframe=timeframe)
 
-    # total quarterly
-    timeframe = 'q'
-    total_q = total_join(co2=co2_q, pop=pop_q, gdp=gdp_q, brent=brent_q, infl=infl_q, ind_prod=ind_prod_q,
-                         key_cols=[country_col, date_col, year_col, quarter_col], timeframe=timeframe)
-    make_stat(df=total_q, timeframe=timeframe)
+    if 'q' in timeframes:
+        # total quarterly
+        timeframe = 'q'
+        total_q = total_join(co2=co2_q, pop=pop_q, gdp=gdp_q, brent=brent_q, infl=infl_q, ind_prod=ind_prod_q,
+                             key_cols=[country_col, date_col, year_col, quarter_col], timeframe=timeframe)
+        make_stat(df=total_q, timeframe=timeframe)
 
 
 if __name__ == "__main__":
-    preprocess()
+    preprocess(timeframes=sys.argv[1])
