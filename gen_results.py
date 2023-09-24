@@ -13,7 +13,7 @@ def gen_results(timeframe: str):
 
     # preprocess()
 
-    for model in ['arco']:
+    for model in ['sc']:
 
         for target_country in target_countries:
             print('============================================================')

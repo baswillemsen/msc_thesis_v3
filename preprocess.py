@@ -6,11 +6,11 @@ import sys
 import numpy as np
 import pandas as pd
 
-from definitions import data_source_path, corr_country_names, sign_level, fake_num, \
-        country_col, year_col, quarter_col, month_col, date_col, incl_countries, show_results
-from helper_functions import read_data, select_country_year_measure, month_name_to_num, rename_order_scale, \
+from definitions import data_source_path, corr_country_names, sign_level, fake_num, show_plots, \
+    country_col, year_col, quarter_col, month_col, date_col, incl_countries, show_results
+from helper_functions_general import read_data, select_country_year_measure, month_name_to_num, rename_order_scale, \
     downsample_month_to_quarter, quarter_to_month, upsample_quarter_to_month, get_timeframe_col, get_trans, \
-    get_data_path, get_fig_path, interpolate_series
+    get_data_path, interpolate_series
 from statistical_tests import stat_test
 from plot_functions import plot_series
 
@@ -178,6 +178,7 @@ def preprocess_WB_q(source_file: str, source_country_col: str, source_time_col: 
     return df_m, df_q
 
 
+# join all preprocessed series together into one big dataframe
 def total_join(co2: object, pop: object, gdp: object, ind_prod: object,
                infl: object, brent: object, key_cols: list, timeframe: str):
     total = co2.copy()
@@ -198,6 +199,7 @@ def total_join(co2: object, pop: object, gdp: object, ind_prod: object,
     return total
 
 
+# Make all country x variable series stationary based on (log, difference) input
 def make_stat(df: object, timeframe: str):
     i = 1
     for stat in ['stat', 'non_stat']:
@@ -228,8 +230,9 @@ def make_stat(df: object, timeframe: str):
                 df_country_series = df_country.set_index(date_col)[series]
                 var_name = f'{country}_{timeframe}_{series}_act'
                 df_country_series.to_csv(f'{data_path_cor}/{var_name}.csv')
-                plot_series(i=i, series=df_country_series, timeframe=timeframe,
-                            target_country=country, var_name=var_name)
+                if show_plots:
+                    plot_series(i=i, series=df_country_series, timeframe=timeframe,
+                                target_country=country, var_name=var_name)
                 i += 1
 
                 log, diff_level, diff_order = trans[series]
@@ -241,8 +244,9 @@ def make_stat(df: object, timeframe: str):
                     df_country_series_log = df_country_series
                 var_name = f'{country}_{timeframe}_{series}_act_log'
                 df_country_series_log.to_csv(f'{data_path_cor}/{var_name}.csv')
-                plot_series(i=i, series=df_country_series_log, timeframe=timeframe,
-                            target_country=country, var_name=var_name)
+                if show_plots:
+                    plot_series(i=i, series=df_country_series_log, timeframe=timeframe,
+                                target_country=country, var_name=var_name)
                 i += 1
 
                 # difference the series
@@ -253,8 +257,9 @@ def make_stat(df: object, timeframe: str):
                         df_country_series_diff = df_country_series_diff.diff(periods=diff_level)
                         var_name = f'{country}_{timeframe}_{series}_act_log_diff_{j}'
                         df_country_series_diff.to_csv(f'{data_path_cor}/{var_name}.csv')
-                        plot_series(i=i, series=df_country_series_diff, timeframe=timeframe,
-                                    target_country=country, var_name=var_name)
+                        if show_plots:
+                            plot_series(i=i, series=df_country_series_diff, timeframe=timeframe,
+                                        target_country=country, var_name=var_name)
                         i += 1
                         j += 1
 

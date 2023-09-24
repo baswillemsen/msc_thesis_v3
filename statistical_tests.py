@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 from definitions import show_results, save_results, country_col, date_col, timeframe_val, sign_level
-from helper_functions import read_data, get_timescale, get_trans, get_impl_date, get_data_path, get_table_path
+from helper_functions_general import read_data, get_timescale, get_trans, get_impl_date, get_data_path, get_table_path
 
 from statsmodels.tsa.stattools import adfuller
 from scipy.stats import shapiro

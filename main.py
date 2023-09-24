@@ -9,9 +9,8 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # custom functions
-from definitions import all_paths, country_col, year_col, stat, show_plots, save_figs
-from helper_functions import read_data, validate_input, get_trans, get_data_path, get_impl_date
-from plot_functions import plot_predictions, plot_diff, plot_cumsum
+from definitions import all_paths, country_col, year_col, stat
+from helper_functions_general import read_data, validate_input, get_trans, get_data_path, get_impl_date
 from estimators import arco, sc
 
 ### define paths & static defs
@@ -38,17 +37,16 @@ def main(model: str, timeframe: str, target_country: str):
 
         # run the model, get back actual and predicted values
         if model == 'arco':
-            act_pred_log_diff, act_pred_log = arco(df=df, df_stat=df_log_diff,
-                                                   target_country=target_country, timeframe=timeframe,
-                                                   alpha_min=0.001, alpha_max=1.0, alpha_step=0.001, ts_splits=5,
-                                                   lasso_iters=1000000, tol=0.00001, model=model)
+            act_pred_log_diff = arco(df=df, df_stat=df_log_diff, target_country=target_country, timeframe=timeframe,
+                                     alpha_min=0.001, alpha_max=1.0, alpha_step=0.001, ts_splits=10,
+                                     lasso_iters=100000000, tol=0.00000001, model=model)
         elif model == 'sc':
-            act_pred_log_diff, act_pred_log = sc(df=df, df_stat=df_log_diff, target_country=target_country,
-                                                 timeframe=timeframe, model=model)
+            act_pred_log_diff = sc(df=df, df_stat=df_log_diff, target_country=target_country, timeframe=timeframe,
+                                   model=model)
         else:
             raise ValueError('Select a valid model: "arco" or "sc"')
 
-        if act_pred_log_diff is None or act_pred_log is None:
+        if act_pred_log_diff is None:
             print("The GHG emissions series of the target country is non-stationary, ArCo method is not possible")
 
 
