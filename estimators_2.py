@@ -10,6 +10,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.linear_model import LassoCV
 
@@ -40,31 +41,27 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str, ts_sp
     else:
 
         ################################
-        ### FIRST PRE, SECOND STAND  ###
+        ### FIRST STAND, SECOND PRE  ###
         ################################
 
         y_log_diff = np.array(target_log_diff).reshape(-1, 1)
         X_log_diff = np.array(donors_log_diff)
 
-        y_log_diff_pre = np.array(
-            target_log_diff[target_log_diff.index < get_impl_date(target_country=target_country)]).reshape(-1, 1)
-        X_log_diff_pre = np.array(
-            donors_log_diff[donors_log_diff.index < get_impl_date(target_country=target_country)])
-        print(f'Nr of timeframes pre-intervention (t < T_0): {len(X_log_diff_pre)}')
-        print(f'Nr of timeframes post-intervention (t >= T_0): {len(donors_log_diff) - len(X_log_diff_pre)}')
-
         # Storing the fit object for later reference
         SS = StandardScaler()
-        SS_targetfit = SS.fit(y_log_diff_pre)
-        X_log_diff_stand = SS.fit_transform(X_log_diff)
+        SS_targetfit = SS.fit(y_log_diff)
 
         # Generating the standardized values of X and y
-        X_log_diff_pre_stand = SS.fit_transform(X_log_diff_pre)
-        y_log_diff_pre_stand = SS.fit_transform(y_log_diff_pre)
+        X_log_diff_stand = SS.fit_transform(X_log_diff)
+        y_log_diff_stand = SS.fit_transform(np.array(y_log_diff).reshape(-1, 1))
 
-        len_data = len(y_log_diff_pre_stand)
-        y_log_diff_pre_stand_train = y_log_diff_pre_stand[:int(0.67 * len_data)]
-        X_log_diff_pre_stand_train = X_log_diff_pre_stand[:int(0.67 * len_data)]
+        # Generating the standardized values of X and y
+        X_log_diff_stand_pre = X_log_diff_stand[:get_impl_date(target_country=target_country, input='index')]
+        y_log_diff_stand_pre = y_log_diff_stand[:get_impl_date(target_country=target_country, input='index')]
+
+        len_data = len(y_log_diff_stand_pre)
+        y_log_diff_pre_stand_train = y_log_diff_stand_pre[:int(0.67 * len_data)]
+        X_log_diff_pre_stand_train = X_log_diff_stand_pre[:int(0.67 * len_data)]
 
         if show_plots or save_figs:
             plot_lasso_path(X=X_log_diff_pre_stand_train, y=y_log_diff_pre_stand_train, target_country=target_country,
@@ -74,7 +71,7 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str, ts_sp
         # define model
         ts_split = TimeSeriesSplit(n_splits=ts_splits)
         # print(ts_split)
-        # for i, (train_index, test_index) in enumerate(ts_split.split(X_log_diff_pre_stand_train)):
+        # for i, (train_index, test_index) in enumerate(ts_split.split(X_log_diff_stand_pre)):
         #     print(f"Fold {i}:")
         #     print(f"  Train: index={train_index}")
         #     print(f"  Test:  index={test_index}")
@@ -125,7 +122,7 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str, ts_sp
                        model=model, target_country=target_country, timeframe=timeframe,
                        save_csv=True, save_predictions=True, save_diff=False, save_cumsum=False)
 
-        print(f'R2 pre-stand: {lasso.score(X_log_diff_pre_stand, y_log_diff_pre_stand)}')
+        print(f'R2 pre-stand: {lasso.score(X_log_diff_stand_pre, y_log_diff_stand_pre)}')
         print(f'R2 pre-stand-train: {lasso.score(X_log_diff_pre_stand_train, y_log_diff_pre_stand_train)}')
         print(f'alpha: {lasso.alpha_}')
 

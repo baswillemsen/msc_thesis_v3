@@ -11,7 +11,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 # custom functions
 from definitions import all_paths, country_col, year_col, stat
 from helper_functions_general import read_data, validate_input, get_trans, get_data_path, get_impl_date
-from estimators import arco, sc
+from estimators_2 import arco, sc
 
 ### define paths & static defs
 for path in all_paths:
@@ -38,7 +38,7 @@ def main(model: str, timeframe: str, target_country: str):
         # run the model, get back actual and predicted values
         if model == 'arco':
             act_pred_log_diff = arco(df=df, df_stat=df_log_diff, target_country=target_country, timeframe=timeframe,
-                                     alpha_min=0.001, alpha_max=1.0, alpha_step=0.001, ts_splits=10,
+                                     alpha_min=0.001, alpha_max=1.0, alpha_step=0.001, ts_splits=5,
                                      lasso_iters=100000000, tol=0.00000001, model=model)
         elif model == 'sc':
             act_pred_log_diff = sc(df=df, df_stat=df_log_diff, target_country=target_country, timeframe=timeframe,

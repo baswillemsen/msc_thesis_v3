@@ -14,7 +14,7 @@ from plot_functions import plot_predictions, plot_diff, plot_cumsum
 def arco_pivot(df: object, target_country: str, timeframe: str, model: str):
     tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=target_country)
 
-    target = df[df[country_col] == target_country].set_index(date_col)[target_var]
+    target = df[df[country_col] == target_country].set_index(date_col)[target_var].to_frame()
 
     donors = df.copy()
     donors = donors[donors[country_col].isin(donor_countries)].reset_index(drop=True)

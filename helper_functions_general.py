@@ -110,6 +110,13 @@ def get_impl_date(target_country: str = None, input: str = None):
                                        'france': dt.date(2014, 1, 1),
                                        'portugal': dt.date(2015, 1, 1)
                                        }
+    elif input == 'index':
+        target_countries_impl_dates = {'switzerland': 72,
+                                       'ireland': 96,
+                                       'united_kingdom': 132,
+                                       'france': 144,
+                                       'portugal': 156
+                                       }
     else:
         target_countries_impl_dates = {'switzerland': '2008-01-01',
                                        'ireland': '2010-01-01',
