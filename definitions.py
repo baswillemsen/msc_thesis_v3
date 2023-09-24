@@ -7,7 +7,7 @@ all_paths = [data_source_path, data_path, output_path]
 
 # PRINTING, SHOWING PLOTS
 show_results = True
-show_plots = True
+show_plots = False
 fig_size = (10, 6)
 
 save_results = True
@@ -16,7 +16,7 @@ save_figs = True
 # NON-STATIC DEFINITIONS
 target_var = 'co2'
 stat = 'non_stat'
-sign_level = 0.05
+sign_level = 0.1
 fake_num = -99999
 
 country_col = 'country'
@@ -71,3 +71,19 @@ corr_country_names = {'republic of cyprus': 'cyprus',
                       'switzerland and liechtenstein': 'switzerland',
                       'united kingdom': 'united_kingdom'
                       }
+
+country_name_formal = {'switzerland': 'Switzerland',
+                       'ireland': 'Ireland',
+                       'united_kingdom': 'United Kingdom',
+                       'france': 'France',
+                       'portugal': 'Portugal'}
+
+var_name_formal = {'co2': 'CO2 Emissions',
+                   'co2_cap': 'CO2 Emissions per capita',
+                   'gdp': 'GDP',
+                   'gdp_cap': 'GDP per capita',
+                   'ind_prod': 'Industrial Production',
+                   'pop': 'Population',
+                   'infl': 'Inflation',
+                   'brent': 'Brent Oil'
+                   }

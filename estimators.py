@@ -52,21 +52,25 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str, ts_sp
         # Storing the fit object for later reference
         SS = StandardScaler()
         SS_targetfit = SS.fit(y_log_diff_pre)
+        X_log_diff_stand = SS.fit_transform(X_log_diff)
 
         # Generating the standardized values of X and y
-        X_log_diff_stand = SS.fit_transform(X_log_diff)
         X_log_diff_pre_stand = SS.fit_transform(X_log_diff_pre)
         y_log_diff_pre_stand = SS.fit_transform(y_log_diff_pre)
 
-        # Split the data into training and testing set
-        X_log_diff_pre_stand_train, \
-            X_log_diff_pre_stand_test, \
-            y_log_diff_pre_stand_train, \
-            y_log_diff_pre_stand_test = train_test_split(X_log_diff_pre_stand, y_log_diff_pre_stand,
-                                                         test_size=0.25, random_state=42,
-                                                         shuffle=False)
+        # # Split the data into training and testing set
+        # X_log_diff_pre_stand_train, \
+        #     X_log_diff_pre_stand_test, \
+        #     y_log_diff_pre_stand_train, \
+        #     y_log_diff_pre_stand_test = train_test_split(X_log_diff_pre_stand, y_log_diff_pre_stand,
+        #                                                  test_size=0.25, random_state=42,
+        #                                                  shuffle=False)
+        len_data = len(y_log_diff_pre_stand)
+        X_log_diff_pre_stand_train = X_log_diff_pre_stand[:int(0.75 * len_data)]
+        y_log_diff_pre_stand_train = y_log_diff_pre_stand[:int(0.75 * len_data)]
+
         if show_plots or save_figs:
-            plot_lasso_path(X=X_log_diff_pre_stand_train, y=y_log_diff_pre_stand_train, target_country=target_country,
+            plot_lasso_path(X=X_log_diff_pre_stand, y=y_log_diff_pre_stand, target_country=target_country,
                             alpha_min=alpha_min, alpha_max=alpha_max, alpha_step=alpha_step, lasso_iters=lasso_iters,
                             model=model, timeframe=timeframe)
 

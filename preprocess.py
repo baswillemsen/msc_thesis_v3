@@ -142,7 +142,7 @@ def preprocess_ind_prod_m(source_file: str, source_country_col: str, var_name: s
 
 # Quarterly GDP data
 def preprocess_WB_q(source_file: str, source_country_col: str, source_time_col: str,
-                    source_measure_col: str, source_incl_measure: list, var_name: str):
+                    source_measure_col: str, source_incl_measure: list, var_name: str, var_scale: float):
     # read data
     df_q_raw = read_data(source_path=data_source_path, file_name=source_file)
     df_q = df_q_raw.copy()
@@ -164,7 +164,7 @@ def preprocess_WB_q(source_file: str, source_country_col: str, source_time_col: 
 
     # rename, order and scale: output = [index, country, date, value]
     df_q = rename_order_scale(df=df_q, source_country_col=source_country_col, source_year_col=year_col,
-                              timeframe='q', var_name=var_name, var_scale=1e6)
+                              timeframe='q', var_name=var_name, var_scale=var_scale)
 
     # upsample monthly to quarterly
     df_m = upsample_quarter_to_month(df_q=df_q, var_name=var_name)
@@ -191,6 +191,7 @@ def total_join(co2: object, pop: object, gdp: object, ind_prod: object,
 
     total = total.dropna(axis=0, how='any', subset=total.columns.drop(['infl', 'ind_prod']))
     total = total.fillna(fake_num).reset_index(drop=True)
+    # total = total.reset_index(drop=True)
     total.to_csv(f'{get_data_path(timeframe=timeframe)}/total_{timeframe}.csv', header=True, index=False)
 
     return total
@@ -318,7 +319,8 @@ def preprocess():
                                    source_time_col='TIME',
                                    source_measure_col='MEASURE',
                                    source_incl_measure=['CPCARSA'],
-                                   var_name='gdp'
+                                   var_name='gdp',
+                                   var_scale=1e6
                                    )
 
     pop_m, pop_q = preprocess_WB_q(source_file='pop_q_1995_2022',
@@ -326,7 +328,8 @@ def preprocess():
                                    source_time_col='TIME',
                                    source_measure_col='MEASURE',
                                    source_incl_measure=['PERSA'],
-                                   var_name='pop'
+                                   var_name='pop',
+                                   var_scale=1e3
                                    )
 
     brent_m, brent_q = preprocess_brent_m(source_file='brent_m_1990_2023',
