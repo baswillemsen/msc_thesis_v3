@@ -59,9 +59,16 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str, ts_sp
         X_log_diff_stand_pre = X_log_diff_stand[:get_impl_date(target_country=target_country, input='index')]
         y_log_diff_stand_pre = y_log_diff_stand[:get_impl_date(target_country=target_country, input='index')]
 
-        len_data = len(y_log_diff_stand_pre)
-        y_log_diff_pre_stand_train = y_log_diff_stand_pre[:int(0.67 * len_data)]
-        X_log_diff_pre_stand_train = X_log_diff_stand_pre[:int(0.67 * len_data)]
+        country_weight = {'switzerland': 0.85,
+                          'ireland': 0.8,
+                          'united_kingdom': 0.7,
+                          'france': 0.8,
+                          'portugal': 0.67
+                          }
+
+        train_weight = int(country_weight[target_country] * len(y_log_diff_stand_pre))
+        y_log_diff_pre_stand_train = y_log_diff_stand_pre[:train_weight]
+        X_log_diff_pre_stand_train = X_log_diff_stand_pre[:train_weight]
 
         if show_plots or save_figs:
             plot_lasso_path(X=X_log_diff_pre_stand_train, y=y_log_diff_pre_stand_train, target_country=target_country,

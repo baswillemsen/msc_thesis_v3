@@ -11,6 +11,7 @@ from helper_functions_general import read_data, get_timescale, get_trans, get_im
 
 from statsmodels.tsa.stattools import adfuller
 from scipy.stats import shapiro
+from scipy.stats import ttest_1samp
 
 
 # adfuller test for stationarity (unit-root test)
@@ -97,9 +98,9 @@ def adf_test(sign_level: float = sign_level):
 def shapiro_wilk_test(df: object, target_country: str, alpha: float):
     shap = shapiro(df['error'].loc[:get_impl_date(target_country)])
     if shap[1] > alpha:
-        print(f"Shapiro-Wilk test: Errors are normally distributed (p-value={round(shap[1],3)})")
+        print(f'Shapiro-Wilk test: Errors are normally distributed (p-value={round(shap[1],3)})')
     else:
-        print(f"Shapiro-Wilk test: Errors NOT normally distributed (p-value={round(shap[1],3)})")
+        print(f'Shapiro-Wilk test: Errors NOT normally distributed (p-value={round(shap[1],3)})')
 
 
 def stat_test(x: list, sign_level: float):
@@ -108,6 +109,37 @@ def stat_test(x: list, sign_level: float):
         return 'stationary'
     else:
         return 'non_stationary'
+
+
+def t_test(df: object, target_country: str):
+    df = df.set_index(date_col)
+    df_post = df[df.index >= get_impl_date(target_country=target_country)]
+    att_mean = df_post['error'].mean()
+    att_std = df_post['error'].std()
+
+    ttest_res = ttest_1samp(df_post['error'], popmean=0)
+    if ttest_res[1] < sign_level:
+        sign = 'significant'
+    else:
+        sign = 'NOT significant'
+
+    return att_mean, att_std, sign
+
+
+def t_test_result(df: object, target_country: str):
+
+    df_post = df[df.index >= get_impl_date(target_country=target_country)]
+    att_mean = df_post['error'].mean()
+    att_std = df_post['error'].std()
+
+    print(f'ATT (mean): {round(att_mean,4)}')
+    print(f'ATT (std):  {round(att_std,4)}')
+
+    ttest_res = ttest_1samp(df_post['error'], popmean=0)
+    if ttest_res[1] < sign_level:
+        print(f'Result is significant (p-value={round(ttest_res[1],3)})')
+    else:
+        print(f'Result is NOT significant (p-value={round(ttest_res[1],3)})')
 
 
 if __name__ == "__main__":

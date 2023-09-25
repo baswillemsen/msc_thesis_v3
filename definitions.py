@@ -15,7 +15,7 @@ save_figs = True
 
 # NON-STATIC DEFINITIONS
 target_var = 'co2'
-stat = 'non_stat'
+stat = 'stat'
 sign_level = 0.10
 fake_num = -99999
 

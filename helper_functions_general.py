@@ -74,8 +74,8 @@ def get_trans(timeframe: str = None):
             , 'infl': (False, 12, 1)
             , 'pop': (True, 12, 2)
             , 'brent': (True, 12, 2)
-            , 'co2_cap': (True, 12, 2)
-            , 'gdp_cap': (True, 12, 2)
+            # , 'co2_cap': (True, 12, 2)
+            # , 'gdp_cap': (True, 12, 2)
         }
     elif timeframe == 'q':
         trans = {
@@ -85,8 +85,8 @@ def get_trans(timeframe: str = None):
             , 'infl': (False, 4, 1)
             , 'pop': (True, 4, 2)
             , 'brent': (True, 4, 2)
-            , 'co2_cap': (True, 4, 2)
-            , 'gdp_cap': (True, 4, 2)
+            # , 'co2_cap': (True, 4, 2)
+            # , 'gdp_cap': (True, 4, 2)
         }
     else:
         trans = ['co2'
@@ -95,8 +95,8 @@ def get_trans(timeframe: str = None):
                  , 'infl'
                  , 'pop'
                  , 'brent'
-                 , 'co2_cap'
-                 , 'gdp_cap'
+                 # , 'co2_cap'
+                 # , 'gdp_cap'
                  ]
 
     return trans

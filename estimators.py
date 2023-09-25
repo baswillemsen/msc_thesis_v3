@@ -20,7 +20,7 @@ from definitions import fake_num, show_plots, sign_level, save_figs
 from helper_functions_general import flatten, get_impl_date
 from helper_functions_estimation import arco_pivot, sc_pivot, transform_back, save_dataframe
 from plot_functions import plot_lasso_path
-from statistical_tests import shapiro_wilk_test
+from statistical_tests import shapiro_wilk_test, t_test, t_test_result
 
 
 ################################
@@ -32,7 +32,8 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str, ts_sp
     # pivot target and donors
     target_log_diff, donors_log_diff = arco_pivot(df=df_stat, target_country=target_country,
                                                   timeframe=timeframe, model=model)
-    print(f'Nr of parameters included ({len(donors_log_diff.columns)}x): {donors_log_diff.columns}')
+    # print(f'Nr of parameters included ({len(donors_log_diff.columns)}x): {donors_log_diff.columns}')
+    print(f'Nr of parameters included: {len(donors_log_diff.columns)}x')
 
     # check the target series is stationary
     if fake_num in list(target_log_diff):
@@ -52,6 +53,7 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str, ts_sp
             donors_log_diff[donors_log_diff.index < get_impl_date(target_country=target_country)])
         print(f'Nr of timeframes pre-intervention (t < T_0): {len(X_log_diff_pre)}')
         print(f'Nr of timeframes post-intervention (t >= T_0): {len(donors_log_diff) - len(X_log_diff_pre)}')
+        print("\n")
 
         # Storing the fit object for later reference
         SS = StandardScaler()
@@ -62,9 +64,16 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str, ts_sp
         X_log_diff_pre_stand = SS.fit_transform(X_log_diff_pre)
         y_log_diff_pre_stand = SS.fit_transform(y_log_diff_pre)
 
-        len_data = len(y_log_diff_pre_stand)
-        y_log_diff_pre_stand_train = y_log_diff_pre_stand[:int(0.67 * len_data)]
-        X_log_diff_pre_stand_train = X_log_diff_pre_stand[:int(0.67 * len_data)]
+        country_weight = {'switzerland': 0.9,
+                          'ireland': 1.0,
+                          'united_kingdom': 0.8,
+                          'france': 1.0,
+                          'portugal': 0.65
+                          }
+
+        train_weight = int(country_weight[target_country] * len(y_log_diff_pre_stand))
+        y_log_diff_pre_stand_train = y_log_diff_pre_stand[:train_weight]
+        X_log_diff_pre_stand_train = X_log_diff_pre_stand[:train_weight]
 
         if show_plots or save_figs:
             plot_lasso_path(X=X_log_diff_pre_stand_train, y=y_log_diff_pre_stand_train, target_country=target_country,
@@ -125,14 +134,22 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str, ts_sp
                        model=model, target_country=target_country, timeframe=timeframe,
                        save_csv=True, save_predictions=True, save_diff=False, save_cumsum=False)
 
-        print(f'R2 pre-stand: {lasso.score(X_log_diff_pre_stand, y_log_diff_pre_stand)}')
-        print(f'R2 pre-stand-train: {lasso.score(X_log_diff_pre_stand_train, y_log_diff_pre_stand_train)}')
-        print(f'alpha: {lasso.alpha_}')
+        print(f'R2 pre-stand:       {round(lasso.score(X_log_diff_pre_stand, y_log_diff_pre_stand), 3)}')
+        print(f'R2 pre-stand-train: {round(lasso.score(X_log_diff_pre_stand_train, y_log_diff_pre_stand_train), 3)}')
+        print(f'alpha: {round(lasso.alpha_, 3)}')
 
         coefs = list(lasso.coef_)
         coef_index = [i for i, val in enumerate(coefs) if val != 0]
         print(f'Parameters estimated ({len(donors_log_diff.columns[coef_index])}x): '
               f'{list(donors_log_diff.columns[coef_index])}')
+        print("\n")
+
+        t_test_result(df=act_pred_log_diff, target_country=target_country)
+
+        # att_mean, att_std, sign = t_test(df=act_pred_log_diff, target_country=target_country)
+        # print(f'att_mean: {att_mean}')
+        # print(f'att_std: {att_std}')
+        # print(f'Result is {sign}')
 
         return act_pred_log_diff
 

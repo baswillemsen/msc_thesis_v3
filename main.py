@@ -11,7 +11,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 # custom functions
 from definitions import all_paths, country_col, year_col, stat
 from helper_functions_general import read_data, validate_input, get_trans, get_data_path, get_impl_date
-from estimators_2 import arco, sc
+from estimators  import arco, sc
 
 ### define paths & static defs
 for path in all_paths:
