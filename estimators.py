@@ -75,11 +75,6 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str, ts_sp
         y_log_diff_pre_stand_train = y_log_diff_pre_stand[:train_weight]
         X_log_diff_pre_stand_train = X_log_diff_pre_stand[:train_weight]
 
-        if show_plots or save_figs:
-            plot_lasso_path(X=X_log_diff_pre_stand_train, y=y_log_diff_pre_stand_train, target_country=target_country,
-                            alpha_min=alpha_min, alpha_max=alpha_max, alpha_step=alpha_step, lasso_iters=lasso_iters,
-                            model=model, timeframe=timeframe)
-
         # define model
         ts_split = TimeSeriesSplit(n_splits=ts_splits)
         # print(ts_split)
@@ -116,6 +111,11 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str, ts_sp
                                                     timeframe=timeframe, pred_log_diff=pred_log_diff)
 
         shapiro_wilk_test(df=act_pred_log_diff, target_country=target_country, alpha=sign_level)
+
+        if show_plots or save_figs:
+            plot_lasso_path(X=X_log_diff_pre_stand_train, y=y_log_diff_pre_stand_train, target_country=target_country,
+                            alpha_min=alpha_min, alpha_max=alpha_max, alpha_step=alpha_step, lasso_iters=lasso_iters,
+                            model=model, timeframe=timeframe, alpha_cv=lasso.alpha_)
 
         # save dataframes
         save_dataframe(df=act_pred_log_diff, var_title='act_pred_log_diff',
@@ -200,5 +200,5 @@ def sc(df: object, df_stat: object, target_country: str, timeframe: str, model: 
     return act_pred_log_diff
 
 
-def did():
+def did(df: object, df_stat: object, target_country: str, timeframe: str, model: str):
     pass

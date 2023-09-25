@@ -38,23 +38,35 @@ def arco_pivot(df: object, target_country: str, timeframe: str, model: str):
 def sc_pivot(df: object, target_country: str, timeframe: str, model: str):
     tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=target_country)
 
-    df = df[df[country_col].isin(donor_countries + [target_country])]
     df_pivot = df.copy()
+    df_pivot = df_pivot[df_pivot[country_col].isin(donor_countries + [target_country])]
     df_pivot = df_pivot.pivot(index=country_col, columns=date_col, values=target_var)
-    df_pivot = df_pivot.dropna(axis=1, how='any')
+    df_pivot = df_pivot.replace({fake_num: np.nan})
+    df_pivot = df_pivot.dropna(axis=0, how='any')
 
-    pre_treat = df_pivot.iloc[:, df_pivot.columns <= get_impl_date(target_country)]
-    post_treat = df_pivot.iloc[:, df_pivot.columns > get_impl_date(target_country)]
+    pre_treat = df_pivot.iloc[:, df_pivot.columns < get_impl_date(target_country)]
+    post_treat = df_pivot.iloc[:, df_pivot.columns >= get_impl_date(target_country)]
     treat_unit = [idx for idx, val in enumerate(df_pivot.index.values) if val == target_country]
+
     if save_results:
+        df_pivot.to_csv(f'{tables_path_res}/{model}_{target_country}_{timeframe}_full_pivot.csv')
         pre_treat.to_csv(f'{tables_path_res}/{model}_{target_country}_{timeframe}_pre_treat.csv')
         post_treat.to_csv(f'{tables_path_res}/{model}_{target_country}_{timeframe}_post_treat.csv')
 
     return df_pivot, pre_treat, post_treat, treat_unit
 
 
-def did_pivot():
+def did_pivot(df: object, target_country: str, timeframe: str, model: str):
+    tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=target_country)
+
+    df_pivot = df.copy()
+    df_pivot = df_pivot[df_pivot[country_col].isin(donor_countries + [target_country])]
+    df_pivot = df_pivot.pivot(index=country_col, columns=date_col, values=target_var)
+    df_pivot = df_pivot.replace({fake_num: np.nan})
+    df_pivot = df_pivot.dropna(axis=0, how='any')
     pass
+
+
 
 
 def transform_back(df: object, df_stat: object, pred_log_diff: object, timeframe: str, target_country: str):

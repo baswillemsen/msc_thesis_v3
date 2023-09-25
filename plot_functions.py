@@ -54,7 +54,7 @@ def plot_series(i: int, series: object, timeframe: str, target_country: str, var
 
 # print lasso path for given alphas and LASSO solution
 def plot_lasso_path(X: list, y: list, target_country: str, model: str, timeframe: str,
-                    alpha_min: float, alpha_max: float, alpha_step: float, lasso_iters: int):
+                    alpha_min: float, alpha_max: float, alpha_step: float, lasso_iters: int, alpha_cv: float):
     figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=target_country)
     var_name = f'{model}_{target_country}_{timeframe}_lasso_path'
 
@@ -68,6 +68,7 @@ def plot_lasso_path(X: list, y: list, target_country: str, model: str, timeframe
 
     fig, ax = plt.subplots(figsize=fig_size)
     ax.plot(alphas, coefs)
+    ax.axvline(x=alpha_cv, c='black')
 
     ax.set_title(f'{country_name_formal[target_country]} LASSO Path')
     ax.set_xscale('log')

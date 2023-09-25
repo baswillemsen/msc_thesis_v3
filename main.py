@@ -9,9 +9,9 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # custom functions
-from definitions import all_paths, country_col, year_col, stat
+from definitions import all_paths, country_col, year_col, stat, model_val
 from helper_functions_general import read_data, validate_input, get_trans, get_data_path, get_impl_date
-from estimators  import arco, sc
+from estimators  import arco, sc, did
 
 ### define paths & static defs
 for path in all_paths:
@@ -43,6 +43,9 @@ def main(model: str, timeframe: str, target_country: str):
         elif model == 'sc':
             act_pred_log_diff = sc(df=df, df_stat=df_log_diff, target_country=target_country, timeframe=timeframe,
                                    model=model)
+        elif model == 'did':
+            act_pred_log_diff = did(df=df, df_stat=df_log_diff, target_country=target_country, timeframe=timeframe,
+                                    model=model)
         else:
             raise ValueError('Select a valid model: "arco" or "sc"')
 

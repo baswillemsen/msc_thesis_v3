@@ -8,7 +8,7 @@ all_paths = [data_source_path, data_path, output_path]
 # PRINTING, SHOWING PLOTS
 show_results = True
 show_plots = False
-fig_size = (10, 6)
+fig_size = (10, 4)
 
 save_results = True
 save_figs = True
@@ -25,7 +25,7 @@ month_col = 'month'
 quarter_col = 'quarter'
 date_col = 'date'
 
-model_val = ['arco', 'sc']
+model_val = ['arco', 'sc', 'did']
 timeframe_val = ['m', 'q']
 folder_val = ['data', 'methodology', 'results']
 
