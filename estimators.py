@@ -155,6 +155,7 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str, ts_sp
 
 
 def sc(df: object, df_stat: object, target_country: str, timeframe: str, model: str):
+    # stationary input
     # pivot target and donors
     df_pivot, pre_treat, post_treat, treat_unit = sc_pivot(df=df_stat, target_country=target_country,
                                                            timeframe=timeframe, model=model)
@@ -197,7 +198,31 @@ def sc(df: object, df_stat: object, target_country: str, timeframe: str, model: 
                    model=model, target_country=target_country, timeframe=timeframe,
                    save_csv=True, save_predictions=True, save_diff=False, save_cumsum=False)
 
-    return act_pred_log_diff
+    # # normal input = same results
+    # df_pivot, pre_treat, post_treat, treat_unit = sc_pivot(df=df, target_country=target_country,
+    #                                                        timeframe=timeframe, model=model)
+    #
+    # # define the SC estimator
+    # sc = SparseSC.fit(
+    #     features=np.array(pre_treat),
+    #     targets=np.array(post_treat),
+    #     treated_units=treat_unit
+    # )
+    #
+    # # Predict the series, make act_pred dataframe
+    # act_pred = df_pivot.loc[df_pivot.index == target_country].T
+    # act_pred.columns = ['act']
+    # pred = sc.predict(df_pivot.values)[treat_unit, :][0]
+    # act_pred['pred'] = pred
+    # act_pred['error'] = act_pred['pred'] - act_pred['act']
+    #
+    # shapiro_wilk_test(df=act_pred, target_country=target_country, alpha=sign_level)
+    #
+    # save_dataframe(df=act_pred, var_title='act_pred',
+    #                model=model, target_country=target_country, timeframe=timeframe,
+    #                save_csv=True, save_predictions=True, save_diff=True, save_cumsum=True)
+
+    return act_pred
 
 
 def did(df: object, df_stat: object, target_country: str, timeframe: str, model: str):
