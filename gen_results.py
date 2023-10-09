@@ -6,7 +6,7 @@ import sys
 from preprocess import preprocess
 from main import main
 
-from definitions import target_countries
+from definitions import treatment_countries
 
 
 def gen_results(timeframe: str):
@@ -15,9 +15,9 @@ def gen_results(timeframe: str):
 
     for model in ['sc']:
 
-        for target_country in target_countries:
+        for treatment_country in treatment_countries:
             print('============================================================')
-            main(model=model, timeframe=timeframe, target_country=target_country)
+            main(model=model, timeframe=timeframe, treatment_country=treatment_country)
             print("\n")
 
 

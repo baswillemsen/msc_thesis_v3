@@ -232,7 +232,7 @@ def make_stat(df: object, timeframe: str):
                 df_country_series.to_csv(f'{data_path_cor}/{var_name}.csv')
                 if show_plots:
                     plot_series(i=i, series=df_country_series, timeframe=timeframe,
-                                target_country=country, var_name=var_name)
+                                treatment_country=country, var_name=var_name)
                 i += 1
 
                 log, diff_level, diff_order = trans[series]
@@ -246,7 +246,7 @@ def make_stat(df: object, timeframe: str):
                 df_country_series_log.to_csv(f'{data_path_cor}/{var_name}.csv')
                 if show_plots:
                     plot_series(i=i, series=df_country_series_log, timeframe=timeframe,
-                                target_country=country, var_name=var_name)
+                                treatment_country=country, var_name=var_name)
                 i += 1
 
                 # difference the series
@@ -259,7 +259,7 @@ def make_stat(df: object, timeframe: str):
                         df_country_series_diff.to_csv(f'{data_path_cor}/{var_name}.csv')
                         if show_plots:
                             plot_series(i=i, series=df_country_series_diff, timeframe=timeframe,
-                                        target_country=country, var_name=var_name)
+                                        treatment_country=country, var_name=var_name)
                         i += 1
                         j += 1
 

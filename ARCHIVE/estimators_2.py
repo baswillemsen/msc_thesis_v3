@@ -27,11 +27,11 @@ from statistical_tests import shapiro_wilk_test
 ################################
 ### Arco method              ###
 ################################
-def arco(df: object, df_stat: object, target_country: str, timeframe: str, ts_splits: int,
+def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts_splits: int,
          alpha_min: float, alpha_max: float, alpha_step: float, tol: float, lasso_iters: int,
          model: str):
     # pivot target and donors
-    target_log_diff, donors_log_diff = arco_pivot(df=df_stat, target_country=target_country,
+    target_log_diff, donors_log_diff = arco_pivot(df=df_stat, treatment_country=treatment_country,
                                                   timeframe=timeframe, model=model)
     print(f'Nr of parameters included ({len(donors_log_diff.columns)}x): {donors_log_diff.columns}')
 
@@ -56,8 +56,8 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str, ts_sp
         y_log_diff_stand = SS.fit_transform(np.array(y_log_diff).reshape(-1, 1))
 
         # Generating the standardized values of X and y
-        X_log_diff_stand_pre = X_log_diff_stand[:get_impl_date(target_country=target_country, input='index')]
-        y_log_diff_stand_pre = y_log_diff_stand[:get_impl_date(target_country=target_country, input='index')]
+        X_log_diff_stand_pre = X_log_diff_stand[:get_impl_date(treatment_country=treatment_country, input='index')]
+        y_log_diff_stand_pre = y_log_diff_stand[:get_impl_date(treatment_country=treatment_country, input='index')]
 
         country_weight = {'switzerland': 0.85,
                           'ireland': 0.8,
@@ -66,12 +66,12 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str, ts_sp
                           'portugal': 0.67
                           }
 
-        train_weight = int(country_weight[target_country] * len(y_log_diff_stand_pre))
+        train_weight = int(country_weight[treatment_country] * len(y_log_diff_stand_pre))
         y_log_diff_pre_stand_train = y_log_diff_stand_pre[:train_weight]
         X_log_diff_pre_stand_train = X_log_diff_stand_pre[:train_weight]
 
         if show_plots or save_figs:
-            plot_lasso_path(X=X_log_diff_pre_stand_train, y=y_log_diff_pre_stand_train, target_country=target_country,
+            plot_lasso_path(X=X_log_diff_pre_stand_train, y=y_log_diff_pre_stand_train, treatment_country=treatment_country,
                             alpha_min=alpha_min, alpha_max=alpha_max, alpha_step=alpha_step, lasso_iters=lasso_iters,
                             model=model, timeframe=timeframe)
 
@@ -107,26 +107,26 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str, ts_sp
         act_pred_log_diff['error'] = act_pred_log_diff['pred'] - act_pred_log_diff['act']
 
         act_pred_log_diff_check, \
-            act_pred_log, act_pred = transform_back(df=df, df_stat=df_stat, target_country=target_country,
+            act_pred_log, act_pred = transform_back(df=df, df_stat=df_stat, treatment_country=treatment_country,
                                                     timeframe=timeframe, pred_log_diff=pred_log_diff)
 
-        shapiro_wilk_test(df=act_pred_log_diff, target_country=target_country, alpha=sign_level)
+        shapiro_wilk_test(df=act_pred_log_diff, treatment_country=treatment_country, alpha=sign_level)
 
         # save dataframes
         save_dataframe(df=act_pred_log_diff, var_title='act_pred_log_diff',
-                       model=model, target_country=target_country, timeframe=timeframe,
+                       model=model, treatment_country=treatment_country, timeframe=timeframe,
                        save_csv=True, save_predictions=True, save_diff=True, save_cumsum=True)
 
         save_dataframe(df=act_pred_log_diff_check, var_title='act_pred_log_diff_check',
-                       model=model, target_country=target_country, timeframe=timeframe,
+                       model=model, treatment_country=treatment_country, timeframe=timeframe,
                        save_csv=True, save_predictions=True, save_diff=False, save_cumsum=False)
 
         save_dataframe(df=act_pred_log, var_title='act_pred_log',
-                       model=model, target_country=target_country, timeframe=timeframe,
+                       model=model, treatment_country=treatment_country, timeframe=timeframe,
                        save_csv=True, save_predictions=True, save_diff=False, save_cumsum=False)
 
         save_dataframe(df=act_pred, var_title='act_pred',
-                       model=model, target_country=target_country, timeframe=timeframe,
+                       model=model, treatment_country=treatment_country, timeframe=timeframe,
                        save_csv=True, save_predictions=True, save_diff=False, save_cumsum=False)
 
         print(f'R2 pre-stand: {lasso.score(X_log_diff_stand_pre, y_log_diff_stand_pre)}')
@@ -141,9 +141,9 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str, ts_sp
         return act_pred_log_diff
 
 
-def sc(df: object, df_stat: object, target_country: str, timeframe: str, model: str):
+def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, model: str):
     # pivot target and donors
-    df_pivot, pre_treat, post_treat, treat_unit = sc_pivot(df=df_stat, target_country=target_country,
+    df_pivot, pre_treat, post_treat, treat_unit = sc_pivot(df=df_stat, treatment_country=treatment_country,
                                                            timeframe=timeframe, model=model)
 
     # define the SC estimator
@@ -154,7 +154,7 @@ def sc(df: object, df_stat: object, target_country: str, timeframe: str, model: 
     )
 
     # Predict the series, make act_pred dataframe
-    act_pred_log_diff = df_pivot.loc[df_pivot.index == target_country].T
+    act_pred_log_diff = df_pivot.loc[df_pivot.index == treatment_country].T
     act_pred_log_diff.columns = ['act']
     pred_log_diff = sc.predict(df_pivot.values)[treat_unit, :][0]
     act_pred_log_diff['pred'] = pred_log_diff
@@ -162,26 +162,26 @@ def sc(df: object, df_stat: object, target_country: str, timeframe: str, model: 
 
     # transform back
     act_pred_log_diff_check, \
-        act_pred_log, act_pred = transform_back(df=df, df_stat=df_stat, target_country=target_country,
+        act_pred_log, act_pred = transform_back(df=df, df_stat=df_stat, treatment_country=treatment_country,
                                                 timeframe=timeframe, pred_log_diff=pred_log_diff)
 
-    shapiro_wilk_test(df=act_pred_log_diff, target_country=target_country, alpha=sign_level)
+    shapiro_wilk_test(df=act_pred_log_diff, treatment_country=treatment_country, alpha=sign_level)
 
     # save dataframes
     save_dataframe(df=act_pred_log_diff, var_title='act_pred_log_diff',
-                   model=model, target_country=target_country, timeframe=timeframe,
+                   model=model, treatment_country=treatment_country, timeframe=timeframe,
                    save_csv=True, save_predictions=True, save_diff=True, save_cumsum=True)
 
     save_dataframe(df=act_pred_log_diff_check, var_title='act_pred_log_diff_check',
-                   model=model, target_country=target_country, timeframe=timeframe,
+                   model=model, treatment_country=treatment_country, timeframe=timeframe,
                    save_csv=True, save_predictions=True, save_diff=False, save_cumsum=False)
 
     save_dataframe(df=act_pred_log, var_title='act_pred_log',
-                   model=model, target_country=target_country, timeframe=timeframe,
+                   model=model, treatment_country=treatment_country, timeframe=timeframe,
                    save_csv=True, save_predictions=True, save_diff=False, save_cumsum=False)
 
     save_dataframe(df=act_pred, var_title='act_pred',
-                   model=model, target_country=target_country, timeframe=timeframe,
+                   model=model, treatment_country=treatment_country, timeframe=timeframe,
                    save_csv=True, save_predictions=True, save_diff=False, save_cumsum=False)
 
     return act_pred_log_diff

@@ -95,8 +95,8 @@ def adf_test(sign_level: float = sign_level):
             df_stat_group.to_csv(f'{table_path_meth}/{timeframe}_stat_results_grouped.csv')
 
 
-def shapiro_wilk_test(df: object, target_country: str, alpha: float):
-    shap = shapiro(df['error'].loc[:get_impl_date(target_country)])
+def shapiro_wilk_test(df: object, treatment_country: str, alpha: float):
+    shap = shapiro(df['error'].loc[:get_impl_date(treatment_country)])
     if shap[1] > alpha:
         print(f'Shapiro-Wilk test: Errors are normally distributed (p-value={round(shap[1],3)})')
     else:
@@ -111,9 +111,9 @@ def stat_test(x: list, sign_level: float):
         return 'non_stationary'
 
 
-def t_test(df: object, target_country: str):
+def t_test(df: object, treatment_country: str):
     df = df.set_index(date_col)
-    df_post = df[df.index >= get_impl_date(target_country=target_country)]
+    df_post = df[df.index >= get_impl_date(treatment_country=treatment_country)]
     att_mean = df_post['error'].mean()
     att_std = df_post['error'].std()
 
@@ -126,9 +126,9 @@ def t_test(df: object, target_country: str):
     return att_mean, att_std, sign
 
 
-def t_test_result(df: object, target_country: str):
+def t_test_result(df: object, treatment_country: str):
 
-    df_post = df[df.index >= get_impl_date(target_country=target_country)]
+    df_post = df[df.index >= get_impl_date(treatment_country=treatment_country)]
     att_mean = df_post['error'].mean()
     att_std = df_post['error'].std()
 

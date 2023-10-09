@@ -7,7 +7,7 @@ all_paths = [data_source_path, data_path, output_path]
 
 # PRINTING, SHOWING PLOTS
 show_results = True
-show_plots = False
+show_plots = True
 fig_size = (10, 4)
 
 save_results = True
@@ -33,14 +33,15 @@ interpolation_val = ['median', 'linear']
 agg_val = ['sum', 'mean']
 
 # COUNTRIES, YEARS INCLUDED
-target_countries = ['switzerland',
+treatment_countries = ['switzerland',
                     'ireland',
                     'united_kingdom',
                     'france',
-                    'portugal'
+                    'portugal',
+                    'belgium'
                     ]  # 5x
 donor_countries = ['austria',
-                   'belgium',
+                   # 'belgium',
                    'bulgaria',
                    'croatia',
                    'czech_republic',
@@ -55,7 +56,7 @@ donor_countries = ['austria',
                    'slovakia',
                    'spain',
                    ]  # 14x
-incl_countries = target_countries + donor_countries
+incl_countries = treatment_countries + donor_countries
 incl_countries.sort()
 incl_years = range(2000, 2020)
 
@@ -76,7 +77,9 @@ country_name_formal = {'switzerland': 'Switzerland',
                        'ireland': 'Ireland',
                        'united_kingdom': 'United Kingdom',
                        'france': 'France',
-                       'portugal': 'Portugal'}
+                       'portugal': 'Portugal',
+                       'belgium': 'Belgium'
+                       }
 
 var_name_formal = {'co2': 'CO2 Emissions',
                    'co2_cap': 'CO2 Emissions per capita',

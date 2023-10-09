@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 
-from definitions import target_var, data_path, incl_countries, incl_years, target_countries, \
+from definitions import target_var, data_path, incl_countries, incl_years, treatment_countries, \
     country_col, year_col, month_col, quarter_col, date_col, model_val, timeframe_val, \
     output_path, agg_val, interpolation_val, folder_val
 
@@ -102,32 +102,35 @@ def get_trans(timeframe: str = None):
     return trans
 
 
-def get_impl_date(target_country: str = None, input: str = None):
+def get_impl_date(treatment_country: str = None, input: str = None):
     if input == 'dt':
-        target_countries_impl_dates = {'switzerland': dt.date(2008, 1, 1),
+        treatment_countries_impl_dates = {'switzerland': dt.date(2008, 1, 1),
                                        'ireland': dt.date(2010, 1, 1),
                                        'united_kingdom': dt.date(2013, 1, 1),
                                        'france': dt.date(2014, 1, 1),
-                                       'portugal': dt.date(2015, 1, 1)
+                                       'portugal': dt.date(2015, 1, 1),
+                                       'belgium': dt.date(2015, 1, 1)
                                        }
     elif input == 'index':
-        target_countries_impl_dates = {'switzerland': 72,
+        treatment_countries_impl_dates = {'switzerland': 72,
                                        'ireland': 96,
                                        'united_kingdom': 132,
                                        'france': 144,
-                                       'portugal': 156
+                                       'portugal': 156,
+                                       'belgium': 156
                                        }
     else:
-        target_countries_impl_dates = {'switzerland': '2008-01-01',
+        treatment_countries_impl_dates = {'switzerland': '2008-01-01',
                                        'ireland': '2010-01-01',
                                        'united_kingdom': '2013-01-01',
                                        'france': '2014-01-01',
-                                       'portugal': '2015-01-01'
+                                       'portugal': '2015-01-01',
+                                       'belgium': '2015-01-01'
                                        }
-    if target_country is None:
-        return target_countries_impl_dates
+    if treatment_country is None:
+        return treatment_countries_impl_dates
     else:
-        return target_countries_impl_dates[target_country]
+        return treatment_countries_impl_dates[treatment_country]
 
 
 def get_formal_title(var_name: str):
@@ -220,11 +223,11 @@ def flatten(lst):
     return [item for sublist in lst for item in sublist]
 
 
-def first_value(target_country: str, timeframe: str):
+def first_value(treatment_country: str, timeframe: str):
     df = read_data(source_path=get_data_path(timeframe=timeframe), file_name=f'total_{timeframe}')
     _, diff_level, diff_order = get_trans(timeframe=timeframe)[target_var]
     i = diff_level * diff_order
-    orig_value = df[df[country_col] == target_country].set_index(date_col)[target_var].iloc[i]
+    orig_value = df[df[country_col] == treatment_country].set_index(date_col)[target_var].iloc[i]
     return orig_value
 
 
@@ -234,15 +237,15 @@ def read_data(source_path: str, file_name: str):
     return df
 
 
-def validate_input(model: str, timeframe: str, target_country: str):
+def validate_input(model: str, timeframe: str, treatment_country: str):
     if model not in model_val:
         raise ValueError(f'Input a valid model argument: {model_val}')
 
     elif timeframe not in timeframe_val:
         raise ValueError(f'Input a valid timeframe argument: {timeframe_val}')
 
-    elif target_country not in target_countries:
-        raise ValueError(f'Input a valid target_country argument: {target_countries}')
+    elif treatment_country not in treatment_countries:
+        raise ValueError(f'Input a valid treatment_country argument: {treatment_countries}')
 
     else:
         return True

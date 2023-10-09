@@ -8,7 +8,7 @@ plt.rcParams.update({'font.size': 15})
 
 from sklearn.preprocessing import StandardScaler
 
-from definitions import figures_path_meth, target_countries, fig_size, show_plots, save_figs, show_results, \
+from definitions import figures_path_meth, treatment_countries, fig_size, show_plots, save_figs, show_results, \
     target_var, country_col, date_col
 from helper_functions_general import read_data, get_impl_date, get_trans, get_timescale, get_data_path
 from plot_functions import plot_corr
@@ -34,9 +34,9 @@ def descriptive_stats(df: object, var_name: str):
             print(f"within-country std: \n{df.groupby(country_col).std().mean()[var_name]}")
 
 
-def co2_target_countries(df: object):
+def co2_treatment_countries(df: object):
 
-    for country in target_countries:
+    for country in treatment_countries:
         plt.figure(figsize=fig_size)
         df_target = df[df[country_col] == country].set_index(date_col)[target_var]
         df_target.plot(figsize=fig_size)
@@ -102,9 +102,9 @@ def all_series_stand(df: object, timeframe: str):
             plt.show()
 
 
-def corr_matrix(df: object, target_country: str):
+def corr_matrix(df: object, treatment_country: str):
     df_cor = df.copy()
-    df_cor = df_cor[df_cor[country_col] == target_country]
+    df_cor = df_cor[df_cor[country_col] == treatment_country]
     df_cor = df_cor[get_trans()]
     cor_matrix = df_cor.corr()
     if save_figs:
@@ -123,10 +123,10 @@ def eda(timeframe: str, stat: bool):
     for var_name in get_trans():
         descriptive_stats(df=df, var_name=var_name)
 
-    co2_target_countries(df=df)
+    co2_treatment_countries(df=df)
     all_series(df=df, timeframe=timeframe)
     all_series_stand(df=df, timeframe=timeframe)
-    corr_matrix(df=df, target_country='united kingdom')
+    corr_matrix(df=df, treatment_country='united kingdom')
 
 
 if __name__ == "__main__":

@@ -27,11 +27,11 @@
 # ################################
 # ### Arco method              ###
 # ################################
-# def arco(df: object, df_stat: object, target_country: str, timeframe: str, ts_splits: int,
+# def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts_splits: int,
 #          alpha_min: float, alpha_max: float, alpha_step: float, tol: float, lasso_iters: int,
 #          model: str):
 #     # pivot target and donors
-#     target_log_diff, donors_log_diff = arco_pivot(df=df_stat, target_country=target_country,
+#     target_log_diff, donors_log_diff = arco_pivot(df=df_stat, treatment_country=treatment_country,
 #                                                   timeframe=timeframe, model=model)
 #     print(f'Nr of parameters included ({len(donors_log_diff.columns)}x): {donors_log_diff.columns}')
 #
@@ -44,14 +44,14 @@
 #         X_log_diff = np.array(donors_log_diff)
 #
 #         y_log_diff_pre = np.array(
-#             target_log_diff[target_log_diff.index < get_impl_date(target_country=target_country)]).reshape(-1, 1)
+#             target_log_diff[target_log_diff.index < get_impl_date(treatment_country=treatment_country)]).reshape(-1, 1)
 #         X_log_diff_pre = np.array(
-#             donors_log_diff[donors_log_diff.index < get_impl_date(target_country=target_country)])
+#             donors_log_diff[donors_log_diff.index < get_impl_date(treatment_country=treatment_country)])
 #         print(f'Nr of timeframes pre-intervention (t < T_0): {len(X_log_diff_pre)}')
 #         print(f'Nr of timeframes post-intervention (t >= T_0): {len(donors_log_diff) - len(X_log_diff_pre)}')
 #
-#         target_log_diff_pre = target_log_diff[target_log_diff.index < get_impl_date(target_country=target_country)]
-#         donors_log_diff_pre = donors_log_diff[donors_log_diff.index < get_impl_date(target_country=target_country)]
+#         target_log_diff_pre = target_log_diff[target_log_diff.index < get_impl_date(treatment_country=treatment_country)]
+#         donors_log_diff_pre = donors_log_diff[donors_log_diff.index < get_impl_date(treatment_country=treatment_country)]
 #         target_log_diff_pre.to_csv('target_log_diff_pre.csv')
 #         donors_log_diff_pre.to_csv('donors_log_diff_pre.csv')
 #
@@ -101,7 +101,7 @@
 #         # pd.DataFrame(target_log_diff_pre_stand_train).to_csv('target_log_diff_pre_stand_train.csv')
 #
 #         if show_plots or save_figs:
-#             plot_lasso_path(X=X_log_diff_pre_stand_train, y=y_log_diff_pre_stand_train, target_country=target_country,
+#             plot_lasso_path(X=X_log_diff_pre_stand_train, y=y_log_diff_pre_stand_train, treatment_country=treatment_country,
 #                             alpha_min=alpha_min, alpha_max=alpha_max, alpha_step=alpha_step, lasso_iters=lasso_iters,
 #                             model=model, timeframe=timeframe)
 #
@@ -138,26 +138,26 @@
 #         act_pred_log_diff['error'] = act_pred_log_diff['pred'] - act_pred_log_diff['act']
 #
 #         act_pred_log_diff_check, \
-#             act_pred_log, act_pred = transform_back(df=df, df_stat=df_stat, target_country=target_country,
+#             act_pred_log, act_pred = transform_back(df=df, df_stat=df_stat, treatment_country=treatment_country,
 #                                                     timeframe=timeframe, pred_log_diff=pred_log_diff)
 #
-#         shapiro_wilk_test(df=act_pred_log_diff, target_country=target_country, alpha=sign_level)
+#         shapiro_wilk_test(df=act_pred_log_diff, treatment_country=treatment_country, alpha=sign_level)
 #
 #         # save dataframes
 #         save_dataframe(df=act_pred_log_diff, var_title='act_pred_log_diff',
-#                        model=model, target_country=target_country, timeframe=timeframe,
+#                        model=model, treatment_country=treatment_country, timeframe=timeframe,
 #                        save_csv=True, save_predictions=True, save_diff=True, save_cumsum=True)
 #
 #         save_dataframe(df=act_pred_log_diff_check, var_title='act_pred_log_diff_check',
-#                        model=model, target_country=target_country, timeframe=timeframe,
+#                        model=model, treatment_country=treatment_country, timeframe=timeframe,
 #                        save_csv=True, save_predictions=True, save_diff=False, save_cumsum=False)
 #
 #         save_dataframe(df=act_pred_log, var_title='act_pred_log',
-#                        model=model, target_country=target_country, timeframe=timeframe,
+#                        model=model, treatment_country=treatment_country, timeframe=timeframe,
 #                        save_csv=True, save_predictions=True, save_diff=False, save_cumsum=False)
 #
 #         save_dataframe(df=act_pred, var_title='act_pred',
-#                        model=model, target_country=target_country, timeframe=timeframe,
+#                        model=model, treatment_country=treatment_country, timeframe=timeframe,
 #                        save_csv=True, save_predictions=True, save_diff=False, save_cumsum=False)
 #
 #         print(f'R2 pre-stand: {lasso.score(X_log_diff_pre_stand, y_log_diff_pre_stand)}')
@@ -172,9 +172,9 @@
 #         return act_pred_log_diff
 #
 #
-# def sc(df: object, df_stat: object, target_country: str, timeframe: str, model: str):
+# def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, model: str):
 #     # pivot target and donors
-#     df_pivot, pre_treat, post_treat, treat_unit = sc_pivot(df=df_stat, target_country=target_country,
+#     df_pivot, pre_treat, post_treat, treat_unit = sc_pivot(df=df_stat, treatment_country=treatment_country,
 #                                                            timeframe=timeframe, model=model)
 #
 #     # define the SC estimator
@@ -185,7 +185,7 @@
 #     )
 #
 #     # Predict the series, make act_pred dataframe
-#     act_pred_log_diff = df_pivot.loc[df_pivot.index == target_country].T
+#     act_pred_log_diff = df_pivot.loc[df_pivot.index == treatment_country].T
 #     act_pred_log_diff.columns = ['act']
 #     pred_log_diff = sc.predict(df_pivot.values)[treat_unit, :][0]
 #     act_pred_log_diff['pred'] = pred_log_diff
@@ -193,26 +193,26 @@
 #
 #     # transform back
 #     act_pred_log_diff_check, \
-#         act_pred_log, act_pred = transform_back(df=df, df_stat=df_stat, target_country=target_country,
+#         act_pred_log, act_pred = transform_back(df=df, df_stat=df_stat, treatment_country=treatment_country,
 #                                                 timeframe=timeframe, pred_log_diff=pred_log_diff)
 #
-#     shapiro_wilk_test(df=act_pred_log_diff, target_country=target_country, alpha=sign_level)
+#     shapiro_wilk_test(df=act_pred_log_diff, treatment_country=treatment_country, alpha=sign_level)
 #
 #     # save dataframes
 #     save_dataframe(df=act_pred_log_diff, var_title='act_pred_log_diff',
-#                    model=model, target_country=target_country, timeframe=timeframe,
+#                    model=model, treatment_country=treatment_country, timeframe=timeframe,
 #                    save_csv=True, save_predictions=True, save_diff=True, save_cumsum=True)
 #
 #     save_dataframe(df=act_pred_log_diff_check, var_title='act_pred_log_diff_check',
-#                    model=model, target_country=target_country, timeframe=timeframe,
+#                    model=model, treatment_country=treatment_country, timeframe=timeframe,
 #                    save_csv=True, save_predictions=True, save_diff=False, save_cumsum=False)
 #
 #     save_dataframe(df=act_pred_log, var_title='act_pred_log',
-#                    model=model, target_country=target_country, timeframe=timeframe,
+#                    model=model, treatment_country=treatment_country, timeframe=timeframe,
 #                    save_csv=True, save_predictions=True, save_diff=False, save_cumsum=False)
 #
 #     save_dataframe(df=act_pred, var_title='act_pred',
-#                    model=model, target_country=target_country, timeframe=timeframe,
+#                    model=model, treatment_country=treatment_country, timeframe=timeframe,
 #                    save_csv=True, save_predictions=True, save_diff=False, save_cumsum=False)
 #
 #     return act_pred_log_diff

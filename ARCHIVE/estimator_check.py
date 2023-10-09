@@ -23,11 +23,11 @@ from statistical_tests import shapiro_wilk_test
 ################################
 ### Arco method              ###
 ################################
-def arco(df: object, df_stat: object, target_country: str, timeframe: str,
+def arco(df: object, df_stat: object, treatment_country: str, timeframe: str,
          alpha_min: float, alpha_max: float, alpha_step: float, lasso_iters: int):
 
     # pivot target and donors
-    target_log_diff, donors_log_diff = arco_pivot(df=df_stat, target_country=target_country)
+    target_log_diff, donors_log_diff = arco_pivot(df=df_stat, treatment_country=treatment_country)
 
     if fake_num in list(target_log_diff):
         return None, None, None
@@ -35,8 +35,8 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
         y_log_diff = np.array(target_log_diff).reshape(-1, 1)
         X_log_diff = np.array(donors_log_diff)
 
-        y_log_diff_pre = np.array(target_log_diff[target_log_diff.index <= get_impl_date(target_country=target_country)]).reshape(-1, 1)
-        X_log_diff_pre = np.array(donors_log_diff[donors_log_diff.index <= get_impl_date(target_country=target_country)])
+        y_log_diff_pre = np.array(target_log_diff[target_log_diff.index <= get_impl_date(treatment_country=treatment_country)]).reshape(-1, 1)
+        X_log_diff_pre = np.array(donors_log_diff[donors_log_diff.index <= get_impl_date(treatment_country=treatment_country)])
 
         # Storing the fit object for later reference
         SS = StandardScaler()
@@ -53,7 +53,7 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
                                                                          test_size=0.25, random_state=42,
                                                                          shuffle=False)
 
-        plot_lasso_path(X=X_log_diff_pre_stand_train, y=y_log_diff_pre_stand_train, target_country=target_country,
+        plot_lasso_path(X=X_log_diff_pre_stand_train, y=y_log_diff_pre_stand_train, treatment_country=treatment_country,
                         alpha_min=alpha_min, alpha_max=alpha_max, alpha_step=alpha_step, lasso_iters=lasso_iters)
 
         # define model
@@ -80,12 +80,12 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
                                          columns=['act', 'pred']).set_index(target_log_diff.index)
         act_pred_log_diff['error'] = act_pred_log_diff['pred'] - act_pred_log_diff['act']
 
-        shapiro_wilk_test(df=act_pred_log_diff, target_country=target_country, alpha=sign_level)
+        shapiro_wilk_test(df=act_pred_log_diff, treatment_country=treatment_country, alpha=sign_level)
         if save_results:
-            act_pred_log_diff.to_csv(f'{tables_path_res}{target_country}/{target_country}_act_pred_log_diff.csv')
+            act_pred_log_diff.to_csv(f'{tables_path_res}{treatment_country}/{treatment_country}_act_pred_log_diff.csv')
         if show_plots:
             print('act_pred_log_diff')
-            plot_predictions(df=act_pred_log_diff, target_country=target_country)
+            plot_predictions(df=act_pred_log_diff, treatment_country=treatment_country)
             print('act_pred_errors')
             plt.plot(act_pred_log_diff['error'])
 
@@ -94,7 +94,7 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
         _, diff_level, diff_order = get_trans(timeframe=timeframe)[target_var]
 
         orig_data = df.copy()
-        orig_data = orig_data[(orig_data[country_col] == target_country) &
+        orig_data = orig_data[(orig_data[country_col] == treatment_country) &
                               (orig_data[date_col] >= date_start)].set_index(date_col)[target_var]
         orig_data_log = np.log(orig_data)
 
@@ -105,10 +105,10 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
             orig_data_act_pred_log_diff_check = orig_data_log_diff1.diff(diff_level)
         act_pred_log_diff_check = pd.DataFrame(list(zip(orig_data_act_pred_log_diff_check, pred_log_diff)),
                                                columns=['act', 'pred']).set_index(orig_data_log.index)
-        act_pred_log_diff_check.to_csv(f'{tables_path_res}{target_country}/{target_country}_act_pred_log_diff_check.csv')
+        act_pred_log_diff_check.to_csv(f'{tables_path_res}{treatment_country}/{treatment_country}_act_pred_log_diff_check.csv')
         if show_plots:
             print('act_pred_log_diff_check')
-            plot_predictions(df=act_pred_log_diff_check, target_country=target_country)
+            plot_predictions(df=act_pred_log_diff_check, treatment_country=treatment_country)
 
         if diff_order == 2:
             pred1 = np.zeros(len(orig_data_log_diff1))
@@ -128,10 +128,10 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
                                 columns=['act', 'pred']).set_index(orig_data_log.index)
         act_pred_log['error'] = act_pred_log['pred'] - act_pred_log['act']
         if save_results:
-            act_pred_log.to_csv(f'{tables_path_res}{target_country}/{target_country}_act_pred_log.csv')
+            act_pred_log.to_csv(f'{tables_path_res}{treatment_country}/{treatment_country}_act_pred_log.csv')
         if show_plots:
             print('act_pred')
-            plot_predictions(df=act_pred_log, target_country=target_country)
+            plot_predictions(df=act_pred_log, treatment_country=treatment_country)
 
         if show_results:
             print('alpha: %f' % model.alpha_)
@@ -152,9 +152,9 @@ def arco(df: object, df_stat: object, target_country: str, timeframe: str,
         return model, act_pred_log_diff, act_pred_log
 
 
-def sc(df: object, target_country: str):
+def sc(df: object, treatment_country: str):
     # pivot target and donors
-    df_pivot, pre_treat, post_treat, treat_unit = sc_pivot(df=df, target_country=target_country)
+    df_pivot, pre_treat, post_treat, treat_unit = sc_pivot(df=df, treatment_country=treatment_country)
 
     model = SparseSC.fit(
         features=np.array(pre_treat),
@@ -162,7 +162,7 @@ def sc(df: object, target_country: str):
         treated_units=treat_unit,
     )
 
-    act_pred = df_pivot.loc[df_pivot.index == target_country].T
+    act_pred = df_pivot.loc[df_pivot.index == treatment_country].T
     act_pred.columns = ['act']
     act_pred['pred'] = model.predict(df_pivot.values)[treat_unit, :][0]
 

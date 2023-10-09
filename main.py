@@ -22,36 +22,36 @@ for path in all_paths:
 ################################
 ### main script              ###
 ################################
-def main(model: str, timeframe: str, target_country: str):
-    if validate_input(model, timeframe, target_country):
+def main(model: str, timeframe: str, treatment_country: str):
+    if validate_input(model, timeframe, treatment_country):
 
         # read data
         df = read_data(source_path=get_data_path(timeframe=timeframe), file_name=f'total_{timeframe}')
         df_log_diff = read_data(source_path=get_data_path(timeframe=timeframe), file_name=f'total_{timeframe}_{stat}')
 
         # See which countries are included
-        print(f'Target country: {target_country} ({get_impl_date(target_country=target_country)[:4]})')
+        print(f'Treatment country: {treatment_country} ({get_impl_date(treatment_country=treatment_country)[:4]})')
         print(f'Variables included ({len(get_trans())}x): {get_trans()}')
         print(f'Countries included ({len(df[country_col].unique())}x): {df[country_col].unique()}')
         print(f'Years included ({len(df[year_col].unique())}x): {df[year_col].unique()}')
 
         # run the model, get back actual and predicted values
         if model == 'arco':
-            act_pred_log_diff = arco(df=df, df_stat=df_log_diff, target_country=target_country, timeframe=timeframe,
+            act_pred_log_diff = arco(df=df, df_stat=df_log_diff, treatment_country=treatment_country, timeframe=timeframe,
                                      alpha_min=0.001, alpha_max=1.0, alpha_step=0.001, ts_splits=5,
                                      lasso_iters=100000000, tol=0.00000001, model=model)
         elif model == 'sc':
-            act_pred_log_diff = sc(df=df, df_stat=df_log_diff, target_country=target_country, timeframe=timeframe,
+            act_pred_log_diff = sc(df=df, df_stat=df_log_diff, treatment_country=treatment_country, timeframe=timeframe,
                                    model=model)
         elif model == 'did':
-            act_pred_log_diff = did(df=df, df_stat=df_log_diff, target_country=target_country, timeframe=timeframe,
-                                    model=model)
+            act_pred_log_diff = did(df=df, df_stat=df_log_diff, treatment_country=treatment_country, timeframe=timeframe,
+                                    model=model, x_years=3)
         else:
             raise ValueError('Select a valid model: "arco" or "sc"')
 
         if act_pred_log_diff is None:
-            print("The GHG emissions series of the target country is non-stationary, ArCo method is not possible")
+            print("The GHG emissions series of the treatment country is non-stationary, ArCo method is not possible")
 
 
 if __name__ == "__main__":
-    main(model=sys.argv[1], timeframe=sys.argv[2], target_country=sys.argv[3])
+    main(model=sys.argv[1], timeframe=sys.argv[2], treatment_country=sys.argv[3])
