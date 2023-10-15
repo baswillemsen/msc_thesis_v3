@@ -9,9 +9,9 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # custom functions
-from definitions import all_paths, country_col, year_col, stat, model_val
+from definitions import all_paths, country_col, year_col, stat, incl_countries, incl_years
 from helper_functions_general import read_data, validate_input, get_trans, get_data_path, get_impl_date
-from estimators  import arco, sc, did
+from estimators import arco, sc, did
 
 ### define paths & static defs
 for path in all_paths:
@@ -29,6 +29,9 @@ def main(model: str, timeframe: str, treatment_country: str):
         df = read_data(source_path=get_data_path(timeframe=timeframe), file_name=f'total_{timeframe}')
         df_log_diff = read_data(source_path=get_data_path(timeframe=timeframe), file_name=f'total_{timeframe}_{stat}')
 
+        df = df[(df[country_col].isin(incl_countries)) & (df[year_col].isin(incl_years))]
+        df_log_diff = df_log_diff[(df_log_diff[country_col].isin(incl_countries)) & (df_log_diff[year_col].isin(incl_years))]
+
         # See which countries are included
         print(f'Treatment country: {treatment_country} ({get_impl_date(treatment_country=treatment_country)[:4]})')
         print(f'Variables included ({len(get_trans())}x): {get_trans()}')
@@ -45,9 +48,9 @@ def main(model: str, timeframe: str, treatment_country: str):
                                    model=model)
         elif model == 'did':
             act_pred_log_diff = did(df=df, df_stat=df_log_diff, treatment_country=treatment_country, timeframe=timeframe,
-                                    model=model, x_years=3)
+                                    model=model, x_years=5)
         else:
-            raise ValueError('Select a valid model: "arco" or "sc"')
+            raise ValueError('Select a valid model: "arco", "sc" or "did"')
 
         if act_pred_log_diff is None:
             print("The GHG emissions series of the treatment country is non-stationary, ArCo method is not possible")

@@ -1,4 +1,4 @@
-date,co2,target_dummy,post_dummy,target_post_dummy
+date,co2,treatment_dummy,post_dummy,treatment_post_dummy
 2010-01-01,10763054880.0,0,0,0
 2010-02-01,10033818480.0,0,0,0
 2010-03-01,9546160182.0,0,0,0

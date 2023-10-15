@@ -11,7 +11,7 @@ from definitions import treatment_countries
 
 def gen_results(timeframe: str):
 
-    # preprocess()
+    # preprocess(timeframe=timeframe)
 
     for model in ['sc']:
 

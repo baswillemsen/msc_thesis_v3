@@ -69,24 +69,24 @@ def get_trans(timeframe: str = None):
     if timeframe == 'm':
         trans = {
             'co2': (True, 12, 1)
-            , 'gdp': (True, 12, 2)
-            , 'ind_prod': (False, 12, 1)
-            , 'infl': (False, 12, 1)
-            , 'pop': (True, 12, 2)
-            , 'brent': (True, 12, 2)
-            # , 'co2_cap': (True, 12, 2)
-            # , 'gdp_cap': (True, 12, 2)
+            , 'gdp': (True, 1, 1)
+            , 'ind_prod': (False, 1, 1)
+            , 'infl': (False, 1, 1)
+            , 'pop': (True, 1, 1)
+            , 'brent': (True, 1, 1)
+            , 'co2_cap': (True, 12, 1)
+            , 'gdp_cap': (True, 1, 1)
         }
     elif timeframe == 'q':
         trans = {
             'co2': (True, 4, 1)
-            , 'gdp': (True, 4, 2)
-            , 'ind_prod': (False, 4, 1)
-            , 'infl': (False, 4, 1)
-            , 'pop': (True, 4, 2)
-            , 'brent': (True, 4, 2)
-            # , 'co2_cap': (True, 4, 2)
-            # , 'gdp_cap': (True, 4, 2)
+            , 'gdp': (True, 1, 1)
+            , 'ind_prod': (False, 1, 1)
+            , 'infl': (False, 1, 1)
+            , 'pop': (True, 1, 1)
+            , 'brent': (True, 1, 1)
+            , 'co2_cap': (True, 4, 1)
+            , 'gdp_cap': (True, 1, 1)
         }
     else:
         trans = ['co2'
@@ -95,8 +95,8 @@ def get_trans(timeframe: str = None):
                  , 'infl'
                  , 'pop'
                  , 'brent'
-                 # , 'co2_cap'
-                 # , 'gdp_cap'
+                 , 'co2_cap'
+                 , 'gdp_cap'
                  ]
 
     return trans
@@ -105,28 +105,28 @@ def get_trans(timeframe: str = None):
 def get_impl_date(treatment_country: str = None, input: str = None):
     if input == 'dt':
         treatment_countries_impl_dates = {'switzerland': dt.date(2008, 1, 1),
-                                       'ireland': dt.date(2010, 1, 1),
-                                       'united_kingdom': dt.date(2013, 1, 1),
-                                       'france': dt.date(2014, 1, 1),
-                                       'portugal': dt.date(2015, 1, 1),
-                                       'belgium': dt.date(2015, 1, 1)
-                                       }
+                                          'ireland': dt.date(2010, 5, 1),
+                                          'united_kingdom': dt.date(2013, 4, 1),
+                                          'france': dt.date(2014, 4, 1),
+                                          'portugal': dt.date(2015, 1, 1)
+                                          # ,'belgium': dt.date(2015, 1, 1)
+                                          }
     elif input == 'index':
         treatment_countries_impl_dates = {'switzerland': 72,
-                                       'ireland': 96,
-                                       'united_kingdom': 132,
-                                       'france': 144,
-                                       'portugal': 156,
-                                       'belgium': 156
-                                       }
+                                          'ireland': 100,
+                                          'united_kingdom': 135,
+                                          'france': 147,
+                                          'portugal': 156
+                                          # ,'belgium': 156
+                                          }
     else:
         treatment_countries_impl_dates = {'switzerland': '2008-01-01',
-                                       'ireland': '2010-01-01',
-                                       'united_kingdom': '2013-01-01',
-                                       'france': '2014-01-01',
-                                       'portugal': '2015-01-01',
-                                       'belgium': '2015-01-01'
-                                       }
+                                          'ireland': '2010-05-01',
+                                          'united_kingdom': '2013-04-01',
+                                          'france': '2014-04-01',
+                                          'portugal': '2015-01-01'
+                                          # ,'belgium': '2015-01-01'
+                                          }
     if treatment_country is None:
         return treatment_countries_impl_dates
     else:
@@ -135,15 +135,15 @@ def get_impl_date(treatment_country: str = None, input: str = None):
 
 def get_formal_title(var_name: str):
     if 'act_pred_log_diff_check' in var_name:
-        return 'Log-differenced CHECK'
-
-    if 'act_pred_log_diff' in var_name:
         return 'Log-differenced'
 
-    if 'act_pred_log' in var_name:
+    elif 'act_pred_log_diff' in var_name:
+        return 'Log-differenced'
+
+    elif 'act_pred_log' in var_name:
         return 'Log'
 
-    if 'act_pred' in var_name:
+    elif 'act_pred' in var_name:
         return ''
 
     else:

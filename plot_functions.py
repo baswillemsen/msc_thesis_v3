@@ -154,6 +154,30 @@ def plot_cumsum(df: object, treatment_country: str, timeframe: str, var_name: st
         plt.show()
 
 
+def plot_cumsum_impl(df: object, treatment_country: str, timeframe: str, var_name: str):
+    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=treatment_country)
+
+    df = df[df.index >= get_impl_date(treatment_country)]
+
+    fig, ax = plt.subplots(figsize=fig_size)
+    ax.plot(df['act'].cumsum(), label='actual')
+    ax.plot(df['pred'].cumsum(), label='predicted')
+    ax.axvline(x=get_impl_date(treatment_country, input='dt'), c='black')
+
+    ax.xaxis.set_major_locator(mdates.YearLocator())
+    for tick in ax.get_xticklabels():
+        tick.set_rotation(45)
+
+    ax.set_title(f'{country_name_formal[treatment_country]} {get_formal_title(var_name=var_name)} CO2 series (cumsum)')
+    ax.set_xlabel('Year')
+    ax.set_ylabel(f'{get_formal_title(var_name=var_name)} CO2 (cumsum)')
+    ax.legend(loc='best')
+    if save_figs:
+        plt.savefig(f'{figures_path_res}/{var_name}_cumsum_impl.png', dpi=300, bbox_inches='tight')
+    if show_plots:
+        plt.show()
+
+
 def plot_corr(matrix: object, timeframe: str):
     figures_path_meth = get_fig_path(timeframe=timeframe, folder='methodology')
     var_name = 'corr_matrix'

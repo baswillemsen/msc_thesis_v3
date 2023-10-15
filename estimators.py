@@ -18,11 +18,11 @@ from sklearn.linear_model import LinearRegression
 import statsmodels.formula.api as smf
 
 # custom functions
-from definitions import fake_num, show_plots, sign_level, save_figs, country_col, target_var
+from definitions import fake_num, show_plots, sign_level, save_figs, target_var
 from helper_functions_general import flatten, get_impl_date
 from helper_functions_estimation import arco_pivot, sc_pivot, transform_back, save_dataframe, did_pivot
 from plot_functions import plot_lasso_path
-from statistical_tests import shapiro_wilk_test, t_test, t_test_result
+from statistical_tests import shapiro_wilk_test, t_test_result
 
 
 ################################
@@ -33,7 +33,7 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
          model: str):
     # pivot treatment and donors
     treatment_log_diff, donors_log_diff = arco_pivot(df=df_stat, treatment_country=treatment_country,
-                                                  timeframe=timeframe, model=model)
+                                                     timeframe=timeframe, model=model)
     # print(f'Nr of parameters included ({len(donors_log_diff.columns)}x): {donors_log_diff.columns}')
     print(f'Nr of parameters included: {len(donors_log_diff.columns)}x')
 
@@ -41,10 +41,6 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
     if fake_num in list(treatment_log_diff):
         return None
     else:
-
-        ################################
-        ### FIRST PRE, SECOND STAND  ###
-        ################################
 
         y_log_diff = np.array(treatment_log_diff).reshape(-1, 1)
         X_log_diff = np.array(donors_log_diff)
@@ -66,15 +62,27 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
         X_log_diff_pre_stand = SS.fit_transform(X_log_diff_pre)
         y_log_diff_pre_stand = SS.fit_transform(y_log_diff_pre)
 
-        country_weight = {'switzerland': 0.9,
-                          'ireland': 1.0,
-                          'united_kingdom': 0.8,
-                          'france': 1.0,
-                          'portugal': 0.65,
-                          'belgium': 1.0
+        # country_weights = np.arange(0.5, 1.0, 0.05)
+        # country_weights = [0.5]
+        # for country_weight in country_weights:
+        # country_weight = {'switzerland': 0.9,
+        #                   'ireland': 1.0,
+        #                   'united_kingdom': 0.95,
+        #                   'france': 1.0,
+        #                   'portugal': 0.65,
+        #                   'belgium': 1.0
+        #                   }
+        country_weight = {'switzerland': 1,
+                          'ireland': 1,
+                          'united_kingdom': 1,
+                          'france': 1,
+                          'portugal': 1,
+                          'belgium': 1
                           }
-
         train_weight = int(country_weight[treatment_country] * len(y_log_diff_pre_stand))
+        # print(f'country_weight: {country_weight}')
+        # train_weight = int(country_weight * len(y_log_diff_pre_stand))
+
         y_log_diff_pre_stand_train = y_log_diff_pre_stand[:train_weight]
         X_log_diff_pre_stand_train = X_log_diff_pre_stand[:train_weight]
 
@@ -99,6 +107,16 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
 
         # fit model
         lasso.fit(X_log_diff_pre_stand_train, y_log_diff_pre_stand_train.ravel())  # very good results
+        # lasso results
+        print(f'R2 pre-stand:       {round(lasso.score(X_log_diff_pre_stand, y_log_diff_pre_stand), 3)}')
+        print(f'R2 pre-stand-train: {round(lasso.score(X_log_diff_pre_stand_train, y_log_diff_pre_stand_train), 3)}')
+        print(f'alpha: {round(lasso.alpha_, 3)}')
+
+        coefs = list(lasso.coef_)
+        coef_index = [i for i, val in enumerate(coefs) if val != 0]
+        print(f'Parameters estimated ({len(donors_log_diff.columns[coef_index])}x): '
+              f'{list(donors_log_diff.columns[coef_index])}')
+        # print("\n")
 
         # summarize chosen configuration
         act_log_diff = flatten(y_log_diff)
@@ -108,51 +126,36 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
         act_pred_log_diff = pd.DataFrame(list(zip(act_log_diff, pred_log_diff)),
                                          columns=['act', 'pred']).set_index(treatment_log_diff.index)
         act_pred_log_diff['error'] = act_pred_log_diff['pred'] - act_pred_log_diff['act']
-
+        # other configurations, transform back to act_pred
         act_pred_log_diff_check, \
             act_pred_log, act_pred = transform_back(df=df, df_stat=df_stat, treatment_country=treatment_country,
                                                     timeframe=timeframe, pred_log_diff=pred_log_diff)
 
+        # perform hypothesis tests
         shapiro_wilk_test(df=act_pred_log_diff, treatment_country=treatment_country, alpha=sign_level)
+        t_test_result(df=act_pred_log_diff, treatment_country=treatment_country)
 
+        # save dataframes and plots
         if show_plots or save_figs:
             plot_lasso_path(X=X_log_diff_pre_stand_train, y=y_log_diff_pre_stand_train, treatment_country=treatment_country,
                             alpha_min=alpha_min, alpha_max=alpha_max, alpha_step=alpha_step, lasso_iters=lasso_iters,
                             model=model, timeframe=timeframe, alpha_cv=lasso.alpha_)
 
-        # save dataframes
         save_dataframe(df=act_pred_log_diff, var_title='act_pred_log_diff',
                        model=model, treatment_country=treatment_country, timeframe=timeframe,
                        save_csv=True, save_predictions=True, save_diff=True, save_cumsum=True)
 
         save_dataframe(df=act_pred_log_diff_check, var_title='act_pred_log_diff_check',
                        model=model, treatment_country=treatment_country, timeframe=timeframe,
-                       save_csv=True, save_predictions=True, save_diff=False, save_cumsum=False)
+                       save_csv=True, save_predictions=True, save_diff=True, save_cumsum=True)
 
         save_dataframe(df=act_pred_log, var_title='act_pred_log',
                        model=model, treatment_country=treatment_country, timeframe=timeframe,
-                       save_csv=True, save_predictions=True, save_diff=False, save_cumsum=False)
+                       save_csv=True, save_predictions=True, save_diff=True, save_cumsum=True)
 
         save_dataframe(df=act_pred, var_title='act_pred',
                        model=model, treatment_country=treatment_country, timeframe=timeframe,
-                       save_csv=True, save_predictions=True, save_diff=False, save_cumsum=False)
-
-        print(f'R2 pre-stand:       {round(lasso.score(X_log_diff_pre_stand, y_log_diff_pre_stand), 3)}')
-        print(f'R2 pre-stand-train: {round(lasso.score(X_log_diff_pre_stand_train, y_log_diff_pre_stand_train), 3)}')
-        print(f'alpha: {round(lasso.alpha_, 3)}')
-
-        coefs = list(lasso.coef_)
-        coef_index = [i for i, val in enumerate(coefs) if val != 0]
-        print(f'Parameters estimated ({len(donors_log_diff.columns[coef_index])}x): '
-              f'{list(donors_log_diff.columns[coef_index])}')
-        print("\n")
-
-        t_test_result(df=act_pred_log_diff, treatment_country=treatment_country)
-
-        # att_mean, att_std, sign = t_test(df=act_pred_log_diff, treatment_country=treatment_country)
-        # print(f'att_mean: {att_mean}')
-        # print(f'att_std: {att_std}')
-        # print(f'Result is {sign}')
+                       save_csv=True, save_predictions=True, save_diff=True, save_cumsum=True)
 
         return act_pred_log_diff
 
@@ -183,6 +186,7 @@ def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, mode
                                                 timeframe=timeframe, pred_log_diff=pred_log_diff)
 
     shapiro_wilk_test(df=act_pred_log_diff, treatment_country=treatment_country, alpha=sign_level)
+    t_test_result(df=act_pred_log_diff, treatment_country=treatment_country)
 
     # save dataframes
     save_dataframe(df=act_pred_log_diff, var_title='act_pred_log_diff',

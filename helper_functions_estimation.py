@@ -1,14 +1,13 @@
 ################################
 ### import relevant packages ###
 ################################
-import os
 import numpy as np
 import pandas as pd
 
 from definitions import target_var, donor_countries, country_col, date_col, save_results, fake_num, show_plots, \
     save_figs, year_col
 from helper_functions_general import get_table_path, get_impl_date, get_trans
-from plot_functions import plot_predictions, plot_diff, plot_cumsum
+from plot_functions import plot_predictions, plot_diff, plot_cumsum, plot_cumsum_impl
 
 
 def arco_pivot(df: object, treatment_country: str, timeframe: str, model: str):
@@ -158,3 +157,4 @@ def save_dataframe(df: object, var_title: str, model: str, treatment_country: st
             plot_diff(df=df, treatment_country=treatment_country, timeframe=timeframe, var_name=var_name)
         if save_cumsum:
             plot_cumsum(df=df, treatment_country=treatment_country, timeframe=timeframe, var_name=var_name)
+            plot_cumsum_impl(df=df, treatment_country=treatment_country, timeframe=timeframe, var_name=var_name)

@@ -1,7 +1,6 @@
 ################################
 ### import relevant packages ###
 ################################
-import os
 import sys
 import numpy as np
 import pandas as pd
@@ -188,8 +187,8 @@ def total_join(co2: object, pop: object, gdp: object, ind_prod: object,
     total = total.merge(pop, how='left', on=key_cols)
     total = total.merge(brent, how='left', on=key_cols.remove(country_col))
 
-    total[f'co2_cap'] = total[f'co2'] / total[f'pop']
-    total[f'gdp_cap'] = total[f'gdp'] / total[f'pop']
+    total['co2_cap'] = total['co2'] / total['pop']
+    total['gdp_cap'] = total['gdp'] / total['pop']
 
     total = total.dropna(axis=0, how='any', subset=total.columns.drop(['infl', 'ind_prod']))
     total = total.fillna(fake_num).reset_index(drop=True)

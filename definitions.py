@@ -15,7 +15,7 @@ save_figs = True
 
 # NON-STATIC DEFINITIONS
 target_var = 'co2'
-stat = 'stat'
+stat = 'non_stat'
 sign_level = 0.10
 fake_num = -99999
 
@@ -34,14 +34,14 @@ agg_val = ['sum', 'mean']
 
 # COUNTRIES, YEARS INCLUDED
 treatment_countries = ['switzerland',
-                    'ireland',
-                    'united_kingdom',
-                    'france',
-                    'portugal',
-                    'belgium'
-                    ]  # 5x
+                       'ireland',
+                       'united_kingdom',
+                       'france',
+                       'portugal'
+                       # , 'belgium'
+                       ]  # 5x
 donor_countries = ['austria',
-                   # 'belgium',
+                   'belgium',
                    'bulgaria',
                    'croatia',
                    'czech_republic',
@@ -57,6 +57,7 @@ donor_countries = ['austria',
                    'spain',
                    ]  # 14x
 incl_countries = treatment_countries + donor_countries
+incl_countries = list(set(incl_countries))
 incl_countries.sort()
 incl_years = range(2000, 2020)
 
