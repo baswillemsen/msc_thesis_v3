@@ -8,14 +8,14 @@ plt.rcParams.update({'font.size': 15})
 
 from sklearn.preprocessing import StandardScaler
 
-from definitions import figures_path_meth, treatment_countries, fig_size, show_plots, save_figs, show_results, \
+from definitions import figures_path_meth, treatment_countries, fig_size, show_plots, save_figs, show_output, \
     target_var, country_col, date_col
 from helper_functions_general import read_data, get_impl_date, get_trans, get_timescale, get_data_path
 from plot_functions import plot_corr
 
 
 def descriptive_stats(df: object, var_name: str):
-    if show_results:
+    if show_output:
         # describe df
         print(df.info())
         print(df.describe())

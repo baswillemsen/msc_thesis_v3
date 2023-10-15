@@ -6,12 +6,12 @@ output_path = 'output'
 all_paths = [data_source_path, data_path, output_path]
 
 # PRINTING, SHOWING PLOTS
-show_results = True
-show_plots = True
+show_output = True
+show_plots = False
 fig_size = (10, 4)
 
-save_results = True
-save_figs = True
+save_output = True
+save_figs = False
 
 # NON-STATIC DEFINITIONS
 target_var = 'co2'

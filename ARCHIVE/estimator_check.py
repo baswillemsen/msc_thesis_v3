@@ -13,7 +13,7 @@ from sklearn.linear_model import LassoCV
 import SparseSC
 
 # custom functions
-from definitions import show_results, fake_num, country_col, date_col, tables_path_res, save_results, \
+from definitions import show_output, fake_num, country_col, date_col, tables_path_res, save_output, \
     target_var, show_plots, sign_level
 from helper_functions_general import flatten, arco_pivot, sc_pivot, get_impl_date, get_trans
 from plot_functions import plot_lasso_path, plot_predictions
@@ -81,7 +81,7 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str,
         act_pred_log_diff['error'] = act_pred_log_diff['pred'] - act_pred_log_diff['act']
 
         shapiro_wilk_test(df=act_pred_log_diff, treatment_country=treatment_country, alpha=sign_level)
-        if save_results:
+        if save_output:
             act_pred_log_diff.to_csv(f'{tables_path_res}{treatment_country}/{treatment_country}_act_pred_log_diff.csv')
         if show_plots:
             print('act_pred_log_diff')
@@ -127,13 +127,13 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str,
         act_pred_log = pd.DataFrame(list(zip(orig_data_log, pred2)),
                                 columns=['act', 'pred']).set_index(orig_data_log.index)
         act_pred_log['error'] = act_pred_log['pred'] - act_pred_log['act']
-        if save_results:
+        if save_output:
             act_pred_log.to_csv(f'{tables_path_res}{treatment_country}/{treatment_country}_act_pred_log.csv')
         if show_plots:
             print('act_pred')
             plot_predictions(df=act_pred_log, treatment_country=treatment_country)
 
-        if show_results:
+        if show_output:
             print('alpha: %f' % model.alpha_)
             # print(model.coef_)
             # print(model.intercept_)

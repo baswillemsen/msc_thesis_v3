@@ -69,24 +69,24 @@ def get_trans(timeframe: str = None):
     if timeframe == 'm':
         trans = {
             'co2': (True, 12, 1)
-            , 'gdp': (True, 1, 1)
-            , 'ind_prod': (False, 1, 1)
+            , 'gdp': (False, 0, 0)
+            , 'ind_prod': (False, 0, 0)
             , 'infl': (False, 1, 1)
             , 'pop': (True, 1, 1)
             , 'brent': (True, 1, 1)
             , 'co2_cap': (True, 12, 1)
-            , 'gdp_cap': (True, 1, 1)
+            # , 'gdp_cap': (True, 1, 1)
         }
     elif timeframe == 'q':
         trans = {
             'co2': (True, 4, 1)
-            , 'gdp': (True, 1, 1)
-            , 'ind_prod': (False, 1, 1)
+            , 'gdp': (False, 0, 0)
+            , 'ind_prod': (False, 0, 0)
             , 'infl': (False, 1, 1)
             , 'pop': (True, 1, 1)
             , 'brent': (True, 1, 1)
             , 'co2_cap': (True, 4, 1)
-            , 'gdp_cap': (True, 1, 1)
+            # , 'gdp_cap': (True, 1, 1)
         }
     else:
         trans = ['co2'
@@ -96,7 +96,7 @@ def get_trans(timeframe: str = None):
                  , 'pop'
                  , 'brent'
                  , 'co2_cap'
-                 , 'gdp_cap'
+                 # , 'gdp_cap'
                  ]
 
     return trans
@@ -110,14 +110,6 @@ def get_impl_date(treatment_country: str = None, input: str = None):
                                           'france': dt.date(2014, 4, 1),
                                           'portugal': dt.date(2015, 1, 1)
                                           # ,'belgium': dt.date(2015, 1, 1)
-                                          }
-    elif input == 'index':
-        treatment_countries_impl_dates = {'switzerland': 72,
-                                          'ireland': 100,
-                                          'united_kingdom': 135,
-                                          'france': 147,
-                                          'portugal': 156
-                                          # ,'belgium': 156
                                           }
     else:
         treatment_countries_impl_dates = {'switzerland': '2008-01-01',

@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from definitions import data_source_path, corr_country_names, sign_level, fake_num, show_plots, \
-    country_col, year_col, quarter_col, month_col, date_col, incl_countries, show_results
+    country_col, year_col, quarter_col, month_col, date_col, incl_countries, show_output
 from helper_functions_general import read_data, select_country_year_measure, month_name_to_num, rename_order_scale, \
     downsample_month_to_quarter, quarter_to_month, upsample_quarter_to_month, get_timeframe_col, get_trans, \
     get_data_path, interpolate_series
@@ -93,10 +93,12 @@ def preprocess_infl_m(source_file: str, source_country_col: str, var_name: str):
 
     # select years
     infl_m = select_country_year_measure(df=infl_m, year_col=year_col)
+    infl_m = infl_m.replace({':': np.nan})
 
     # order
     infl_m = rename_order_scale(df=infl_m, source_country_col=source_country_col,
                                 var_name=var_name, var_scale=1e-2, timeframe='m')
+    infl_m['infl'] = interpolate_series(series=infl_m['infl'], method='median')
 
     # downsample monthly to quarterly
     infl_q = downsample_month_to_quarter(df_m=infl_m, var_name=var_name, agg='mean')
@@ -294,7 +296,7 @@ def make_stat(df: object, timeframe: str):
 
         total_stat = total_stat.dropna(axis=0, how='any').reset_index(drop=True)
         total_stat.to_csv(f'{get_data_path(timeframe=timeframe)}/total_{timeframe}_{stat}.csv', header=True, index=False)
-        if show_results:
+        if show_output:
             print(f'Timeframe: {timeframe}; Stat: {stat}')
             print(total_stat)
 
@@ -302,32 +304,32 @@ def make_stat(df: object, timeframe: str):
 
 
 def preprocess(timeframes: list):
-    co2_m, co2_q = preprocess_co2_m(source_file='co2_m_2000_2021',
+    co2_m, co2_q = preprocess_co2_m(source_file='edgar_co2_m_2000_2021',
                                     source_country_col='Name',
                                     source_year_col='Year',
                                     var_name='co2'
                                     )
 
-    infl_m, infl_q = preprocess_infl_m(source_file='infl_m_2000_2023',
+    infl_m, infl_q = preprocess_infl_m(source_file='eurostat_infl_m_1963_2023',
                                        source_country_col='Country',
                                        var_name='infl'
                                        )
 
-    ind_prod_m, ind_prod_q = preprocess_ind_prod_m(source_file='ind_prod_m_1953_2023',
+    ind_prod_m, ind_prod_q = preprocess_ind_prod_m(source_file='eurostat_ind_prod_m_1953_2023_yoy',
                                                    source_country_col='Country',
                                                    var_name='ind_prod'
                                                    )
 
-    gdp_m, gdp_q = preprocess_WB_q(source_file='gdp_q_1990_2022',
+    gdp_m, gdp_q = preprocess_WB_q(source_file='wb_gdp_q_1996_2022',
                                    source_country_col='Country',
                                    source_time_col='TIME',
                                    source_measure_col='MEASURE',
-                                   source_incl_measure=['CPCARSA'],
+                                   source_incl_measure=['CPCARSA'],  # GPSA, CPCARSA
                                    var_name='gdp',
-                                   var_scale=1e6
+                                   var_scale=1e6  # 1, 1e6
                                    )
 
-    pop_m, pop_q = preprocess_WB_q(source_file='pop_q_1995_2022',
+    pop_m, pop_q = preprocess_WB_q(source_file='wb_pop_q_1995_2022',
                                    source_country_col='Country',
                                    source_time_col='TIME',
                                    source_measure_col='MEASURE',
@@ -336,7 +338,7 @@ def preprocess(timeframes: list):
                                    var_scale=1e3
                                    )
 
-    brent_m, brent_q = preprocess_brent_m(source_file='brent_m_1990_2023',
+    brent_m, brent_q = preprocess_brent_m(source_file='fred_brent_m_1990_2023',
                                           source_date_col='DATE',
                                           source_measure_col='BRENT',
                                           var_name='brent'

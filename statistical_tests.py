@@ -6,7 +6,7 @@ import sys
 import pandas as pd
 import numpy as np
 
-from definitions import show_results, save_results, country_col, date_col, timeframe_val, sign_level
+from definitions import show_output, save_output, country_col, date_col, timeframe_val, sign_level
 from helper_functions_general import read_data, get_timescale, get_trans, get_impl_date, get_data_path, get_table_path
 
 from statsmodels.tsa.stattools import adfuller
@@ -87,10 +87,10 @@ def adf_test(sign_level: float = sign_level):
                                         'regression', 'stationary', 'p_value'])
         df_stat_group = df_stat.groupby(by=['series', 'log', 'diff_level', 'diff_order', 'regression']).mean()
 
-        if show_results:
+        if show_output:
             print(df_stat)
             print(df_stat_group)
-        if save_results:
+        if save_output:
             df_stat.to_csv(f'{table_path_meth}/{timeframe}_stat_results.csv')
             df_stat_group.to_csv(f'{table_path_meth}/{timeframe}_stat_results_grouped.csv')
 
@@ -98,9 +98,13 @@ def adf_test(sign_level: float = sign_level):
 def shapiro_wilk_test(df: object, treatment_country: str, alpha: float):
     shap = shapiro(df['error'].loc[:get_impl_date(treatment_country)])
     if shap[1] > alpha:
+        normal_errors = 1
         print(f'Shapiro-Wilk test: Errors are normally distributed (p-value={round(shap[1],3)})')
     else:
+        normal_errors = 0
         print(f'Shapiro-Wilk test: Errors NOT normally distributed (p-value={round(shap[1],3)})')
+
+    return normal_errors
 
 
 def stat_test(x: list, sign_level: float):
@@ -111,19 +115,19 @@ def stat_test(x: list, sign_level: float):
         return 'non_stationary'
 
 
-def t_test(df: object, treatment_country: str):
-    df = df.set_index(date_col)
-    df_post = df[df.index >= get_impl_date(treatment_country=treatment_country)]
-    att_mean = df_post['error'].mean()
-    att_std = df_post['error'].std()
-
-    ttest_res = ttest_1samp(df_post['error'], popmean=0)
-    if ttest_res[1] < sign_level:
-        sign = 'significant'
-    else:
-        sign = 'NOT significant'
-
-    return att_mean, att_std, sign
+# def t_test(df: object, treatment_country: str):
+#     df = df.set_index(date_col)
+#     df_post = df[df.index >= get_impl_date(treatment_country=treatment_country)]
+#     att_mean = df_post['error'].mean()
+#     att_std = df_post['error'].std()
+#
+#     ttest_res = ttest_1samp(df_post['error'], popmean=0)
+#     if ttest_res[1] < sign_level:
+#         sign = 'significant'
+#     else:
+#         sign = 'NOT significant'
+#
+#     return att_mean, att_std, sign
 
 
 def t_test_result(df: object, treatment_country: str):
@@ -137,9 +141,13 @@ def t_test_result(df: object, treatment_country: str):
 
     ttest_res = ttest_1samp(df_post['error'], popmean=0)
     if ttest_res[1] < sign_level:
+        significant = 1
         print(f'Result is significant (p-value={round(ttest_res[1],3)})')
     else:
+        significant = 0
         print(f'Result is NOT significant (p-value={round(ttest_res[1],3)})')
+
+    return att_mean, att_std, significant
 
 
 if __name__ == "__main__":
