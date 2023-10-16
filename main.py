@@ -24,7 +24,7 @@ for path in all_paths:
 ### main script              ###
 ################################
 def main(model: str, timeframe: str, treatment_country: str):
-    if validate_input(model, timeframe, treatment_country):
+    if validate_input(model, stat, timeframe, treatment_country):
 
         # read data
         df = read_data(source_path=get_data_path(timeframe=timeframe), file_name=f'total_{timeframe}')
@@ -41,13 +41,9 @@ def main(model: str, timeframe: str, treatment_country: str):
 
         # run the model, get back actual and predicted values
         if model == 'arco':
-            act_pred_log_diff = arco(df=df, df_stat=df_log_diff, treatment_country=treatment_country,
-                                     timeframe=timeframe,
-                                     alpha_min=0.01, alpha_max=1.0, alpha_step=0.01, ts_splits=5,
-                                     lasso_iters=1000000, tol=0.00001, model=model)
-            # act_pred_log_diff = arco(df=df, df_stat=df_log_diff, treatment_country=treatment_country, timeframe=timeframe,
-            #                          alpha_min=0.001, alpha_max=1.0, alpha_step=0.001, ts_splits=5,
-            #                          lasso_iters=100000000, tol=0.00000001, model=model)
+            act_pred_log_diff = arco(df=df, df_stat=df_log_diff, treatment_country=treatment_country, timeframe=timeframe,
+                                     alpha_min=0.001, alpha_max=1.0, alpha_step=0.001, ts_splits=5,
+                                     lasso_iters=100000000, tol=0.00000001, model=model, prox=True)
         elif model == 'sc':
             act_pred_log_diff = sc(df=df, df_stat=df_log_diff, treatment_country=treatment_country, timeframe=timeframe,
                                    model=model)

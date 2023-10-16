@@ -7,15 +7,15 @@ all_paths = [data_source_path, data_path, output_path]
 
 # PRINTING, SHOWING PLOTS
 show_output = True
-show_plots = False
-fig_size = (10, 4)
+show_plots = True
+fig_size = (10, 6)
 
-save_output = True
+save_output = False
 save_figs = False
 
 # NON-STATIC DEFINITIONS
 target_var = 'co2'
-stat = 'non_stat'
+stat = 'stat'
 sign_level = 0.10
 fake_num = -99999
 
@@ -26,6 +26,7 @@ quarter_col = 'quarter'
 date_col = 'date'
 
 model_val = ['arco', 'sc', 'did']
+stat_val = ['stat', 'non_stat']
 timeframe_val = ['m', 'q']
 folder_val = ['data', 'methodology', 'results']
 
@@ -40,23 +41,23 @@ treatment_countries = ['switzerland',
                        'portugal'
                        # , 'belgium'
                        ]  # 5x
-donor_countries = ['austria',
-                   'belgium',
-                   'bulgaria',
-                   'croatia',
-                   'czech_republic',
-                   # 'cyprus',
-                   'germany',
-                   'greece',
-                   'hungary',
-                   'italy',
-                   'lithuania',
-                   'netherlands',
-                   'romania',
-                   'slovakia',
-                   'spain',
-                   ]  # 14x
-incl_countries = treatment_countries + donor_countries
+donor_countries_all = ['austria',
+                       'belgium',
+                       'bulgaria',
+                       'croatia',
+                       'czech_republic',
+                       # 'cyprus',
+                       'germany',
+                       'greece',
+                       'hungary',
+                       'italy',
+                       'lithuania',
+                       'netherlands',
+                       'romania',
+                       'slovakia',
+                       'spain',
+                       ]  # 14x
+incl_countries = treatment_countries + donor_countries_all
 incl_countries = list(set(incl_countries))
 incl_countries.sort()
 incl_years = range(2000, 2020)
@@ -91,3 +92,4 @@ var_name_formal = {'co2': 'CO2 Emissions',
                    'infl': 'Inflation',
                    'brent': 'Brent Oil'
                    }
+

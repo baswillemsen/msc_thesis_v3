@@ -104,7 +104,7 @@ def shapiro_wilk_test(df: object, treatment_country: str, alpha: float):
         normal_errors = 0
         print(f'Shapiro-Wilk test: Errors NOT normally distributed (p-value={round(shap[1],3)})')
 
-    return normal_errors
+    return normal_errors, shap[1]
 
 
 def stat_test(x: list, sign_level: float):
@@ -147,7 +147,7 @@ def t_test_result(df: object, treatment_country: str):
         significant = 0
         print(f'Result is NOT significant (p-value={round(ttest_res[1],3)})')
 
-    return att_mean, att_std, significant
+    return att_mean, att_std, significant, ttest_res[1]
 
 
 if __name__ == "__main__":

@@ -7,13 +7,13 @@ import pandas as pd
 import csv
 from sklearn.metrics import r2_score
 
-from definitions import target_var, donor_countries, country_col, date_col, save_output, fake_num, show_plots, \
+from definitions import target_var, country_col, date_col, save_output, fake_num, show_plots, \
     save_figs, year_col
 from helper_functions_general import get_table_path, get_impl_date, get_trans
 from plot_functions import plot_predictions, plot_diff, plot_cumsum, plot_cumsum_impl
 
 
-def arco_pivot(df: object, treatment_country: str, timeframe: str, model: str):
+def arco_pivot(df: object, treatment_country: str, donor_countries: list, timeframe: str, model: str):
     tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country)
 
     treatment = df.copy()
@@ -38,7 +38,7 @@ def arco_pivot(df: object, treatment_country: str, timeframe: str, model: str):
     return treatment, donors
 
 
-def sc_pivot(df: object, treatment_country: str, timeframe: str, model: str):
+def sc_pivot(df: object, treatment_country: str, donor_countries: list, timeframe: str, model: str):
     tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country)
 
     df_pivot = df.copy()
@@ -59,7 +59,7 @@ def sc_pivot(df: object, treatment_country: str, timeframe: str, model: str):
     return df_pivot, pre_treat, post_treat, treat_unit
 
 
-def did_pivot(df: object, treatment_country: str, timeframe: str, model: str, x_years: int):
+def did_pivot(df: object, treatment_country: str, donor_countries: list, timeframe: str, model: str, x_years: int):
     tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country)
     impl_year = get_impl_date(treatment_country=treatment_country, input='dt').year
 
@@ -164,26 +164,21 @@ def save_dataframe(df: object, var_title: str, model: str, treatment_country: st
 
 
 def save_results(y_log_diff, y_log_diff_pre_stand, act_pred_log_diff, act_pred_log, act_pred,
-                 impl_date_index, model, timeframe, timestamp, treatment_country, incl_countries, incl_years,
+                 impl_date_index, model, timeframe, timestamp, treatment_country, prox, incl_countries, incl_years,
                  stat, impl_date, months_cor, split_date, r2_pre_log_diff_stand,
-                 lasso_alpha, n_pars, lasso_pars, lasso_coefs, normal_errors, att_mean, att_std, significant):
+                 normal_errors, shapiro_p, att_mean, att_std, att_sign, att_p,
+                 lasso_alpha=None, n_pars=None, lasso_pars=None, lasso_coefs=None):
 
     tables_path_res = get_table_path(timeframe=timeframe, folder='results')
 
     incl_vars = get_trans()
     n_train = len(y_log_diff_pre_stand)
     n_test = len(y_log_diff) - len(y_log_diff_pre_stand)
-    r2_pre_log_diff = round(
-        r2_score(act_pred_log_diff['act'][:impl_date_index], act_pred_log_diff['pred'][:impl_date_index]), 3)
-    r2_pre_log = round(r2_score(act_pred_log['act'][:impl_date_index], act_pred_log['pred'][:impl_date_index]), 3)
-    r2_pre = round(r2_score(act_pred['act'][:impl_date_index], act_pred['pred'][:impl_date_index]), 3)
-    colmns = ['model', 'timeframe', 'timestamp', 'treatment_country', 'incl_vars', 'incl_countries', 'incl_years',
-              'stat', 'impl_date', 'months_cor', 'split_date', 'n_train', 'n_test', 'r2_pre_log_diff_stand',
-              'r2_pre_log_diff', 'r2_pre_log', 'r2_pre', 'lasso_alpha', 'n_pars', 'lasso_pars', 'lasso_coefs',
-              'normal_errors', 'att_mean', 'att_std', 'significant']
-    result = [model, timeframe, timestamp, treatment_country, incl_vars, incl_countries, incl_years, stat, impl_date,
-              months_cor, split_date, n_train, n_test, r2_pre_log_diff_stand, r2_pre_log_diff, r2_pre_log, r2_pre,
-              lasso_alpha, n_pars, lasso_pars, lasso_coefs, normal_errors, att_mean, att_std, significant]
+    r2_pre_log_diff = r2_score(act_pred_log_diff['act'][:impl_date_index], act_pred_log_diff['pred'][:impl_date_index])
+    r2_pre_log = r2_score(act_pred_log['act'][:impl_date_index], act_pred_log['pred'][:impl_date_index])
+    r2_pre = r2_score(act_pred['act'][:impl_date_index], act_pred['pred'][:impl_date_index])
+    colmns = ['model', 'timeframe', 'timestamp', 'treatment_country', 'prox', 'incl_vars', 'incl_countries', 'incl_years', 'stat', 'impl_date', 'months_cor', 'split_date', 'n_train', 'n_test', 'r2_pre_log_diff_stand', 'r2_pre_log_diff', 'r2_pre_log', 'r2_pre', 'lasso_alpha', 'n_pars', 'lasso_pars', 'lasso_coefs', 'normal_errors', 'shapiro_p', 'att_mean', 'att_std', 'att_sign', 'att_p']
+    result = [model,    timeframe,   timestamp,   treatment_country,   prox,   incl_vars,   incl_countries,   incl_years,   stat,   impl_date,   months_cor,   split_date,   n_train,   n_test,   r2_pre_log_diff_stand,   r2_pre_log_diff,   r2_pre_log,   r2_pre,   lasso_alpha,   n_pars,   lasso_pars,   lasso_coefs,   normal_errors,   shapiro_p,   att_mean,   att_std,   att_sign,   att_p]
 
     if len(result) != len(colmns):
         raise ValueError('Length column names in file is different from length of output')
@@ -197,7 +192,7 @@ def save_results(y_log_diff, y_log_diff_pre_stand, act_pred_log_diff, act_pred_l
 
     # Create a file object for this file
     with open(file_path, 'a', newline='') as file:
-        print('saving results')
         writer = csv.writer(file)
         writer.writerow(result)
+        print(f'Results saved in {file_path}')
         file.close()

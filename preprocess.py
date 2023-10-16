@@ -6,16 +6,17 @@ import numpy as np
 import pandas as pd
 
 from definitions import data_source_path, corr_country_names, sign_level, fake_num, show_plots, \
-    country_col, year_col, quarter_col, month_col, date_col, incl_countries, show_output
+    country_col, year_col, quarter_col, month_col, date_col, incl_countries, show_output, timeframe_val
 from helper_functions_general import read_data, select_country_year_measure, month_name_to_num, rename_order_scale, \
     downsample_month_to_quarter, quarter_to_month, upsample_quarter_to_month, get_timeframe_col, get_trans, \
-    get_data_path, interpolate_series
+    get_data_path, interpolate_series, validate_input
 from statistical_tests import stat_test
 from plot_functions import plot_series
 
 
 # Monthly CO2 data
-def preprocess_co2_m(source_file: str, source_country_col: str, source_year_col: str, var_name: str):
+def preprocess_co2_m(source_file: str, source_country_col: str, source_year_col: str, var_name: str,
+                     var_scale: str, downsample_method: str):
     # read data
     co2_m_raw = read_data(source_path=data_source_path, file_name=source_file)
     co2_m = co2_m_raw.copy()
@@ -30,15 +31,15 @@ def preprocess_co2_m(source_file: str, source_country_col: str, source_year_col:
     co2_m = co2_m.melt(id_vars=[source_country_col, source_year_col],
                        value_vars=co2_m.drop([source_country_col, source_year_col], axis=1),
                        value_name=var_name)
-    co2_m[month_col] = co2_m.apply (lambda row: month_name_to_num(row.variable), axis=1)
+    co2_m[month_col] = co2_m.apply(lambda row: month_name_to_num(row.variable), axis=1)
     co2_m[date_col] = pd.to_datetime(dict(year=co2_m[source_year_col], month=co2_m[month_col], day=1))
     co2_m = co2_m.drop('variable', axis=1)
 
     # rename, order and scale: output = [index, country, date, value]
     co2_m = rename_order_scale(df=co2_m, source_country_col=source_country_col, source_year_col=source_year_col,
-                               var_name=var_name, var_scale=1e6, timeframe='m')
+                               var_name=var_name, var_scale=var_scale, timeframe='m')
     # downsample monthly to quarterly
-    co2_q = downsample_month_to_quarter(df_m=co2_m, var_name=var_name, agg='sum')
+    co2_q = downsample_month_to_quarter(df_m=co2_m, var_name=var_name, agg=downsample_method)
 
     # export to csv
     co2_m.to_csv(f'{get_data_path(timeframe="m")}/{var_name}_m.csv')
@@ -47,7 +48,8 @@ def preprocess_co2_m(source_file: str, source_country_col: str, source_year_col:
     return co2_m, co2_q
 
 
-def preprocess_brent_m(source_file: str, source_date_col: str, source_measure_col: str, var_name: str):
+def preprocess_brent_m(source_file: str, source_date_col: str, source_measure_col: str, var_name: str,
+                       downsample_method: str):
     # read data
     brent_m_raw = read_data(source_path=data_source_path, file_name=source_file)
     brent_m = brent_m_raw.copy()
@@ -65,7 +67,7 @@ def preprocess_brent_m(source_file: str, source_date_col: str, source_measure_co
     brent_m = brent_m[[date_col, year_col, month_col, var_name]].reset_index(drop=True)
 
     # downsample to q
-    brent_q = downsample_month_to_quarter(df_m=brent_m, var_name=var_name, agg='mean')
+    brent_q = downsample_month_to_quarter(df_m=brent_m, var_name=var_name, agg=downsample_method)
 
     # export to csv
     brent_m.to_csv(f'{get_data_path(timeframe="m")}/{var_name}_m.csv')
@@ -74,125 +76,127 @@ def preprocess_brent_m(source_file: str, source_date_col: str, source_measure_co
     return brent_m, brent_q
 
 
-def preprocess_infl_m(source_file: str, source_country_col: str, var_name: str):
+# Quarterly World Bank data
+def preprocess_WB(source_file: str, source_country_col: str, source_time_col: str, source_measure_col: str,
+                  source_incl_measure: list, source_timeframe: str, var_name: str, var_scale: float,
+                  downsample_method: str = None):
+
+    # validate input
+    validate_input(timeframe=source_timeframe)
+    alt_timeframe = ['m' if source_timeframe == 'q' else 'q'][0]
+
     # read data
-    infl_m = read_data(source_path=data_source_path, file_name=source_file)
+    df_raw = read_data(source_path=data_source_path, file_name=source_file)
+    df = df_raw.copy()
 
     # lowercase, replace country names
-    infl_m[source_country_col] = infl_m[source_country_col].str.lower()
-    infl_m = infl_m.replace({source_country_col: corr_country_names})
-
-    infl_m = infl_m.melt(id_vars=[source_country_col],
-                         value_vars=infl_m.drop([source_country_col], axis=1),
-                         value_name=var_name)
-
-    infl_m[date_col] = pd.to_datetime(infl_m['variable'])
-    infl_m[year_col] = infl_m[date_col].dt.year
-    infl_m[month_col] = infl_m[date_col].dt.month
-    infl_m = infl_m.drop('variable', axis=1)
-
-    # select years
-    infl_m = select_country_year_measure(df=infl_m, year_col=year_col)
-    infl_m = infl_m.replace({':': np.nan})
-
-    # order
-    infl_m = rename_order_scale(df=infl_m, source_country_col=source_country_col,
-                                var_name=var_name, var_scale=1e-2, timeframe='m')
-    infl_m['infl'] = interpolate_series(series=infl_m['infl'], method='median')
-
-    # downsample monthly to quarterly
-    infl_q = downsample_month_to_quarter(df_m=infl_m, var_name=var_name, agg='mean')
-
-    # export to csv
-    infl_m.to_csv(f'{get_data_path(timeframe="m")}/{var_name}_m.csv')
-    infl_q.to_csv(f'{get_data_path(timeframe="q")}/{var_name}_q.csv')
-
-    return infl_m, infl_q
-
-
-def preprocess_ind_prod_m(source_file: str, source_country_col: str, var_name: str):
-    ind_prod_m = read_data(source_path=data_source_path, file_name=source_file)
-
-    # lowercase, replace country names
-    ind_prod_m[source_country_col] = ind_prod_m[source_country_col].str.lower()
-    ind_prod_m = ind_prod_m.replace({source_country_col: corr_country_names})
-
-    ind_prod_m = ind_prod_m.melt(id_vars=[source_country_col],
-                                 value_vars=ind_prod_m.drop([source_country_col], axis=1),
-                                 value_name=var_name)
-
-    ind_prod_m[date_col] = pd.to_datetime(ind_prod_m['variable'])
-    ind_prod_m[year_col] = ind_prod_m[date_col].dt.year
-    ind_prod_m[month_col] = ind_prod_m[date_col].dt.month
-    ind_prod_m = ind_prod_m.drop('variable', axis=1)
-
-    ind_prod_m = select_country_year_measure(df=ind_prod_m, year_col=year_col, country_col=source_country_col)
-    ind_prod_m = ind_prod_m.replace({':': np.nan})
-
-    ind_prod_m = rename_order_scale(df=ind_prod_m, source_country_col=source_country_col,
-                                    var_name=var_name, var_scale=1e-2, timeframe='m')
-    ind_prod_m['ind_prod'] = interpolate_series(series=ind_prod_m['ind_prod'], method='median')
-
-    ind_prod_q = downsample_month_to_quarter(df_m=ind_prod_m, var_name=var_name, agg='mean')
-
-    # export to csv
-    ind_prod_m.to_csv(f'{get_data_path(timeframe="m")}/{var_name}_m.csv')
-    ind_prod_q.to_csv(f'{get_data_path(timeframe="q")}/{var_name}_q.csv')
-
-    return ind_prod_m, ind_prod_q
-
-
-# Quarterly GDP data
-def preprocess_WB_q(source_file: str, source_country_col: str, source_time_col: str,
-                    source_measure_col: str, source_incl_measure: list, var_name: str, var_scale: float):
-    # read data
-    df_q_raw = read_data(source_path=data_source_path, file_name=source_file)
-    df_q = df_q_raw.copy()
-
-    # lowercase, replace country names
-    df_q[source_country_col] = df_q[source_country_col].str.lower()
-    df_q = df_q.replace({source_country_col: corr_country_names})
+    df[source_country_col] = df[source_country_col].str.lower()
+    df = df.replace({source_country_col: corr_country_names})
 
     # transform
-    df_q[year_col] = df_q[source_time_col].str[:4].astype(int)
-    df_q[quarter_col] = df_q[source_time_col].str[6:].astype(int)
-    df_q[month_col] = df_q.apply(lambda row: quarter_to_month(row.quarter), axis=1)
-    df_q[date_col] = pd.to_datetime(dict(year=df_q[year_col], month=df_q[month_col], day=1)).dt.to_period('M')
-    df_q[var_name] = df_q['Value']
+    df[year_col] = df[source_time_col].str[:4].astype(int)
+    df[quarter_col] = df[source_time_col].str[6:].astype(int)
+    df[month_col] = df.apply(lambda row: quarter_to_month(row.quarter), axis=1)
+    df[date_col] = pd.to_datetime(dict(year=df[year_col], month=df[month_col], day=1))
+    df[var_name] = df['Value']
 
     # select countries and year
-    df_q = select_country_year_measure(df=df_q, country_col=source_country_col, year_col=year_col,
-                                       measure_col=source_measure_col, incl_measure=source_incl_measure)
+    df = select_country_year_measure(df=df, country_col=source_country_col, year_col=year_col,
+                                     measure_col=source_measure_col, incl_measure=source_incl_measure)
 
     # rename, order and scale: output = [index, country, date, value]
-    df_q = rename_order_scale(df=df_q, source_country_col=source_country_col, source_year_col=year_col,
-                              timeframe='q', var_name=var_name, var_scale=var_scale)
+    df = rename_order_scale(df=df, source_country_col=source_country_col, source_year_col=year_col,
+                            timeframe=source_timeframe, var_name=var_name, var_scale=var_scale)
 
-    # upsample monthly to quarterly
-    df_m = upsample_quarter_to_month(df_q=df_q, var_name=var_name)
-    df_q[date_col] = pd.to_datetime(dict(year=df_q[year_col], month=df_q[quarter_col].apply(quarter_to_month), day=1))
+    if source_timeframe == 'm':
+        df_alt = downsample_month_to_quarter(df_m=df, var_name=var_name, agg=downsample_method)
+    else:
+        df_alt = upsample_quarter_to_month(df_q=df, var_name=var_name)
+
+    df[date_col] = pd.to_datetime(dict(year=df[year_col], month=df[quarter_col].apply(quarter_to_month), day=1))
 
     # export to csv
-    df_m.to_csv(f'{get_data_path(timeframe="m")}/{var_name}_m.csv')
-    df_q.to_csv(f'{get_data_path(timeframe="q")}/{var_name}_q.csv')
+    df.to_csv(f'{get_data_path(timeframe=source_timeframe)}/{var_name}_{source_timeframe}.csv')
+    df_alt.to_csv(f'{get_data_path(timeframe=alt_timeframe)}/{var_name}_{alt_timeframe}.csv')
 
-    return df_m, df_q
+    return df, df_alt
+
+
+# Monthly Eurostat data
+def preprocess_EUstat(source_file: str, source_country_col: str, var_name: str, var_scale: float,
+                      source_timeframe: str, interpolate_method: str, downsample_method: str = None):
+
+    # validate input
+    validate_input(timeframe=source_timeframe)
+    alt_timeframe = ['m' if source_timeframe == 'q' else 'q'][0]
+
+    # read data
+    df_raw = read_data(source_path=data_source_path, file_name=source_file)
+    df = df_raw.copy()
+
+    # lowercase, replace country names
+    df[source_country_col] = df[source_country_col].str.lower()
+    df = df.replace({source_country_col: corr_country_names})
+
+    df = df.melt(id_vars=[source_country_col],
+                 value_vars=df.drop([source_country_col], axis=1),
+                 value_name=var_name)
+
+    df[date_col] = pd.to_datetime(df['variable'])
+    df[year_col] = df[date_col].dt.year
+    df[quarter_col] = df[date_col].dt.quarter
+    df[month_col] = df[date_col].dt.month
+    df = df.drop('variable', axis=1)
+
+    df = select_country_year_measure(df=df, year_col=year_col, country_col=source_country_col)
+    df = df.replace({':': np.nan})
+
+    df = rename_order_scale(df=df, source_country_col=source_country_col,
+                            var_name=var_name, var_scale=var_scale, timeframe=source_timeframe)
+    df[var_name] = interpolate_series(series=df[var_name], method=interpolate_method)
+
+    if source_timeframe == 'm':
+        df_alt = downsample_month_to_quarter(df_m=df, var_name=var_name, agg=downsample_method)
+    else:
+        df_alt = upsample_quarter_to_month(df_q=df, var_name=var_name)
+
+    df.to_csv(f'{get_data_path(timeframe=source_timeframe)}/{var_name}_{source_timeframe}.csv')
+    df_alt.to_csv(f'{get_data_path(timeframe=alt_timeframe)}/{var_name}_{alt_timeframe}.csv')
+
+    return df, df_alt
 
 
 # join all preprocessed series together into one big dataframe
-def total_join(co2: object, pop: object, gdp: object, ind_prod: object,
-               infl: object, brent: object, key_cols: list, timeframe: str):
+def total_join(key_cols: list, timeframe: str,
+               co2: object = None, brent: object = None,
+               infl: object = None, ind_prod: object = None,
+               infl_energy: object = None, unempl: object = None, trade: object = None,
+               cows: object = None,
+               pop: object = None, gdp: object = None):
     total = co2.copy()
-    total = total.merge(gdp, how='left', on=key_cols)
-    total = total.merge(ind_prod, how='left', on=key_cols)
-    total = total.merge(infl, how='left', on=key_cols)
-    total = total.merge(pop, how='left', on=key_cols)
-    total = total.merge(brent, how='left', on=key_cols.remove(country_col))
+    if gdp is not None:
+        total = total.merge(gdp, how='left', on=key_cols)
+    if ind_prod is not None:
+        total = total.merge(ind_prod, how='left', on=key_cols)
+    if infl is not None:
+        total = total.merge(infl, how='left', on=key_cols)
+    if infl_energy is not None:
+        total = total.merge(infl_energy, how='left', on=key_cols)
+    if unempl is not None:
+        total = total.merge(unempl, how='left', on=key_cols)
+    if trade is not None:
+        total = total.merge(trade, how='left', on=key_cols)
+    if cows is not None:
+        total = total.merge(cows, how='left', on=key_cols)
+    if pop is not None:
+        total = total.merge(pop, how='left', on=key_cols)
+    if brent is not None:
+        total = total.merge(brent, how='left', on=key_cols.remove(country_col))
 
     total['co2_cap'] = total['co2'] / total['pop']
     total['gdp_cap'] = total['gdp'] / total['pop']
 
-    total = total.dropna(axis=0, how='any', subset=total.columns.drop(['infl', 'ind_prod']))
+    total = total.dropna(axis=0, how='any', subset=total.columns.drop(['ind_prod', 'infl', 'unempl']))
     total = total.fillna(fake_num).reset_index(drop=True)
     # total = total.reset_index(drop=True)
     total.to_csv(f'{get_data_path(timeframe=timeframe)}/total_{timeframe}.csv', header=True, index=False)
@@ -229,6 +233,8 @@ def make_stat(df: object, timeframe: str):
             for series in vars:
                 print(timeframe, stat, country, series)
                 df_country_series = df_country.set_index(date_col)[series]
+                if timeframe == 'm ' and stat == 'stat' and country == 'switerland' and series == 'co2':
+                    print(df_country_series)
                 var_name = f'{country}_{timeframe}_{series}_act'
                 df_country_series.to_csv(f'{data_path_cor}/{var_name}.csv')
                 if show_plots:
@@ -282,12 +288,26 @@ def make_stat(df: object, timeframe: str):
         # put together in dataframe
         total_stat = pd.DataFrame(list(zip(country_list, date_list, year_list, period_list)),
                                   columns=[country_col, date_col, year_col, period_col])
-        total_stat['co2'] = co2_list
-        total_stat['gdp'] = gdp_list
-        total_stat['ind_prod'] = ind_prod_list
-        total_stat['infl'] = infl_list
-        total_stat['pop'] = pop_list
-        total_stat['brent'] = brent_list
+        if 'co2' in trans:
+            total_stat['co2'] = co2_list
+        if 'gdp' in trans:
+            total_stat['gdp'] = gdp_list
+        if 'ind_prod' in trans:
+            total_stat['ind_prod'] = ind_prod_list
+        if 'infl' in trans:
+            total_stat['infl'] = infl_list
+        if 'infl_energy' in trans:
+            total_stat['infl_energy'] = infl_energy_list
+        if 'unempl' in trans:
+            total_stat['unempl'] = unempl_list
+        if 'trade' in trans:
+            total_stat['trade'] = trade_list
+        if 'cows' in trans:
+            total_stat['cows'] = cows_list
+        if 'pop' in trans:
+            total_stat['pop'] = pop_list
+        if 'brent' in trans:
+            total_stat['brent'] = brent_list
 
         if 'co2_cap' in trans:
             total_stat['co2_cap'] = co2_cap_list
@@ -300,64 +320,124 @@ def make_stat(df: object, timeframe: str):
             print(f'Timeframe: {timeframe}; Stat: {stat}')
             print(total_stat)
 
-    return total_stat
 
-
-def preprocess(timeframes: list):
+def preprocess():
     co2_m, co2_q = preprocess_co2_m(source_file='edgar_co2_m_2000_2021',
                                     source_country_col='Name',
                                     source_year_col='Year',
-                                    var_name='co2'
+                                    var_name='co2',
+                                    var_scale=1e6,
+                                    downsample_method='sum'
                                     )
-
-    infl_m, infl_q = preprocess_infl_m(source_file='eurostat_infl_m_1963_2023',
-                                       source_country_col='Country',
-                                       var_name='infl'
-                                       )
-
-    ind_prod_m, ind_prod_q = preprocess_ind_prod_m(source_file='eurostat_ind_prod_m_1953_2023_yoy',
-                                                   source_country_col='Country',
-                                                   var_name='ind_prod'
-                                                   )
-
-    gdp_m, gdp_q = preprocess_WB_q(source_file='wb_gdp_q_1996_2022',
-                                   source_country_col='Country',
-                                   source_time_col='TIME',
-                                   source_measure_col='MEASURE',
-                                   source_incl_measure=['CPCARSA'],  # GPSA, CPCARSA
-                                   var_name='gdp',
-                                   var_scale=1e6  # 1, 1e6
-                                   )
-
-    pop_m, pop_q = preprocess_WB_q(source_file='wb_pop_q_1995_2022',
-                                   source_country_col='Country',
-                                   source_time_col='TIME',
-                                   source_measure_col='MEASURE',
-                                   source_incl_measure=['PERSA'],
-                                   var_name='pop',
-                                   var_scale=1e3
-                                   )
 
     brent_m, brent_q = preprocess_brent_m(source_file='fred_brent_m_1990_2023',
                                           source_date_col='DATE',
                                           source_measure_col='BRENT',
-                                          var_name='brent'
+                                          var_name='brent',
+                                          downsample_method='sum'
                                           )
 
-    if 'm' in timeframes:
-        # total monthly
-        timeframe = 'm'
-        total_m = total_join(co2=co2_m, pop=pop_m, gdp=gdp_m, brent=brent_m, infl=infl_m, ind_prod=ind_prod_m,
-                             key_cols=[country_col, date_col, year_col, month_col], timeframe=timeframe)
-        make_stat(df=total_m, timeframe=timeframe)
+    ind_prod_m, ind_prod_q = preprocess_EUstat(source_file='eurostat_ind_prod_m_1953_2023',
+                                               source_country_col='Country',
+                                               var_name='ind_prod',
+                                               var_scale=1e-2,
+                                               source_timeframe='m',
+                                               interpolate_method='median',
+                                               downsample_method='mean'
+                                               )
 
-    if 'q' in timeframes:
-        # total quarterly
-        timeframe = 'q'
-        total_q = total_join(co2=co2_q, pop=pop_q, gdp=gdp_q, brent=brent_q, infl=infl_q, ind_prod=ind_prod_q,
-                             key_cols=[country_col, date_col, year_col, quarter_col], timeframe=timeframe)
-        make_stat(df=total_q, timeframe=timeframe)
+    infl_m, infl_q = preprocess_EUstat(source_file='eurostat_infl_m_1963_2023',
+                                       source_country_col='Country',
+                                       var_name='infl',
+                                       var_scale=1e-2,
+                                       source_timeframe='m',
+                                       interpolate_method='median',
+                                       downsample_method='mean'
+                                       )
+
+    unempl_m, unempl_q = preprocess_EUstat(source_file='eurostat_unempl_m_1980_2023',
+                                           source_country_col='Country',
+                                           var_name='unempl',
+                                           var_scale=1e-2,
+                                           source_timeframe='m',
+                                           interpolate_method='median',
+                                           downsample_method='mean'
+                                           )
+
+    # infl_energy_m, infl_energy_q = preprocess_EUstat(source_file='eurostat_infl_energy_m_1990_2023',
+    #                                                  source_country_col='Country',
+    #                                                  var_name='infl_energy',
+    #                                                  var_scale=1e-2,
+    #                                                  source_timeframe='m',
+    #                                                  interpolate_method='median',
+    #                                                  downsample_method='mean'
+    #                                                  )
+
+    # cows_m, cows_q = preprocess_EUstat(source_file='eurostat_cow_slaugh_m_1990_2023',
+    #                                    source_country_col='Country',
+    #                                    var_name='cows',
+    #                                    var_scale=1e6,
+    #                                    source_timeframe='m',
+    #                                    interpolate_method='median',
+    #                                    downsample_method='mean'
+    #                                    )
+
+    # trade_m, trade_q = preprocess_EUstat(source_file='eurostat_trade_m_1990_2023',
+    #                                      source_country_col='Country',
+    #                                      var_name='trade',
+    #                                      var_scale=1e6,
+    #                                      source_timeframe='m',
+    #                                      interpolate_method='median',
+    #                                      downsample_method='mean'
+    #                                      )
+
+    # gdp_q, gdp_m = preprocess_EUstat(source_file='eurostat_gdp_q_1975_2023',
+    #                                  source_country_col='Country',
+    #                                  var_name='gdp',
+    #                                  var_scale=1e6,
+    #                                  source_timeframe='q',
+    #                                  interpolate_method='median',
+    #                                  downsample_method='mean'
+    #                                  )
+
+    gdp_q, gdp_m = preprocess_WB(source_file='wb_gdp_q_1996_2022',
+                                 source_country_col='Country',
+                                 source_time_col='TIME',
+                                 source_measure_col='MEASURE',
+                                 source_incl_measure=['GPSA'],  # GPSA=growth rate, CPCARSA = absolute
+                                 source_timeframe='q',
+                                 var_name='gdp',
+                                 var_scale=1e-2  # 1e-2, 1e6
+                                 )
+
+    pop_q, pop_m = preprocess_WB(source_file='wb_pop_q_1995_2022',
+                                 source_country_col='Country',
+                                 source_time_col='TIME',
+                                 source_measure_col='MEASURE',
+                                 source_incl_measure=['PERSA'],
+                                 source_timeframe='q',
+                                 var_name='pop',
+                                 var_scale=1e3
+                                 )
+
+    # total monthly
+    timeframe = 'm'
+    total_m = total_join(key_cols=[country_col, date_col, year_col, month_col], timeframe=timeframe,
+                         co2=co2_m, brent=brent_m,
+                         infl=infl_m, ind_prod=ind_prod_m, unempl=unempl_m,
+                         # trade=trade_m, infl_energy=infl_energy_m, cows=cows_m,
+                         pop=pop_m, gdp=gdp_m)
+    make_stat(df=total_m, timeframe=timeframe)
+
+    # total quarterly
+    timeframe = 'q'
+    total_q = total_join(key_cols=[country_col, date_col, year_col, quarter_col], timeframe=timeframe,
+                         co2=co2_q, brent=brent_q,
+                         infl=infl_q, ind_prod=ind_prod_q, unempl=unempl_q,
+                         # trade=trade_q, infl_energy=infl_energy_q, cows=cows_q,
+                         pop=pop_q, gdp=gdp_q)
+    make_stat(df=total_q, timeframe=timeframe)
 
 
 if __name__ == "__main__":
-    preprocess(timeframes=sys.argv[1])
+    preprocess()

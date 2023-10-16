@@ -24,7 +24,7 @@ import statsmodels.formula.api as smf
 # custom functions
 from definitions import fake_num, show_plots, sign_level, save_figs, target_var, incl_years, incl_countries, stat, \
     save_output
-from helper_functions_general import flatten, get_impl_date, get_table_path
+from helper_functions_general import flatten, get_impl_date, get_table_path, get_trans, get_months_cors, get_donor_countries
 from helper_functions_estimation import arco_pivot, sc_pivot, transform_back, save_dataframe, did_pivot, save_results
 from plot_functions import plot_lasso_path
 from statistical_tests import shapiro_wilk_test, t_test_result
@@ -35,10 +35,12 @@ from statistical_tests import shapiro_wilk_test, t_test_result
 ################################
 def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts_splits: int,
          alpha_min: float, alpha_max: float, alpha_step: float, tol: float, lasso_iters: int,
-         model: str):
-    tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country)
+         model: str, prox: bool):
+
     # pivot treatment and donors
+    donor_countries = get_donor_countries(prox, treatment_country)
     treatment_log_diff, donors_log_diff = arco_pivot(df=df_stat, treatment_country=treatment_country,
+                                                     donor_countries=donor_countries,
                                                      timeframe=timeframe, model=model)
     # print(f'Nr of parameters included ({len(donors_log_diff.columns)}x): {donors_log_diff.columns}')
     print(f'Nr of parameters included: {len(donors_log_diff.columns)}x')
@@ -53,13 +55,8 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
 
         impl_date = get_impl_date(treatment_country=treatment_country)
         impl_date_index = list(treatment_log_diff.index).index(impl_date)
-        months_cors = {'switzerland': 6,
-                       'ireland': 12,
-                       'united_kingdom': -6,
-                       'france': -3,
-                       'portugal': 15
-                       }
-        months_cor = months_cors[treatment_country]
+
+        months_cor = get_months_cors(timeframe=timeframe, treatment_country=treatment_country)
 
         # for months_cor in np.arange(-24, 24, 3):
         # for months_cor in [0]:
@@ -101,8 +98,8 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
         # fit model
         lasso.fit(X_log_diff_pre_stand, y_log_diff_pre_stand.ravel())
         # lasso results
-        r2_pre_log_diff_stand = round(lasso.score(X_log_diff_pre_stand, y_log_diff_pre_stand), 3)
-        lasso_alpha = round(lasso.alpha_, 3)
+        r2_pre_log_diff_stand = lasso.score(X_log_diff_pre_stand, y_log_diff_pre_stand)
+        lasso_alpha = lasso.alpha_
         print(f'R2 r2_pre_log_diff_stand: {r2_pre_log_diff_stand}')
         print(f'alpha: {lasso_alpha}')
 
@@ -131,19 +128,20 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
                                                     timeframe=timeframe, pred_log_diff=pred_log_diff)
 
         # perform hypothesis tests
-        timestamp = datetime.now().strftime("%Y-%m-%d, %H:%M:%S")
-        normal_errors = shapiro_wilk_test(df=act_pred_log_diff, treatment_country=treatment_country, alpha=sign_level)
-        att_mean, att_std, significant = t_test_result(df=act_pred_log_diff, treatment_country=treatment_country)
+        timestamp = datetime.now().strftime("%Y-%m-%d, %H:%M")
+        normal_errors, shapiro_p = shapiro_wilk_test(df=act_pred_log_diff, treatment_country=treatment_country, alpha=sign_level)
+        att_mean, att_std, att_sign, att_p = t_test_result(df=act_pred_log_diff, treatment_country=treatment_country)
 
         # if save_output:
+        #     tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country)
         #     incl_vars = get_trans()
         #     n_train = len(y_log_diff_pre_stand)
         #     n_test = len(y_log_diff) - len(y_log_diff_pre_stand)
         #     r2_pre_log_diff = round(r2_score(act_pred_log_diff['act'][:impl_date_index], act_pred_log_diff['pred'][:impl_date_index]), 3)
         #     r2_pre_log = round(r2_score(act_pred_log['act'][:impl_date_index], act_pred_log['pred'][:impl_date_index]), 3)
         #     r2_pre = round(r2_score(act_pred['act'][:impl_date_index], act_pred['pred'][:impl_date_index]), 3)
-        #     colmns = ['model', 'timeframe', 'timestamp', 'treatment_country', 'incl_vars', 'incl_countries', 'incl_years', 'stat', 'impl_date', 'months_cor', 'split_date', 'n_train', 'n_test', 'r2_pre_log_diff_stand', 'r2_pre_log_diff', 'r2_pre_log', 'r2_pre', 'lasso_alpha', 'n_pars', 'lasso_pars', 'lasso_coefs', 'normal_errors', 'att_mean', 'att_std', 'significant']
-        #     result = [model,    timeframe,   timestamp,   treatment_country,   incl_vars,   incl_countries,   incl_years,   stat,   impl_date,   months_cor,   split_date,   n_train,   n_test,   r2_pre_log_diff_stand,   r2_pre_log_diff,   r2_pre_log,   r2_pre,   lasso_alpha,   n_pars,   lasso_pars,   lasso_coefs,   normal_errors,   att_mean,   att_std,   significant]
+        #     colmns = ['model', 'timeframe', 'timestamp', 'treatment_country', 'incl_vars', 'incl_countries', 'incl_years', 'stat', 'impl_date', 'months_cor', 'split_date', 'n_train', 'n_test', 'r2_pre_log_diff_stand', 'r2_pre_log_diff', 'r2_pre_log', 'r2_pre', 'lasso_alpha', 'n_pars', 'lasso_pars', 'lasso_coefs', 'normal_errors', 'shapiro_p', 'att_mean', 'att_std', 'att_sign', 'att_sign']
+        #     result = [model,    timeframe,   timestamp,   treatment_country,   incl_vars,   incl_countries,   incl_years,   stat,   impl_date,   months_cor,   split_date,   n_train,   n_test,   r2_pre_log_diff_stand,   r2_pre_log_diff,   r2_pre_log,   r2_pre,   lasso_alpha,   n_pars,   lasso_pars,   lasso_coefs,   normal_errors,   shapiro_p,   att_mean,   att_std,   att_sign,   att_p]
         #
         #     if len(result) != len(colmns):
         #         raise ValueError('Length column names in file is different from length of output')
@@ -190,10 +188,14 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
                            model=model, treatment_country=treatment_country, timeframe=timeframe,
                            save_csv=True, save_predictions=True, save_diff=True, save_cumsum=True)
 
-            save_results(y_log_diff, y_log_diff_pre_stand, act_pred_log_diff, act_pred_log, act_pred,
-                         impl_date_index, model, timeframe, timestamp, treatment_country, incl_countries, incl_years,
-                         stat, impl_date, months_cor, split_date, r2_pre_log_diff_stand,
-                         lasso_alpha, n_pars, lasso_pars, lasso_coefs, normal_errors, att_mean, att_std, significant)
+            save_results(y_log_diff=y_log_diff, y_log_diff_pre_stand=y_log_diff_pre_stand, prox=prox,
+                         act_pred_log_diff=act_pred_log_diff, act_pred_log=act_pred_log, act_pred=act_pred,
+                         impl_date_index=impl_date_index, model=model, timeframe=timeframe, timestamp=timestamp,
+                         treatment_country=treatment_country, incl_countries=incl_countries, incl_years=incl_years,
+                         stat=stat, impl_date=impl_date, months_cor=months_cor, split_date=split_date,
+                         r2_pre_log_diff_stand=r2_pre_log_diff_stand, normal_errors=normal_errors,
+                         shapiro_p=shapiro_p, att_mean=att_mean, att_std=att_std, att_p=att_p, att_sign=att_sign,
+                         lasso_alpha=lasso_alpha, n_pars=n_pars, lasso_pars=lasso_pars, lasso_coefs=lasso_coefs)
 
         return act_pred_log_diff
 

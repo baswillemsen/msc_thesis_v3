@@ -8,7 +8,7 @@ import datetime as dt
 
 from definitions import target_var, data_path, incl_countries, incl_years, treatment_countries, \
     country_col, year_col, month_col, quarter_col, date_col, model_val, timeframe_val, \
-    output_path, agg_val, interpolation_val, folder_val
+    output_path, agg_val, interpolation_val, folder_val, stat_val, donor_countries_all
 
 
 def get_data_path(timeframe: str,  country: str = None):
@@ -72,6 +72,10 @@ def get_trans(timeframe: str = None):
             , 'gdp': (False, 0, 0)
             , 'ind_prod': (False, 0, 0)
             , 'infl': (False, 1, 1)
+            , 'unempl': (False, 1, 1)
+            # , 'infl_energy': (False, 1, 1)
+            # , 'trade': (True, 1, 1)
+            # , 'cows': (True, 1, 1)
             , 'pop': (True, 1, 1)
             , 'brent': (True, 1, 1)
             , 'co2_cap': (True, 12, 1)
@@ -83,6 +87,10 @@ def get_trans(timeframe: str = None):
             , 'gdp': (False, 0, 0)
             , 'ind_prod': (False, 0, 0)
             , 'infl': (False, 1, 1)
+            , 'unempl': (False, 1, 1)
+            # , 'infl_energy': (False, 1, 1)
+            # , 'trade': (True, 1, 1)
+            # , 'cows': (True, 1, 1)
             , 'pop': (True, 1, 1)
             , 'brent': (True, 1, 1)
             , 'co2_cap': (True, 4, 1)
@@ -93,6 +101,10 @@ def get_trans(timeframe: str = None):
                  , 'gdp'
                  , 'ind_prod'
                  , 'infl'
+                 , 'unempl'
+                 # , 'infl_energy'
+                 # , 'trade'
+                 # , 'cows'
                  , 'pop'
                  , 'brent'
                  , 'co2_cap'
@@ -123,6 +135,27 @@ def get_impl_date(treatment_country: str = None, input: str = None):
         return treatment_countries_impl_dates
     else:
         return treatment_countries_impl_dates[treatment_country]
+
+
+def get_months_cors(timeframe, treatment_country):
+    if timeframe == 'm':
+        months_cors = {'switzerland': 6,
+                       'ireland': 0,
+                       'united_kingdom': 0,  # -6, -9, -12, -15
+                       'france': -3,  # -6, -9
+                       'portugal': 15  # 12, 18
+                       }
+    elif timeframe == 'q':
+        months_cors = {'switzerland': 2,
+                       'ireland': 0,
+                       'united_kingdom': 0,  # -2, -3, -4, -5
+                       'france': -1,  # -2, -3
+                       'portugal': 5  # 4, 6
+                       }
+    else:
+        raise ValueError(f'Input valid timeframe argument: {timeframe_val}')
+
+    return months_cors[treatment_country]
 
 
 def get_formal_title(var_name: str):
@@ -229,14 +262,17 @@ def read_data(source_path: str, file_name: str):
     return df
 
 
-def validate_input(model: str, timeframe: str, treatment_country: str):
-    if model not in model_val:
+def validate_input(model: str = None, stat: str = None, timeframe: str = None, treatment_country: str = None):
+    if model is not None and model not in model_val:
         raise ValueError(f'Input a valid model argument: {model_val}')
 
-    elif timeframe not in timeframe_val:
+    if stat is not None and stat not in stat_val:
+        raise ValueError(f'Input a valid model argument: {stat_val}')
+
+    if timeframe is not None and timeframe not in timeframe_val:
         raise ValueError(f'Input a valid timeframe argument: {timeframe_val}')
 
-    elif treatment_country not in treatment_countries:
+    if treatment_country is not None and treatment_country not in treatment_countries:
         raise ValueError(f'Input a valid treatment_country argument: {treatment_countries}')
 
     else:
@@ -335,6 +371,7 @@ def upsample_quarter_to_month(df_q: object, var_name: str):
     for country in df_q[country_col].unique():
         df_country = df_q.copy()
         df_country = df_country[df_country[country_col] == country]
+        df_country[date_col] = df_country[date_col].dt.to_period('M')
         df_country = df_country.set_index(date_col)[var_name]
         df_country = df_country.resample('M', convention='start').interpolate().to_frame()
         df_country[country_col] = [country] * len(df_country)
@@ -375,3 +412,16 @@ def interpolate_series(series: object, method='linear'):
 
     else:
         raise ValueError(f'Input a valid method argument: {interpolation_val}')
+
+
+def get_donor_countries(prox: bool = None, treatment_country: str = None):
+    if prox and treatment_country is not None:
+        donor_countries_prox = {'switzerland': ['austria', 'germany', 'italy'],
+                                'ireland': donor_countries_all,
+                                'united_kingdom': ['netherlands', 'belgium', 'spain'],
+                                'france': ['belgium', 'italy', 'netherlands', 'spain'],
+                                'portugal': ['spain']
+                                }
+        return donor_countries_prox[treatment_country]
+    else:
+        return donor_countries_all
