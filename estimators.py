@@ -36,6 +36,7 @@ from statistical_tests import shapiro_wilk_test, t_test_result
 def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts_splits: int,
          alpha_min: float, alpha_max: float, alpha_step: float, tol: float, lasso_iters: int,
          model: str, prox: bool):
+    tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
 
     # pivot treatment and donors
     donor_countries = get_donor_countries(prox, treatment_country)
@@ -114,6 +115,11 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
               f'{lasso_coefs}')
         print("\n")
 
+        ind = list(range(1, n_pars+1))
+        df_results = pd.DataFrame(list(zip(ind, lasso_pars, lasso_coefs)), columns=['Index', 'Variable', 'Coefficient'])
+        df_results = df_results.sort_values('Coefficient', asc=False)
+        df_results.to_csv(f'{tables_path_res}/{model}_{treatment_country}_{timeframe}_lasso_pars.csv', index=False)
+
         # summarize chosen configuration
         act_log_diff = flatten(y_log_diff)
         pred_log_diff = flatten(SS_treatmentfit_pre.inverse_transform(lasso.predict(X_log_diff_stand).reshape(-1, 1)))
@@ -128,10 +134,10 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
                                                     timeframe=timeframe, pred_log_diff=pred_log_diff)
 
         # perform hypothesis tests
-        timestamp = datetime.now().strftime("%Y-%m-%d, %H:%M")
-        normal_errors, shapiro_p = shapiro_wilk_test(df=act_pred_log_diff, treatment_country=treatment_country, alpha=sign_level)
-        att_mean, att_std, att_sign, att_p = t_test_result(df=act_pred_log_diff, treatment_country=treatment_country)
-        _, _, _, _ = t_test_result(df=act_pred, treatment_country=treatment_country)
+        # timestamp = datetime.now().strftime("%Y-%m-%d, %H:%M")
+        # normal_errors, shapiro_p = shapiro_wilk_test(df=act_pred_log_diff, treatment_country=treatment_country, alpha=sign_level)
+        # t_test_result(df=act_pred_log_diff, treatment_country=treatment_country)
+        # t_test_result(df=act_pred, treatment_country=treatment_country)
 
         # if save_output:
         #     tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country)
@@ -175,27 +181,26 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
 
             save_dataframe(df=act_pred_log_diff, var_title='act_pred_log_diff',
                            model=model, treatment_country=treatment_country, timeframe=timeframe,
-                           save_csv=True, save_predictions=True, save_diff=True, save_cumsum=True)
+                           save_csv=True, save_predictions=True, save_diff=True, save_cumsum=True, save_qq=True)
 
             save_dataframe(df=act_pred_log_diff_check, var_title='act_pred_log_diff_check',
                            model=model, treatment_country=treatment_country, timeframe=timeframe,
-                           save_csv=True, save_predictions=True, save_diff=True, save_cumsum=True)
+                           save_csv=True, save_predictions=True, save_diff=True, save_cumsum=True, save_qq=True)
 
             save_dataframe(df=act_pred_log, var_title='act_pred_log',
                            model=model, treatment_country=treatment_country, timeframe=timeframe,
-                           save_csv=True, save_predictions=True, save_diff=True, save_cumsum=True)
+                           save_csv=True, save_predictions=True, save_diff=True, save_cumsum=True, save_qq=True)
 
             save_dataframe(df=act_pred, var_title='act_pred',
                            model=model, treatment_country=treatment_country, timeframe=timeframe,
-                           save_csv=True, save_predictions=True, save_diff=True, save_cumsum=True)
+                           save_csv=True, save_predictions=True, save_diff=True, save_cumsum=True, save_qq=True)
 
             save_results(y_log_diff=y_log_diff, y_log_diff_pre_stand=y_log_diff_pre_stand, prox=prox,
                          act_pred_log_diff=act_pred_log_diff, act_pred_log=act_pred_log, act_pred=act_pred,
-                         impl_date_index=impl_date_index, model=model, timeframe=timeframe, timestamp=timestamp,
+                         impl_date_index=impl_date_index, model=model, timeframe=timeframe, sign_level=sign_level,
                          treatment_country=treatment_country, incl_countries=incl_countries, incl_years=incl_years,
                          stat=stat, impl_date=impl_date, months_cor=months_cor, split_date=split_date,
-                         r2_pre_log_diff_stand=r2_pre_log_diff_stand, normal_errors=normal_errors,
-                         shapiro_p=shapiro_p, att_mean=att_mean, att_std=att_std, att_p=att_p, att_sign=att_sign,
+                         r2_pre_log_diff_stand=r2_pre_log_diff_stand,
                          lasso_alpha=lasso_alpha, n_pars=n_pars, lasso_pars=lasso_pars, lasso_coefs=lasso_coefs)
 
         return act_pred_log_diff

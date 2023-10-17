@@ -4,6 +4,8 @@
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import statsmodels.api as sm
+import pylab as py
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
@@ -55,7 +57,7 @@ def plot_series(i: int, series: object, timeframe: str, treatment_country: str, 
 # print lasso path for given alphas and LASSO solution
 def plot_lasso_path(X: list, y: list, treatment_country: str, model: str, timeframe: str,
                     alpha_min: float, alpha_max: float, alpha_step: float, lasso_iters: int, alpha_cv: float):
-    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=treatment_country)
+    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
     var_name = f'{model}_{treatment_country}_{timeframe}_lasso_path'
 
     alphas = np.arange(alpha_min, alpha_max, alpha_step)
@@ -82,8 +84,8 @@ def plot_lasso_path(X: list, y: list, treatment_country: str, model: str, timefr
         plt.show()
 
 
-def plot_predictions(df: object, treatment_country: str, timeframe: str, var_name: str):
-    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=treatment_country)
+def plot_predictions(df: object, treatment_country: str, model: str, timeframe: str, var_name: str):
+    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
 
     df.index = pd.to_datetime(df.index)
 
@@ -107,8 +109,8 @@ def plot_predictions(df: object, treatment_country: str, timeframe: str, var_nam
         plt.show()
 
 
-def plot_diff(df: object, treatment_country: str, timeframe: str, var_name: str):
-    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=treatment_country)
+def plot_diff(df: object, treatment_country: str, model: str, timeframe: str, var_name: str):
+    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
 
     df.index = pd.to_datetime(df.index)
 
@@ -132,8 +134,8 @@ def plot_diff(df: object, treatment_country: str, timeframe: str, var_name: str)
         plt.show()
 
 
-def plot_cumsum(df: object, treatment_country: str, timeframe: str, var_name: str):
-    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=treatment_country)
+def plot_cumsum(df: object, treatment_country: str, model: str, timeframe: str, var_name: str):
+    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
 
     fig, ax = plt.subplots(figsize=fig_size)
     ax.plot(df['act'].cumsum(), label='actual')
@@ -154,8 +156,8 @@ def plot_cumsum(df: object, treatment_country: str, timeframe: str, var_name: st
         plt.show()
 
 
-def plot_cumsum_impl(df: object, treatment_country: str, timeframe: str, var_name: str):
-    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=treatment_country)
+def plot_cumsum_impl(df: object, treatment_country: str, model: str, timeframe: str, var_name: str):
+    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
 
     df = df[df.index >= get_impl_date(treatment_country)]
 
@@ -174,6 +176,24 @@ def plot_cumsum_impl(df: object, treatment_country: str, timeframe: str, var_nam
     ax.legend(loc='best')
     if save_figs:
         plt.savefig(f'{figures_path_res}/{var_name}_cumsum_impl.png', dpi=300, bbox_inches='tight')
+    if show_plots:
+        plt.show()
+
+
+def plot_qq(df: object, treatment_country: str, model: str, timeframe: str, var_name: str):
+    figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
+
+    df.index = pd.to_datetime(df.index)
+    df = df[df.index < get_impl_date(treatment_country)]
+
+    fig, ax = plt.subplots(figsize=fig_size)
+    sm.qqplot(df['error'].dropna(), line='45', fit=True, ax=ax)
+
+    ax.set_title(f'{country_name_formal[treatment_country]} {get_formal_title(var_name=var_name)} '
+                 f'prediction error QQ-plot')
+
+    if save_figs:
+        plt.savefig(f'{figures_path_res}/{var_name}_qq.png', dpi=300, bbox_inches='tight')
     if show_plots:
         plt.show()
 

@@ -5,16 +5,18 @@ import os
 import numpy as np
 import pandas as pd
 import csv
+from datetime import datetime
 from sklearn.metrics import r2_score
 
 from definitions import target_var, country_col, date_col, save_output, fake_num, show_plots, \
     save_figs, year_col
 from helper_functions_general import get_table_path, get_impl_date, get_trans
-from plot_functions import plot_predictions, plot_diff, plot_cumsum, plot_cumsum_impl
+from plot_functions import plot_predictions, plot_diff, plot_cumsum, plot_cumsum_impl, plot_qq
+from statistical_tests import shapiro_wilk_test, t_test_result
 
 
 def arco_pivot(df: object, treatment_country: str, donor_countries: list, timeframe: str, model: str):
-    tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country)
+    tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
 
     treatment = df.copy()
     treatment = treatment[treatment[country_col] == treatment_country].set_index(date_col)[target_var].to_frame()
@@ -39,7 +41,7 @@ def arco_pivot(df: object, treatment_country: str, donor_countries: list, timefr
 
 
 def sc_pivot(df: object, treatment_country: str, donor_countries: list, timeframe: str, model: str):
-    tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country)
+    tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
 
     df_pivot = df.copy()
     df_pivot = df_pivot[df_pivot[country_col].isin(donor_countries + [treatment_country])]
@@ -60,7 +62,7 @@ def sc_pivot(df: object, treatment_country: str, donor_countries: list, timefram
 
 
 def did_pivot(df: object, treatment_country: str, donor_countries: list, timeframe: str, model: str, x_years: int):
-    tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country)
+    tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
     impl_year = get_impl_date(treatment_country=treatment_country, input='dt').year
 
     df = df[df[country_col].isin(donor_countries + [treatment_country])]
@@ -145,8 +147,8 @@ def transform_back(df: object, df_stat: object, pred_log_diff: object, timeframe
 
 
 def save_dataframe(df: object, var_title: str, model: str, treatment_country: str, timeframe: str,
-                   save_csv: bool, save_predictions: bool, save_diff: bool, save_cumsum: bool):
-    tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country)
+                   save_csv: bool, save_predictions: bool, save_diff: bool, save_cumsum: bool, save_qq: bool):
+    tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
 
     var_name = f'{model}_{treatment_country}_{timeframe}_{var_title}'
 
@@ -154,22 +156,40 @@ def save_dataframe(df: object, var_title: str, model: str, treatment_country: st
         if save_csv:
             df.to_csv(f'{tables_path_res}/{var_name}.csv')
     if show_plots or save_figs:
+        if save_qq:
+            plot_qq(df=df, treatment_country=treatment_country, timeframe=timeframe, var_name=var_name, model=model)
         if save_predictions:
-            plot_predictions(df=df, treatment_country=treatment_country, timeframe=timeframe, var_name=var_name)
+            plot_predictions(df=df, treatment_country=treatment_country, timeframe=timeframe, var_name=var_name, model=model)
         if save_diff:
-            plot_diff(df=df, treatment_country=treatment_country, timeframe=timeframe, var_name=var_name)
+            plot_diff(df=df, treatment_country=treatment_country, timeframe=timeframe, var_name=var_name, model=model)
         if save_cumsum:
-            plot_cumsum(df=df, treatment_country=treatment_country, timeframe=timeframe, var_name=var_name)
-            plot_cumsum_impl(df=df, treatment_country=treatment_country, timeframe=timeframe, var_name=var_name)
+            plot_cumsum(df=df, treatment_country=treatment_country, timeframe=timeframe, var_name=var_name, model=model)
+            plot_cumsum_impl(df=df, treatment_country=treatment_country, timeframe=timeframe, var_name=var_name, model=model)
 
 
 def save_results(y_log_diff, y_log_diff_pre_stand, act_pred_log_diff, act_pred_log, act_pred,
-                 impl_date_index, model, timeframe, timestamp, treatment_country, prox, incl_countries, incl_years,
+                 impl_date_index, model, timeframe, sign_level, treatment_country, prox, incl_countries, incl_years,
                  stat, impl_date, months_cor, split_date, r2_pre_log_diff_stand,
-                 normal_errors, shapiro_p, att_mean, att_std, att_sign, att_p,
                  lasso_alpha=None, n_pars=None, lasso_pars=None, lasso_coefs=None):
 
     tables_path_res = get_table_path(timeframe=timeframe, folder='results')
+    tables_path_res_country = get_table_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
+
+    timestamp = datetime.now().strftime("%Y-%m-%d, %H:%M")
+    normal_errors, shapiro_p = shapiro_wilk_test(df=act_pred_log_diff, treatment_country=treatment_country,
+                                                 alpha=sign_level)
+    att_log_diff_mean, att_log_diff_std, \
+        att_log_diff_sign, att_log_diff_p = t_test_result(df=act_pred_log_diff, treatment_country=treatment_country)
+    att_mean, att_std, \
+        att_sign, att_p = t_test_result(df=act_pred, treatment_country=treatment_country)
+
+    series = ['12-m Log-Diff $CO_2$', 'Absolute $CO_2$']
+    att = [round(att_log_diff_mean, 3), round(att_mean, 3)]
+    std = [round(att_log_diff_std, 3), round(att_std, 3)]
+    p_val = [round(att_log_diff_p, 3), round(att_p, 3)]
+    df_arco = pd.DataFrame(list(zip(series, att, std, p_val)),
+                           columns=['Series', '$\hat{\Delta}_T$ (ATT)', '$\hat{\sigma}_{\Delta_T}$ (STD)', 'P-value'])
+    df_arco.to_csv(f'{tables_path_res_country}/{model}_{treatment_country}_{timeframe}_att.csv', index=False)
 
     incl_vars = get_trans()
     n_train = len(y_log_diff_pre_stand)
@@ -177,8 +197,8 @@ def save_results(y_log_diff, y_log_diff_pre_stand, act_pred_log_diff, act_pred_l
     r2_pre_log_diff = r2_score(act_pred_log_diff['act'][:impl_date_index], act_pred_log_diff['pred'][:impl_date_index])
     r2_pre_log = r2_score(act_pred_log['act'][:impl_date_index], act_pred_log['pred'][:impl_date_index])
     r2_pre = r2_score(act_pred['act'][:impl_date_index], act_pred['pred'][:impl_date_index])
-    colmns = ['model', 'timeframe', 'timestamp', 'treatment_country', 'prox', 'incl_vars', 'incl_countries', 'incl_years', 'stat', 'impl_date', 'months_cor', 'split_date', 'n_train', 'n_test', 'r2_pre_log_diff_stand', 'r2_pre_log_diff', 'r2_pre_log', 'r2_pre', 'lasso_alpha', 'n_pars', 'lasso_pars', 'lasso_coefs', 'normal_errors', 'shapiro_p', 'att_mean', 'att_std', 'att_sign', 'att_p']
-    result = [model,    timeframe,   timestamp,   treatment_country,   prox,   incl_vars,   incl_countries,   incl_years,   stat,   impl_date,   months_cor,   split_date,   n_train,   n_test,   r2_pre_log_diff_stand,   r2_pre_log_diff,   r2_pre_log,   r2_pre,   lasso_alpha,   n_pars,   lasso_pars,   lasso_coefs,   normal_errors,   shapiro_p,   att_mean,   att_std,   att_sign,   att_p]
+    colmns = ['model', 'timeframe', 'timestamp', 'treatment_country', 'prox', 'incl_vars', 'incl_countries', 'incl_years', 'stat', 'sign_level',  'impl_date', 'months_cor', 'split_date', 'n_train', 'n_test', 'r2_pre_log_diff_stand', 'r2_pre_log_diff', 'r2_pre_log', 'r2_pre', 'lasso_alpha', 'n_pars', 'lasso_pars', 'lasso_coefs', 'normal_errors', 'shapiro_p', 'att_mean', 'att_std', 'att_sign', 'att_p', 'att_log_diff_mean', 'att_log_diff_std', 'att_log_diff_sign', 'att_log_diff_p']
+    result = [model,    timeframe,   timestamp,   treatment_country,   prox,   incl_vars,   incl_countries,   incl_years,   stat,   sign_level,    impl_date,   months_cor,   split_date,   n_train,   n_test,   r2_pre_log_diff_stand,   r2_pre_log_diff,   r2_pre_log,   r2_pre,   lasso_alpha,   n_pars,   lasso_pars,   lasso_coefs,   normal_errors,   shapiro_p,   att_mean,   att_std,   att_sign,   att_p,   att_log_diff_mean,   att_log_diff_std,   att_log_diff_sign,   att_log_diff_p]
 
     if len(result) != len(colmns):
         raise ValueError('Length column names in file is different from length of output')

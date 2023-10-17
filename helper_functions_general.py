@@ -26,7 +26,7 @@ def get_data_path(timeframe: str,  country: str = None):
     return path_cor
 
 
-def get_fig_path(timeframe: str, folder: str, country: str = None):
+def get_fig_path(timeframe: str, folder: str, country: str = None, model: str = None):
     if timeframe not in timeframe_val:
         raise ValueError(f'Input a valid timeframe argument: {timeframe_val}')
     if folder not in folder_val:
@@ -35,7 +35,9 @@ def get_fig_path(timeframe: str, folder: str, country: str = None):
         if country not in incl_countries + ['EDA']:
             raise ValueError(f'Input a valid country argument: {incl_countries}')
 
-    if country is not None:
+    if country is not None and model is not None:
+        path_cor = f'{output_path}/{timeframe}/figures/{folder}/{country}/{model}'
+    elif country is not None:
         path_cor = f'{output_path}/{timeframe}/figures/{folder}/{country}'
     else:
         path_cor = f'{output_path}/{timeframe}/figures/{folder}'
@@ -45,7 +47,7 @@ def get_fig_path(timeframe: str, folder: str, country: str = None):
     return path_cor
 
 
-def get_table_path(timeframe: str, folder: str, country: str = None):
+def get_table_path(timeframe: str, folder: str, country: str = None, model: str = None):
     if timeframe not in timeframe_val:
         raise ValueError(f'Input a valid timeframe argument: {timeframe_val}')
     if folder not in folder_val:
@@ -54,7 +56,9 @@ def get_table_path(timeframe: str, folder: str, country: str = None):
         if country not in incl_countries + ['EDA']:
             raise ValueError(f'Input a valid country argument: {incl_countries}')
 
-    if country is not None:
+    if country is not None and model is not None:
+        path_cor = f'{output_path}/{timeframe}/tables/{folder}/{country}/{model}'
+    elif country is not None:
         path_cor = f'{output_path}/{timeframe}/tables/{folder}/{country}'
     else:
         path_cor = f'{output_path}/{timeframe}/tables/{folder}'
