@@ -43,7 +43,7 @@ def main(model: str, timeframe: str, treatment_country: str):
         if model == 'arco':
             act_pred_log_diff = arco(df=df, df_stat=df_log_diff, treatment_country=treatment_country, timeframe=timeframe,
                                      alpha_min=0.001, alpha_max=1.0, alpha_step=0.001, ts_splits=5,
-                                     lasso_iters=100000000, tol=0.00000001, model=model, prox=True)
+                                     lasso_iters=100000000, tol=0.00000001, model=model, prox=False)
         elif model == 'sc':
             act_pred_log_diff = sc(df=df, df_stat=df_log_diff, treatment_country=treatment_country, timeframe=timeframe,
                                    model=model)

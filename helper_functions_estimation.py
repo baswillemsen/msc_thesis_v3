@@ -115,7 +115,7 @@ def transform_back(df: object, df_stat: object, pred_log_diff: object, timeframe
     # save act_pred_log_diff_check
     act_pred_log_diff_check = pd.DataFrame(list(zip(orig_data_act_pred_log_diff_check, pred_log_diff)),
                                            columns=['act', 'pred']).set_index(orig_data_log.index)
-    act_pred_log_diff_check['error'] = act_pred_log_diff_check['act'] - act_pred_log_diff_check['pred']
+    act_pred_log_diff_check['error'] = act_pred_log_diff_check['pred'] - act_pred_log_diff_check['act']
 
     if diff_order == 2:
         pred1 = np.zeros(len(orig_data_log_diff1))
@@ -134,12 +134,12 @@ def transform_back(df: object, df_stat: object, pred_log_diff: object, timeframe
     # act_pred_log
     act_pred_log = pd.DataFrame(list(zip(orig_data_log, pred2)),
                                 columns=['act', 'pred']).set_index(orig_data_log.index)
-    act_pred_log['error'] = act_pred_log['act'] - act_pred_log['pred']
+    act_pred_log['error'] = act_pred_log['pred'] - act_pred_log['act']
 
     # act_pred
     act_pred = pd.DataFrame(list(zip(np.exp(orig_data_log), np.exp(pred2))),
                             columns=['act', 'pred']).set_index(orig_data_log.index)
-    act_pred['error'] = act_pred['act'] - act_pred['pred']
+    act_pred['error'] = act_pred['pred'] - act_pred['act']
 
     return act_pred_log_diff_check, act_pred_log, act_pred
 

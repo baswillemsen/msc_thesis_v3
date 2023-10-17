@@ -131,6 +131,7 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
         timestamp = datetime.now().strftime("%Y-%m-%d, %H:%M")
         normal_errors, shapiro_p = shapiro_wilk_test(df=act_pred_log_diff, treatment_country=treatment_country, alpha=sign_level)
         att_mean, att_std, att_sign, att_p = t_test_result(df=act_pred_log_diff, treatment_country=treatment_country)
+        _, _, _, _ = t_test_result(df=act_pred, treatment_country=treatment_country)
 
         # if save_output:
         #     tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country)
@@ -227,6 +228,7 @@ def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, mode
 
     shapiro_wilk_test(df=act_pred_log_diff, treatment_country=treatment_country, alpha=sign_level)
     t_test_result(df=act_pred_log_diff, treatment_country=treatment_country)
+    t_test_result(df=act_pred, treatment_country=treatment_country)
 
     # save dataframes
     save_dataframe(df=act_pred_log_diff, var_title='act_pred_log_diff',
