@@ -233,8 +233,6 @@ def make_stat(df: object, timeframe: str):
             for series in vars:
                 print(timeframe, stat, country, series)
                 df_country_series = df_country.set_index(date_col)[series]
-                if timeframe == 'm ' and stat == 'stat' and country == 'switerland' and series == 'co2':
-                    print(df_country_series)
                 var_name = f'{country}_{timeframe}_{series}_act'
                 df_country_series.to_csv(f'{data_path_cor}/{var_name}.csv')
                 if show_plots:
@@ -308,11 +306,6 @@ def make_stat(df: object, timeframe: str):
             total_stat['pop'] = pop_list
         if 'brent' in trans:
             total_stat['brent'] = brent_list
-
-        if 'co2_cap' in trans:
-            total_stat['co2_cap'] = co2_cap_list
-        if 'gdp_cap' in trans:
-            total_stat['gdp_cap'] = gdp_cap_list
 
         total_stat = total_stat.dropna(axis=0, how='any').reset_index(drop=True)
         total_stat.to_csv(f'{get_data_path(timeframe=timeframe)}/total_{timeframe}_{stat}.csv', header=True, index=False)

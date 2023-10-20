@@ -82,8 +82,6 @@ def get_trans(timeframe: str = None):
             # , 'cows': (True, 1, 1)
             , 'pop': (True, 1, 1)
             , 'brent': (True, 1, 1)
-            , 'co2_cap': (True, 12, 1)
-            # , 'gdp_cap': (True, 1, 1)
         }
     elif timeframe == 'q':
         trans = {
@@ -97,8 +95,6 @@ def get_trans(timeframe: str = None):
             # , 'cows': (True, 1, 1)
             , 'pop': (True, 1, 1)
             , 'brent': (True, 1, 1)
-            , 'co2_cap': (True, 4, 1)
-            # , 'gdp_cap': (True, 1, 1)
         }
     else:
         trans = ['co2'
@@ -111,8 +107,6 @@ def get_trans(timeframe: str = None):
                  # , 'cows'
                  , 'pop'
                  , 'brent'
-                 , 'co2_cap'
-                 # , 'gdp_cap'
                  ]
 
     return trans
@@ -120,46 +114,51 @@ def get_trans(timeframe: str = None):
 
 def get_impl_date(treatment_country: str = None, input: str = None):
     if input == 'dt':
-        treatment_countries_impl_dates = {'switzerland': dt.date(2008, 1, 1),
-                                          'ireland': dt.date(2010, 5, 1),
-                                          'united_kingdom': dt.date(2013, 4, 1),
-                                          'france': dt.date(2014, 4, 1),
-                                          'portugal': dt.date(2015, 1, 1)
-                                          # ,'belgium': dt.date(2015, 1, 1)
-                                          }
+        if treatment_country not in treatment_countries:
+            return dt.date(2015, 1, 1)
+        else:
+            treatment_countries_impl_dates = {'switzerland': dt.date(2008, 1, 1),
+                                              'ireland': dt.date(2010, 5, 1),
+                                              'united_kingdom': dt.date(2013, 4, 1),
+                                              'france': dt.date(2014, 4, 1),
+                                              'portugal': dt.date(2015, 1, 1)
+                                              }
     else:
-        treatment_countries_impl_dates = {'switzerland': '2008-01-01',
-                                          'ireland': '2010-05-01',
-                                          'united_kingdom': '2013-04-01',
-                                          'france': '2014-04-01',
-                                          'portugal': '2015-01-01'
-                                          # ,'belgium': '2015-01-01'
-                                          }
-    if treatment_country is None:
-        return treatment_countries_impl_dates
-    else:
-        return treatment_countries_impl_dates[treatment_country]
+        if treatment_country not in treatment_countries:
+            return '2015-01-01'
+        else:
+            treatment_countries_impl_dates = {'switzerland': '2008-01-01',
+                                              'ireland': '2010-05-01',
+                                              'united_kingdom': '2013-04-01',
+                                              'france': '2014-04-01',
+                                              'portugal': '2015-01-01'
+                                              }
+
+    return treatment_countries_impl_dates[treatment_country]
 
 
 def get_months_cors(timeframe, treatment_country):
-    if timeframe == 'm':
-        months_cors = {'switzerland': 6,
-                       'ireland': 0,
-                       'united_kingdom': 0,  # -6, -9, -12, -15
-                       'france': -3,  # -6, -9
-                       'portugal': 15  # 12, 18
-                       }
-    elif timeframe == 'q':
-        months_cors = {'switzerland': 2,
-                       'ireland': 0,
-                       'united_kingdom': 0,  # -2, -3, -4, -5
-                       'france': -1,  # -2, -3
-                       'portugal': 5  # 4, 6
-                       }
+    if treatment_country not in treatment_countries:
+        return 0
     else:
-        raise ValueError(f'Input valid timeframe argument: {timeframe_val}')
+        if timeframe == 'm':
+            months_cors = {'switzerland': 15,
+                           'ireland': 15,
+                           'united_kingdom': 0,  # -6, -9, -12, -15
+                           'france': -3,  # -6, -9
+                           'portugal': 15  # 4, 6
+                           }
+        elif timeframe == 'q':
+            months_cors = {'switzerland': 5,
+                           'ireland': 5,  # 5 for incl UK
+                           'united_kingdom': 0,  # -2, -3, -4, -5
+                           'france': -1,  # -2, -3
+                           'portugal': 5  # 4, 6
+                           }
+        else:
+            raise ValueError(f'Input valid timeframe argument: {timeframe_val}')
 
-    return months_cors[treatment_country]
+        return months_cors[treatment_country]
 
 
 def get_formal_title(var_name: str):
@@ -276,8 +275,8 @@ def validate_input(model: str = None, stat: str = None, timeframe: str = None, t
     if timeframe is not None and timeframe not in timeframe_val:
         raise ValueError(f'Input a valid timeframe argument: {timeframe_val}')
 
-    if treatment_country is not None and treatment_country not in treatment_countries:
-        raise ValueError(f'Input a valid treatment_country argument: {treatment_countries}')
+    if treatment_country is not None and treatment_country not in incl_countries:
+        raise ValueError(f'Input a valid treatment_country argument: {incl_countries}')
 
     else:
         return True
@@ -419,13 +418,27 @@ def interpolate_series(series: object, method='linear'):
 
 
 def get_donor_countries(prox: bool = None, treatment_country: str = None):
-    if prox and treatment_country is not None:
-        donor_countries_prox = {'switzerland': ['austria', 'germany', 'italy'],
-                                'ireland': donor_countries_all,
-                                'united_kingdom': ['netherlands', 'belgium', 'spain'],
-                                'france': ['belgium', 'italy', 'netherlands', 'spain'],
-                                'portugal': ['spain']
-                                }
-        return donor_countries_prox[treatment_country]
+    if treatment_country not in treatment_countries:
+        donor_countries = [i for i in donor_countries_all if i != str(treatment_country)]
+        return donor_countries
     else:
-        return donor_countries_all
+        if prox and treatment_country is not None:
+            donor_countries_prox = {'switzerland': ['austria', 'germany', 'italy'],
+                                    'ireland': donor_countries_all + ['united_kingdom'],
+                                    'united_kingdom': ['netherlands', 'belgium', 'spain'],
+                                    'france': ['belgium', 'germany', 'italy', 'netherlands', 'spain'],
+                                    'portugal': ['spain']
+                                    }
+            return donor_countries_prox[treatment_country]
+        else:
+            return donor_countries_all
+
+
+def get_model_color(type: str):
+    color = {'act': '#1f77b4',
+             'error': '#1f77b4',
+             'impl': 'black',
+             'arco': 'darkorange',  # orange
+             'sc': 'hotpink',  # green
+             }
+    return color[type]

@@ -39,7 +39,6 @@ treatment_countries = ['switzerland',
                        'united_kingdom',
                        'france',
                        'portugal'
-                       # , 'belgium'
                        ]  # 5x
 donor_countries_all = ['austria',
                        'belgium',
@@ -55,7 +54,6 @@ donor_countries_all = ['austria',
                        'netherlands',
                        'romania',
                        'slovakia',
-                       'united_kingdom',
                        'spain',
                        ]  # 14x
 incl_countries = treatment_countries + donor_countries_all
@@ -80,8 +78,7 @@ country_name_formal = {'switzerland': 'Switzerland',
                        'ireland': 'Ireland',
                        'united_kingdom': 'United Kingdom',
                        'france': 'France',
-                       'portugal': 'Portugal',
-                       'belgium': 'Belgium'
+                       'portugal': 'Portugal'
                        }
 
 var_name_formal = {'co2': 'CO2 Emissions',

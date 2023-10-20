@@ -1,9 +1,9 @@
-Index,Variable,Coefficient
-1,belgium co2_cap,0.546
-2,belgium pop,-0.055
-3,czech_republic pop,-0.076
-4,lithuania co2,0.079
-5,lithuania gdp,0.069
-6,lithuania unempl,-0.005
-7,netherlands co2_cap,0.101
-8,netherlands pop,-0.033
+Index,Regressor,Coefficient
+1,belgium co2,0.531
+2,netherlands co2,0.11
+3,lithuania co2,0.08
+4,lithuania gdp,0.074
+5,germany co2,0.0
+6,netherlands pop,-0.036
+7,belgium pop,-0.066
+8,czech_republic pop,-0.078
