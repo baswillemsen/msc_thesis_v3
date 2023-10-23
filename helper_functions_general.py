@@ -80,6 +80,7 @@ def get_trans(timeframe: str = None):
             , 'gdp': (False, 0)
             , 'ind_prod': (False, 0)
             , 'infl': (False, 1)
+            , 'unempl': (False, 1)
             , 'pop': (True, 1)
             , 'brent': (True, 1)
         }
@@ -89,6 +90,7 @@ def get_trans(timeframe: str = None):
             , 'gdp': (False, 0)
             , 'ind_prod': (False, 0)
             , 'infl': (False, 1)
+            , 'unempl': (False, 1)
             , 'pop': (True, 1)
             , 'brent': (True, 1)
         }
@@ -97,6 +99,7 @@ def get_trans(timeframe: str = None):
                  , 'gdp'
                  , 'ind_prod'
                  , 'infl'
+                 , 'unempl'
                  , 'pop'
                  , 'brent'
                  ]

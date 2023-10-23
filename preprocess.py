@@ -172,7 +172,7 @@ def preprocess_EUstat(source_file: str, source_country_col: str, var_name: str, 
 # join all preprocessed series together into one big dataframe
 def total_join(key_cols: list, timeframe: str,
                co2: object = None, brent: object = None,
-               infl: object = None, ind_prod: object = None,
+               infl: object = None, unempl: object = None, ind_prod: object = None,
                pop: object = None, gdp: object = None):
     total = co2.copy()
     if gdp is not None:
@@ -181,6 +181,8 @@ def total_join(key_cols: list, timeframe: str,
         total = total.merge(ind_prod, how='left', on=key_cols)
     if infl is not None:
         total = total.merge(infl, how='left', on=key_cols)
+    if unempl is not None:
+        total = total.merge(unempl, how='left', on=key_cols)
     if pop is not None:
         total = total.merge(pop, how='left', on=key_cols)
     if brent is not None:
@@ -280,6 +282,8 @@ def make_stat(df: object, timeframe: str):
             total_stat['ind_prod'] = ind_prod_list
         if 'infl' in trans:
             total_stat['infl'] = infl_list
+        if 'unempl' in trans:
+            total_stat['unempl'] = unempl_list
         if 'pop' in trans:
             total_stat['pop'] = pop_list
         if 'brent' in trans:
@@ -329,6 +333,15 @@ def preprocess():
                                        downsample_method='mean'
                                        )
 
+    unempl_m, unempl_q = preprocess_EUstat(source_file='eurostat_unempl_m_1980_2023',
+                                           source_country_col='Country',
+                                           var_name='unempl',
+                                           var_scale=1e-2,
+                                           source_timeframe='m',
+                                           interpolate_method='median',
+                                           downsample_method='mean'
+                                           )
+
     gdp_q, gdp_m = preprocess_WB(source_file='wb_gdp_q_1996_2022',
                                  source_country_col='Country',
                                  source_time_col='TIME',
@@ -354,15 +367,15 @@ def preprocess():
     # total monthly
     timeframe = 'm'
     print_preprocess(var_name=var_name, timeframe=timeframe)
-    total_m = total_join(key_cols=[country_col, date_col, year_col, month_col], timeframe=timeframe,
-                         co2=co2_m, brent=brent_m, infl=infl_m, ind_prod=ind_prod_m, pop=pop_m, gdp=gdp_m)
+    total_m = total_join(key_cols=[country_col, date_col, year_col, month_col], timeframe=timeframe, co2=co2_m,
+                         brent=brent_m, infl=infl_m, unempl=unempl_m, ind_prod=ind_prod_m, pop=pop_m, gdp=gdp_m)
     make_stat(df=total_m, timeframe=timeframe)
 
     # total quarterly
     timeframe = 'q'
     print_preprocess(var_name=var_name, timeframe=timeframe)
-    total_q = total_join(key_cols=[country_col, date_col, year_col, quarter_col], timeframe=timeframe,
-                         co2=co2_m, brent=brent_m, infl=infl_m, ind_prod=ind_prod_m, pop=pop_m, gdp=gdp_m)
+    total_q = total_join(key_cols=[country_col, date_col, year_col, quarter_col], timeframe=timeframe, co2=co2_q,
+                         brent=brent_q, infl=infl_q, unempl=unempl_q, ind_prod=ind_prod_q, pop=pop_q, gdp=gdp_q)
     make_stat(df=total_q, timeframe=timeframe)
 
     print('Done!')
