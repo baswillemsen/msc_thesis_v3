@@ -6,14 +6,14 @@ all_paths = [data_source_path, data_path, output_path]
 
 # PRINTING, SHOWING PLOTS
 show_output = True
-show_plots = False
+show_plots = True
 fig_size = (10, 6)
 
-save_output = False
+save_output = True
 save_figs = False
 
 # NON-STATIC DEFINITIONS
-target_var = 'gdp'
+target_var = 'co2'
 stat = 'stat'
 sign_level = 0.10
 fake_num = -99999

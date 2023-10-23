@@ -93,6 +93,7 @@ def adf_test(sign_level: float = sign_level):
             df_stat_group.to_csv(f'{table_path_meth}/{timeframe}_stat_results_grouped.csv')
 
 
+# shapiro wilk test for normality of the residuals
 def shapiro_wilk_test(df: object, treatment_country: str, alpha: float):
     shap = shapiro(df['error'].loc[:get_impl_date(treatment_country)])
     if shap[1] > alpha:
@@ -113,6 +114,7 @@ def stat_test(x: list, sign_level: float):
         return 'non_stationary'
 
 
+# one-sample t-test to see if results are significant
 def t_test_result(df: object, treatment_country: str):
 
     df_post = df[df.index >= get_impl_date(treatment_country=treatment_country)]

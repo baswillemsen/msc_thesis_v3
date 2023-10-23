@@ -137,18 +137,18 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
 
             save_dataframe(df=act_pred_log_diff_check, var_title='act_pred_log_diff_check',
                            model=model, treatment_country=treatment_country, timeframe=timeframe,
-                           save_csv=True, save_predictions=False, save_diff=False,
-                           save_cumsum=False, save_cumsum_impl=False, save_qq=False)
+                           save_csv=True, save_predictions=True, save_diff=True,
+                           save_cumsum=True, save_cumsum_impl=True, save_qq=True)
 
             save_dataframe(df=act_pred_log, var_title='act_pred_log',
                            model=model, treatment_country=treatment_country, timeframe=timeframe,
-                           save_csv=True, save_predictions=False, save_diff=False,
-                           save_cumsum=False, save_cumsum_impl=False, save_qq=False)
+                           save_csv=True, save_predictions=True, save_diff=True,
+                           save_cumsum=True, save_cumsum_impl=True, save_qq=True)
 
             save_dataframe(df=act_pred, var_title='act_pred',
                            model=model, treatment_country=treatment_country, timeframe=timeframe,
-                           save_csv=True, save_predictions=True, save_diff=False,
-                           save_cumsum=False, save_cumsum_impl=False, save_qq=False)
+                           save_csv=True, save_predictions=True, save_diff=True,
+                           save_cumsum=True, save_cumsum_impl=True, save_qq=True)
 
             save_results(act_pred_log_diff=act_pred_log_diff, act_pred_log=act_pred_log, act_pred=act_pred,
                          model=model, stat=stat, timeframe=timeframe, sign_level=sign_level,
