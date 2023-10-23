@@ -5,11 +5,11 @@ import sys
 import numpy as np
 import pandas as pd
 
-from definitions import data_source_path, corr_country_names, sign_level, fake_num, show_plots, \
+from definitions import data_source_path, corr_country_names, sign_level, fake_num, show_plots, save_figs, \
     country_col, year_col, quarter_col, month_col, date_col, incl_countries, show_output
 from helper_functions_general import read_data, select_country_year_measure, month_name_to_num, rename_order_scale, \
     downsample_month_to_quarter, quarter_to_month, upsample_quarter_to_month, get_timeframe_col, get_trans, \
-    get_data_path, interpolate_series, validate_input
+    get_data_path, interpolate_series, validate_input, print_preprocess
 from statistical_tests import stat_test
 from plot_functions import plot_series
 
@@ -17,6 +17,7 @@ from plot_functions import plot_series
 # preprocess monthly CO2 data
 def preprocess_co2_m(source_file: str, source_country_col: str, source_year_col: str, var_name: str,
                      var_scale: str, downsample_method: str):
+    print_preprocess(var_name=var_name)
     # read data
     co2_m_raw = read_data(source_path=data_source_path, file_name=source_file)
     co2_m = co2_m_raw.copy()
@@ -51,6 +52,7 @@ def preprocess_co2_m(source_file: str, source_country_col: str, source_year_col:
 # preprocess brent oil data
 def preprocess_brent_m(source_file: str, source_date_col: str, source_measure_col: str, var_name: str,
                        downsample_method: str):
+    print_preprocess(var_name=var_name)
     # read data
     brent_m_raw = read_data(source_path=data_source_path, file_name=source_file)
     brent_m = brent_m_raw.copy()
@@ -81,6 +83,7 @@ def preprocess_brent_m(source_file: str, source_date_col: str, source_measure_co
 def preprocess_WB(source_file: str, source_country_col: str, source_time_col: str, source_measure_col: str,
                   source_incl_measure: list, source_timeframe: str, var_name: str, var_scale: float,
                   downsample_method: str = None):
+    print_preprocess(var_name=var_name)
 
     # validate input
     validate_input(timeframe=source_timeframe)
@@ -126,7 +129,7 @@ def preprocess_WB(source_file: str, source_country_col: str, source_time_col: st
 # preprocess eurostat data
 def preprocess_EUstat(source_file: str, source_country_col: str, var_name: str, var_scale: float,
                       source_timeframe: str, interpolate_method: str, downsample_method: str = None):
-
+    print_preprocess(var_name=var_name)
     # validate input
     validate_input(timeframe=source_timeframe)
     alt_timeframe = ['m' if source_timeframe == 'q' else 'q'][0]
@@ -171,9 +174,7 @@ def preprocess_EUstat(source_file: str, source_country_col: str, var_name: str, 
 def total_join(key_cols: list, timeframe: str,
                co2: object = None, brent: object = None,
                infl: object = None, ind_prod: object = None,
-               infl_energy: object = None, unempl: object = None, trade: object = None,
-               cows: object = None,
-               pop: object = None, gdp: object = None):
+               unempl: object = None, pop: object = None, gdp: object = None):
     total = co2.copy()
     if gdp is not None:
         total = total.merge(gdp, how='left', on=key_cols)
@@ -181,21 +182,12 @@ def total_join(key_cols: list, timeframe: str,
         total = total.merge(ind_prod, how='left', on=key_cols)
     if infl is not None:
         total = total.merge(infl, how='left', on=key_cols)
-    if infl_energy is not None:
-        total = total.merge(infl_energy, how='left', on=key_cols)
     if unempl is not None:
         total = total.merge(unempl, how='left', on=key_cols)
-    if trade is not None:
-        total = total.merge(trade, how='left', on=key_cols)
-    if cows is not None:
-        total = total.merge(cows, how='left', on=key_cols)
     if pop is not None:
         total = total.merge(pop, how='left', on=key_cols)
     if brent is not None:
         total = total.merge(brent, how='left', on=key_cols.remove(country_col))
-
-    total['co2_cap'] = total['co2'] / total['pop']
-    total['gdp_cap'] = total['gdp'] / total['pop']
 
     total = total.dropna(axis=0, how='any', subset=total.columns.drop(['ind_prod', 'infl', 'unempl']))
     total = total.fillna(fake_num).reset_index(drop=True)
@@ -217,13 +209,12 @@ def make_stat(df: object, timeframe: str):
         period_col = get_timeframe_col(timeframe=timeframe)
         trans = get_trans(timeframe=timeframe)
 
-        # cov = df.columns.drop(['country', 'year'])
         vars = trans.keys()
         for series in vars:
             globals()[f"{series}_list"] = []
 
         for country in incl_countries:
-            data_path_cor = get_data_path(timeframe=timeframe, country=country)
+            data_path_country = get_data_path(timeframe=timeframe, country=country)
 
             df_country = df[df[country_col] == country]
             country_list += list(df_country[country_col])
@@ -232,16 +223,16 @@ def make_stat(df: object, timeframe: str):
             period_list += list(df_country[period_col])
 
             for series in vars:
-                print(timeframe, stat, country, series)
+                # print(timeframe, stat, country, series)
                 df_country_series = df_country.set_index(date_col)[series]
                 var_name = f'{country}_{timeframe}_{series}_act'
-                df_country_series.to_csv(f'{data_path_cor}/{var_name}.csv')
-                if show_plots:
+                df_country_series.to_csv(f'{data_path_country}/{var_name}.csv')
+                if show_plots or save_figs:
                     plot_series(i=i, series=df_country_series, timeframe=timeframe,
                                 treatment_country=country, var_name=var_name)
                 i += 1
 
-                log, diff_level, diff_order = trans[series]
+                log, diff_level = trans[series]
 
                 # log the series if necessary
                 if log:
@@ -249,38 +240,36 @@ def make_stat(df: object, timeframe: str):
                 else:
                     df_country_series_log = df_country_series
                 var_name = f'{country}_{timeframe}_{series}_act_log'
-                df_country_series_log.to_csv(f'{data_path_cor}/{var_name}.csv')
-                if show_plots:
+                df_country_series_log.to_csv(f'{data_path_country}/{var_name}.csv')
+                if show_plots or save_figs:
                     plot_series(i=i, series=df_country_series_log, timeframe=timeframe,
                                 treatment_country=country, var_name=var_name)
                 i += 1
 
                 # difference the series
-                j = 1
-                df_country_series_diff = df_country_series_log.copy()
                 if diff_level != 0:
-                    while j <= diff_order:
-                        df_country_series_diff = df_country_series_diff.diff(periods=diff_level)
-                        var_name = f'{country}_{timeframe}_{series}_act_log_diff_{j}'
-                        df_country_series_diff.to_csv(f'{data_path_cor}/{var_name}.csv')
-                        if show_plots:
-                            plot_series(i=i, series=df_country_series_diff, timeframe=timeframe,
-                                        treatment_country=country, var_name=var_name)
-                        i += 1
-                        j += 1
+                    df_country_series_log_diff = df_country_series_log.diff(periods=diff_level)
+                else:
+                    df_country_series_log_diff = df_country_series_log
+                var_name = f'{country}_{timeframe}_{series}_act_log_diff'
+                df_country_series_log_diff.to_csv(f'{data_path_country}/{var_name}.csv')
+                if show_plots or save_figs:
+                    plot_series(i=i, series=df_country_series_log_diff, timeframe=timeframe,
+                                treatment_country=country, var_name=var_name)
+                i += 1
 
                 # if series is non-stationary input fake number -99999
                 if stat == 'stat':
-                    if stat_test(x=df_country_series_diff.dropna(), sign_level=sign_level) == 'stationary':
-                        globals()[f"{series}_list"] += list(df_country_series_diff)
-                    elif stat_test(x=df_country_series_diff.dropna(), sign_level=sign_level) == 'non_stationary':
-                        globals()[f"{series}_list"] += [fake_num] * len(df_country_series_diff)
+                    if stat_test(x=df_country_series_log_diff.dropna(), sign_level=sign_level) == 'stationary':
+                        globals()[f"{series}_list"] += list(df_country_series_log_diff)
+                    elif stat_test(x=df_country_series_log_diff.dropna(), sign_level=sign_level) == 'non_stationary':
+                        globals()[f"{series}_list"] += [fake_num] * len(df_country_series_log_diff)
 
                 elif stat == 'non_stat':
-                    if sum(df_country_series_diff.dropna() == 0) == len(df_country_series_diff.dropna()):
-                        globals()[f"{series}_list"] += [fake_num] * len(df_country_series_diff)
+                    if sum(df_country_series_log_diff.dropna() == 0) == len(df_country_series_log_diff.dropna()):
+                        globals()[f"{series}_list"] += [fake_num] * len(df_country_series_log_diff)
                     else:
-                        globals()[f"{series}_list"] += list(df_country_series_diff)
+                        globals()[f"{series}_list"] += list(df_country_series_log_diff)
                 else:
                     raise ValueError('Define stat as being "stat" or "non_stat"')
 
@@ -302,14 +291,17 @@ def make_stat(df: object, timeframe: str):
         if 'brent' in trans:
             total_stat['brent'] = brent_list
 
-        total_stat = total_stat.dropna(axis=0, how='any').reset_index(drop=True)
+        total_stat = total_stat.dropna(axis=0, how='any')
+        total_stat = total_stat.reset_index(drop=True)
         total_stat.to_csv(f'{get_data_path(timeframe=timeframe)}/total_{timeframe}_{stat}.csv', header=True, index=False)
         if show_output:
             print(f'Timeframe: {timeframe}; Stat: {stat}')
             print(total_stat)
 
 
+# main function to preprocess all series
 def preprocess():
+    print('Starting preprocessing...')
     co2_m, co2_q = preprocess_co2_m(source_file='edgar_co2_m_2000_2021',
                                     source_country_col='Name',
                                     source_year_col='Year',
@@ -372,21 +364,23 @@ def preprocess():
                                  var_scale=1e3
                                  )
 
+    var_name = 'total'
+
     # total monthly
     timeframe = 'm'
-    total_m = total_join(key_cols=[country_col, date_col, year_col, month_col], timeframe=timeframe,
-                         co2=co2_m, brent=brent_m,
-                         infl=infl_m, ind_prod=ind_prod_m, unempl=unempl_m,
-                         pop=pop_m, gdp=gdp_m)
+    print_preprocess(var_name=var_name, timeframe=timeframe)
+    total_m = total_join(key_cols=[country_col, date_col, year_col, month_col], timeframe=timeframe, co2=co2_m,
+                         brent=brent_m, infl=infl_m, ind_prod=ind_prod_m, unempl=unempl_m, pop=pop_m, gdp=gdp_m)
     make_stat(df=total_m, timeframe=timeframe)
 
     # total quarterly
     timeframe = 'q'
-    total_q = total_join(key_cols=[country_col, date_col, year_col, quarter_col], timeframe=timeframe,
-                         co2=co2_q, brent=brent_q,
-                         infl=infl_q, ind_prod=ind_prod_q, unempl=unempl_q,
-                         pop=pop_q, gdp=gdp_q)
+    print_preprocess(var_name=var_name, timeframe=timeframe)
+    total_q = total_join(key_cols=[country_col, date_col, year_col, quarter_col], timeframe=timeframe, co2=co2_q,
+                         brent=brent_q, infl=infl_q, ind_prod=ind_prod_q, unempl=unempl_q, pop=pop_q, gdp=gdp_q)
     make_stat(df=total_q, timeframe=timeframe)
+
+    print('Done!')
 
 
 if __name__ == "__main__":

@@ -1,8 +1,6 @@
 ################################
 ### import relevant packages ###
 ################################
-import os
-import sys
 import pandas as pd
 import numpy as np
 
@@ -113,21 +111,6 @@ def stat_test(x: list, sign_level: float):
         return 'stationary'
     else:
         return 'non_stationary'
-
-
-# def t_test(df: object, treatment_country: str):
-#     df = df.set_index(date_col)
-#     df_post = df[df.index >= get_impl_date(treatment_country=treatment_country)]
-#     att_mean = df_post['error'].mean()
-#     att_std = df_post['error'].std()
-#
-#     ttest_res = ttest_1samp(df_post['error'], popmean=0)
-#     if ttest_res[1] < sign_level:
-#         sign = 'significant'
-#     else:
-#         sign = 'NOT significant'
-#
-#     return att_mean, att_std, sign
 
 
 def t_test_result(df: object, treatment_country: str):

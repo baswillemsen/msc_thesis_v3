@@ -8,7 +8,7 @@ import datetime as dt
 
 from definitions import target_var, data_path, incl_countries, incl_years, treatment_countries, \
     country_col, year_col, month_col, quarter_col, date_col, model_val, timeframe_val, \
-    output_path, agg_val, interpolation_val, folder_val, stat_val, donor_countries_all
+    output_path, agg_val, interpolation_val, folder_val, stat_val, donor_countries_all, show_output
 
 
 # get data path given the timeframe and the target country
@@ -76,23 +76,23 @@ def get_trans(timeframe: str = None):
     # trans: 'var': (log, diff_level)
     if timeframe == 'm':
         trans = {
-            'co2': (True, 12, 1)
-            , 'gdp': (False, 0, 0)
-            , 'ind_prod': (False, 0, 0)
-            , 'infl': (False, 1, 1)
-            , 'unempl': (False, 1, 1)
-            , 'pop': (True, 1, 1)
-            , 'brent': (True, 1, 1)
+            'co2': (True, 12)
+            , 'gdp': (False, 0)
+            , 'ind_prod': (False, 0)
+            , 'infl': (False, 1)
+            , 'unempl': (False, 1)
+            , 'pop': (True, 1)
+            , 'brent': (True, 1)
         }
     elif timeframe == 'q':
         trans = {
-            'co2': (True, 4, 1)
-            , 'gdp': (False, 0, 0)
-            , 'ind_prod': (False, 0, 0)
-            , 'infl': (False, 1, 1)
-            , 'unempl': (False, 1, 1)
-            , 'pop': (True, 1, 1)
-            , 'brent': (True, 1, 1)
+            'co2': (True, 4)
+            , 'gdp': (False, 0)
+            , 'ind_prod': (False, 0)
+            , 'infl': (False, 1)
+            , 'unempl': (False, 1)
+            , 'pop': (True, 1)
+            , 'brent': (True, 1)
         }
     else:
         trans = ['co2'
@@ -458,3 +458,11 @@ def interpolate_series(series: object, method='linear'):
 
     else:
         raise ValueError(f'Input a valid method argument: {interpolation_val}')
+
+
+def print_preprocess(var_name: str, timeframe: str = None):
+    if show_output:
+        if timeframe is None:
+            print(f'Preprocessing {var_name} data...')
+        else:
+            print(f'Preprocessing {var_name} data for timeframe {timeframe}...')
