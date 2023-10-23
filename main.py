@@ -10,7 +10,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # custom functions
-from definitions import all_paths, country_col, year_col, stat, incl_countries, incl_years, treatment_countries, donor_countries_all
+from definitions import all_paths, country_col, year_col, stat, incl_countries, incl_years, model_val
 from helper_functions_general import read_data, validate_input, get_trans, get_data_path, get_impl_date
 from estimators import arco, sc, did
 
@@ -48,10 +48,10 @@ def main(model: str, timeframe: str, treatment_country: str):
             act_pred_log_diff = sc(df=df, df_stat=df_log_diff, treatment_country=treatment_country, timeframe=timeframe,
                                    model=model, prox=False)
         elif model == 'did':
-            act_pred_log_diff = did(df=df_log_diff, treatment_country=treatment_country, timeframe=timeframe,
+            act_pred_log_diff = did(df=df, treatment_country=treatment_country, timeframe=timeframe,
                                     model=model, prox=False, x_years=3)
         else:
-            raise ValueError('Select a valid model: "arco", "sc" or "did"')
+            raise ValueError(f'Select a valid model: {model_val}')
 
         if act_pred_log_diff is None:
             print("The GHG emissions series of the treatment country is non-stationary, ArCo method is not possible")

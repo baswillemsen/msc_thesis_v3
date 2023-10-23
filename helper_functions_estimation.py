@@ -74,7 +74,7 @@ def did_pivot(df: object, treatment_country: str, timeframe: str, model: str, pr
     impl_date_index = list(df[date_col]).index(impl_date)
     # pre_period = df[date_col][impl_date_index - 12*x_years:impl_date_index]
     # post_period = df[date_col][impl_date_index:impl_date_index + 12*x_years]
-    all_periods = df[date_col][impl_date_index - 12*x_years:impl_date_index + 12*x_years]
+    all_periods = df[date_col][impl_date_index - int(12*x_years):impl_date_index + int(12*x_years)]
 
     df = df[(df[country_col].isin(donor_countries + [treatment_country])) &
             (df[date_col].isin(all_periods))].set_index(date_col)[[country_col, target_var]]
@@ -218,6 +218,39 @@ def save_results(act_pred_log_diff, act_pred_log, act_pred, var_title,
     r2_pre = r2_score(act_pred['act'][:impl_date_index], act_pred['pred'][:impl_date_index])
     colmns = ['model', 'timestamp', 'timeframe', 'stat', 'sign_level',  'treatment_country', 'incl_vars', 'incl_countries', 'incl_years', 'impl_date', 'n_train', 'n_test', 'r2_pre_log_diff', 'r2_pre_log', 'r2_pre', 'shapiro_p', 'normal_errors', 'att_mean', 'att_std', 'att_p', 'att_sign', 'att_log_diff_mean', 'att_log_diff_std', 'att_log_diff_p', 'att_log_diff_sign', 'prox', 'months_cor', 'split_date', 'r2_pre_log_diff_stand', 'lasso_alpha', 'n_pars', 'lasso_pars', 'lasso_coefs']
     result = [model,    timestamp,   timeframe,   stat,   sign_level,    treatment_country,   incl_vars,   incl_countries,   incl_years,   impl_date,   n_train,   n_test,   r2_pre_log_diff,   r2_pre_log,   r2_pre,   shapiro_p,   normal_errors,   att_mean,   att_std,   att_p,   att_sign,   att_log_diff_mean,   att_log_diff_std,   att_log_diff_p,   att_log_diff_sign,   prox,   months_cor,   split_date,   r2_pre_log_diff_stand,   lasso_alpha,   n_pars,   lasso_pars,   lasso_coefs]
+
+    if len(result) != len(colmns):
+        raise ValueError('Length column names in file is different from length of output')
+
+    file_path = f'{tables_path_res}/{var_title}.csv'
+    if not os.path.isfile(file_path):
+        with open(file_path, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(colmns)
+            file.close()
+
+    # Create a file object for this file
+    with open(file_path, 'a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(result)
+        print(f'Results saved in {file_path}')
+        file.close()
+
+
+def save_did(model, stat, timeframe, sign_level, incl_countries, incl_years, treatment_country, impl_date,
+             var_title, x_years, prox, ols):
+
+    tables_path_res = get_table_path(timeframe=timeframe, folder='results')
+    timestamp = datetime.now().strftime("%Y-%m-%d, %H:%M")
+
+    incl_vars = get_trans()
+    ols_n = ols.nobs
+    ols_diff = -1 * ols.params['treatment_post_dummy']
+    ols_t_p = ols.pvalues['treatment_post_dummy']
+    ols_f_p = ols.f_pvalue
+    ols_r2 = ols.rsquared
+    colmns = ['model', 'timestamp', 'timeframe', 'stat', 'sign_level',  'treatment_country', 'incl_vars', 'incl_countries', 'incl_years', 'impl_date', 'x_years', 'prox', 'ols_n', 'ols_diff', 'ols_t_p', 'ols_f_p', 'ols_r2']
+    result = [model,    timestamp,   timeframe,   stat,   sign_level,    treatment_country,   incl_vars,   incl_countries,   incl_years,   impl_date,   x_years,   prox,   ols_n,   ols_diff,   ols_t_p,   ols_f_p,   ols_r2]
 
     if len(result) != len(colmns):
         raise ValueError('Length column names in file is different from length of output')
