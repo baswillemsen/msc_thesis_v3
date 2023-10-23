@@ -11,6 +11,7 @@ from definitions import target_var, data_path, incl_countries, incl_years, treat
     output_path, agg_val, interpolation_val, folder_val, stat_val, donor_countries_all
 
 
+# get data path given the timeframe and the target country
 def get_data_path(timeframe: str,  country: str = None):
     if country is not None:
         if country not in incl_countries:
@@ -26,6 +27,7 @@ def get_data_path(timeframe: str,  country: str = None):
     return path_cor
 
 
+# get the figure path given the timeframe and the target country
 def get_fig_path(timeframe: str, folder: str, country: str = None, model: str = None):
     if timeframe not in timeframe_val:
         raise ValueError(f'Input a valid timeframe argument: {timeframe_val}')
@@ -47,6 +49,7 @@ def get_fig_path(timeframe: str, folder: str, country: str = None, model: str = 
     return path_cor
 
 
+# get the table path given the timeframe and the target country
 def get_table_path(timeframe: str, folder: str, country: str = None, model: str = None):
     if timeframe not in timeframe_val:
         raise ValueError(f'Input a valid timeframe argument: {timeframe_val}')
@@ -68,6 +71,7 @@ def get_table_path(timeframe: str, folder: str, country: str = None, model: str 
     return path_cor
 
 
+# get required transformation for every variable for a given timeframe
 def get_trans(timeframe: str = None):
     # trans: 'var': (log, diff_level)
     if timeframe == 'm':
@@ -77,9 +81,6 @@ def get_trans(timeframe: str = None):
             , 'ind_prod': (False, 0, 0)
             , 'infl': (False, 1, 1)
             , 'unempl': (False, 1, 1)
-            # , 'infl_energy': (False, 1, 1)
-            # , 'trade': (True, 1, 1)
-            # , 'cows': (True, 1, 1)
             , 'pop': (True, 1, 1)
             , 'brent': (True, 1, 1)
         }
@@ -90,9 +91,6 @@ def get_trans(timeframe: str = None):
             , 'ind_prod': (False, 0, 0)
             , 'infl': (False, 1, 1)
             , 'unempl': (False, 1, 1)
-            # , 'infl_energy': (False, 1, 1)
-            # , 'trade': (True, 1, 1)
-            # , 'cows': (True, 1, 1)
             , 'pop': (True, 1, 1)
             , 'brent': (True, 1, 1)
         }
@@ -102,9 +100,6 @@ def get_trans(timeframe: str = None):
                  , 'ind_prod'
                  , 'infl'
                  , 'unempl'
-                 # , 'infl_energy'
-                 # , 'trade'
-                 # , 'cows'
                  , 'pop'
                  , 'brent'
                  ]
@@ -112,6 +107,7 @@ def get_trans(timeframe: str = None):
     return trans
 
 
+# get the implementation date of the carbon tax for the treatment countries, in specific data format
 def get_impl_date(treatment_country: str = None, input: str = None):
     if input == 'dt':
         if treatment_country not in treatment_countries:
@@ -137,6 +133,7 @@ def get_impl_date(treatment_country: str = None, input: str = None):
     return treatment_countries_impl_dates[treatment_country]
 
 
+# get corrections for implementation months
 def get_months_cors(timeframe, treatment_country):
     if treatment_country not in treatment_countries:
         return 0
@@ -144,16 +141,18 @@ def get_months_cors(timeframe, treatment_country):
         if timeframe == 'm':
             months_cors = {'switzerland': 15,
                            'ireland': 15,
-                           'united_kingdom': 0,  # -6, -9, -12, -15
-                           'france': -3,  # -6, -9
-                           'portugal': 15  # 4, 6
+                           'united_kingdom': 0,
+                           'france': -3,
+                           'portugal': 15,
+                           'other': 0
                            }
         elif timeframe == 'q':
             months_cors = {'switzerland': 5,
-                           'ireland': 5,  # 5 for incl UK
-                           'united_kingdom': 0,  # -2, -3, -4, -5
-                           'france': -1,  # -2, -3
-                           'portugal': 5  # 4, 6
+                           'ireland': 5,
+                           'united_kingdom': 0,
+                           'france': -1,
+                           'portugal': 5,
+                           'other': 0
                            }
         else:
             raise ValueError(f'Input valid timeframe argument: {timeframe_val}')
@@ -161,6 +160,36 @@ def get_months_cors(timeframe, treatment_country):
         return months_cors[treatment_country]
 
 
+# function to get the donor countries given the prox argument and the treatment country
+def get_donor_countries(prox: bool = None, treatment_country: str = None):
+    if treatment_country not in treatment_countries:
+        donor_countries = [i for i in donor_countries_all if i != str(treatment_country)]
+        return donor_countries
+    else:
+        if prox and treatment_country is not None:
+            donor_countries_prox = {'switzerland': ['austria', 'germany', 'italy'],
+                                    'ireland': donor_countries_all + ['united_kingdom'],
+                                    'united_kingdom': ['netherlands', 'belgium', 'spain'],
+                                    'france': ['belgium', 'germany', 'italy', 'netherlands', 'spain'],
+                                    'portugal': ['spain']
+                                    }
+            return donor_countries_prox[treatment_country]
+        else:
+            return donor_countries_all
+
+
+# define static colors for plotting the series from different models
+def get_model_color(type: str):
+    color = {'act': '#1f77b4',
+             'error': '#1f77b4',
+             'impl': 'black',
+             'arco': 'darkorange',  # orange
+             'sc': 'hotpink',  # green
+             }
+    return color[type]
+
+
+# get formal title for saving the plots
 def get_formal_title(var_name: str):
     if 'act_pred_log_diff_check' in var_name:
         return 'Log-differenced'
@@ -178,6 +207,7 @@ def get_formal_title(var_name: str):
         return var_name
 
 
+# get timescale for transforming quarter/month into year
 def get_timescale(timeframe: str = None):
     timeframe_scale = {'q': 4,
                        'm': 12
@@ -188,6 +218,7 @@ def get_timescale(timeframe: str = None):
         return timeframe_scale[timeframe]
 
 
+# get the timeframe column given the timeframe
 def get_timeframe_col(timeframe: str = None):
     timeframe_col = {'q': 'quarter',
                      'm': 'month'
@@ -198,6 +229,7 @@ def get_timeframe_col(timeframe: str = None):
         return timeframe_col[timeframe]
 
 
+# function to get the month number from the month name
 def month_name_to_num(month_name: str = None):
     month_num = {'Jan': 1,
                  'Feb': 2,
@@ -217,6 +249,7 @@ def month_name_to_num(month_name: str = None):
         return month_num[month_name]
 
 
+# function to adapt the quarter to month period
 def quarter_to_month(quarter: int):
     month = {1: 1,
              2: 4,
@@ -228,6 +261,7 @@ def quarter_to_month(quarter: int):
         return month[quarter]
 
 
+# function to adapt the month to quarter period
 def month_to_quarter(month: int):
     quarter = {1: 1,
                2: 1,
@@ -247,10 +281,12 @@ def month_to_quarter(month: int):
         return quarter[month]
 
 
+# flatten sublists in list to one long list
 def flatten(lst):
     return [item for sublist in lst for item in sublist]
 
 
+# get the first value of a series, for transforming back from log-differencing
 def first_value(treatment_country: str, timeframe: str):
     df = read_data(source_path=get_data_path(timeframe=timeframe), file_name=f'total_{timeframe}')
     _, diff_level, diff_order = get_trans(timeframe=timeframe)[target_var]
@@ -259,12 +295,14 @@ def first_value(treatment_country: str, timeframe: str):
     return orig_value
 
 
+# function to easily read the data given the source path and desired file.
 def read_data(source_path: str, file_name: str):
     df = pd.read_csv(f'{source_path}/{file_name}.csv', delimiter=',', header=0, encoding='latin-1')
     df = df[df.columns.drop(list(df.filter(regex='Unnamed')))]
     return df
 
 
+# function to validate the input of the main script
 def validate_input(model: str = None, stat: str = None, timeframe: str = None, treatment_country: str = None):
     if model is not None and model not in model_val:
         raise ValueError(f'Input a valid model argument: {model_val}')
@@ -282,6 +320,7 @@ def validate_input(model: str = None, stat: str = None, timeframe: str = None, t
         return True
 
 
+# function to select the needed countries, years, measures from the full dataframe
 def select_country_year_measure(df: object, country_col: str = None, year_col: str = None,
                                 measure_col: str = None, incl_measure: list = None):
     if country_col is not None:
@@ -296,6 +335,7 @@ def select_country_year_measure(df: object, country_col: str = None, year_col: s
     return df
 
 
+# function to reoder the dataframe, rename the column names and scale the variables to absolute units.
 def rename_order_scale(df: object, source_country_col: str = None, source_year_col: str = None, source_date_col: str = None,
                        timeframe: str = None, var_name: str = None, var_scale: float = None):
     if source_country_col is not None:
@@ -319,6 +359,7 @@ def rename_order_scale(df: object, source_country_col: str = None, source_year_c
     return df
 
 
+# function to resample monthly data to quarterly data via aggregation argument
 def downsample_month_to_quarter(df_m: object, var_name: str, agg: str):
     if country_col in df_m.columns:
         df_q = pd.DataFrame({var_name: [],
@@ -366,6 +407,7 @@ def downsample_month_to_quarter(df_m: object, var_name: str, agg: str):
     return df_q
 
 
+# function to resample quarterly data to monthly data via interpolation
 def upsample_quarter_to_month(df_q: object, var_name: str):
     df_m = pd.DataFrame({var_name: [],
                          country_col: []}
@@ -394,6 +436,7 @@ def upsample_quarter_to_month(df_q: object, var_name: str):
     return df_m
 
 
+# function on how to interpolate series given method argument
 def interpolate_series(series: object, method='linear'):
     num_na = sum(series.isna())
     series_no_na = series[~series.isna()]
@@ -415,30 +458,3 @@ def interpolate_series(series: object, method='linear'):
 
     else:
         raise ValueError(f'Input a valid method argument: {interpolation_val}')
-
-
-def get_donor_countries(prox: bool = None, treatment_country: str = None):
-    if treatment_country not in treatment_countries:
-        donor_countries = [i for i in donor_countries_all if i != str(treatment_country)]
-        return donor_countries
-    else:
-        if prox and treatment_country is not None:
-            donor_countries_prox = {'switzerland': ['austria', 'germany', 'italy'],
-                                    'ireland': donor_countries_all + ['united_kingdom'],
-                                    'united_kingdom': ['netherlands', 'belgium', 'spain'],
-                                    'france': ['belgium', 'germany', 'italy', 'netherlands', 'spain'],
-                                    'portugal': ['spain']
-                                    }
-            return donor_countries_prox[treatment_country]
-        else:
-            return donor_countries_all
-
-
-def get_model_color(type: str):
-    color = {'act': '#1f77b4',
-             'error': '#1f77b4',
-             'impl': 'black',
-             'arco': 'darkorange',  # orange
-             'sc': 'hotpink',  # green
-             }
-    return color[type]

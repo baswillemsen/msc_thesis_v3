@@ -1,1 +1,8 @@
 Index,Regressor,Coefficient
+1,united_kingdom co2,0.44
+2,netherlands gdp,0.052
+3,germany unempl,0.031
+4,greece brent,-0.002
+5,lithuania unempl,-0.002
+6,austria brent,-0.012
+7,united_kingdom ind_prod,-0.035

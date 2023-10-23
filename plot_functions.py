@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import statsmodels.api as sm
-import pylab as py
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
@@ -22,23 +21,7 @@ from definitions import fig_size, show_plots, save_figs, treatment_countries, co
 from helper_functions_general import get_impl_date, get_fig_path, get_formal_title, get_model_color
 
 
-# def plot_total(treatment_country: str, timeframe: str):
-#     figures_path_meth = get_fig_path(timeframe=timeframe, folder='methodology', country=treatment_country)
-#     var_name = f'{treatment_country}_test'
-#
-#     df = read_data(source_path=get_data_path(timeframe=timeframe), file_name=f'total_{timeframe}')
-#     df_target = df[df['country'] == treatment_country].set_index(date_col)
-#     print(df_target.columns.drop('country'))
-#
-#     for series in df_target.columns.drop('country').sort_values():
-#         df_target[series].plot(figsize=fig_size)
-#         plt.title(series)
-#         if save_figs:
-#             plt.savefig(f'{figures_path_meth}/{var_name}.png', dpi=300, bbox_inches='tight')
-#         if show_plots:
-#             plt.show()
-
-
+# plot intermediate series as transformed by preprocess
 def plot_series(i: int, series: object, timeframe: str, treatment_country: str, var_name: str):
     figures_path_data = get_fig_path(timeframe=timeframe, folder='data', country=treatment_country)
 
@@ -88,6 +71,7 @@ def plot_lasso_path(X: list, y: list, treatment_country: str, model: str, timefr
         plt.show()
 
 
+# plot predictions and actual series of treatment country co2
 def plot_predictions(df: object, treatment_country: str, model: str, timeframe: str, var_name: str):
     figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
 
@@ -123,6 +107,7 @@ def plot_predictions(df: object, treatment_country: str, model: str, timeframe: 
         plt.show()
 
 
+# plot prediction errors of treatment country co2
 def plot_diff(df: object, treatment_country: str, model: str, timeframe: str, var_name: str):
     figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
 
@@ -151,6 +136,7 @@ def plot_diff(df: object, treatment_country: str, model: str, timeframe: str, va
         plt.show()
 
 
+# plot cumulative summation of treatment country co2
 def plot_cumsum(df: object, treatment_country: str, model: str, timeframe: str, var_name: str):
     figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
 
@@ -176,6 +162,7 @@ def plot_cumsum(df: object, treatment_country: str, model: str, timeframe: str, 
         plt.show()
 
 
+# plot cumulative summation from the implementation date of treatment country co2
 def plot_cumsum_impl(df: object, treatment_country: str, model: str, timeframe: str, var_name: str):
     figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
 
@@ -203,6 +190,7 @@ def plot_cumsum_impl(df: object, treatment_country: str, model: str, timeframe: 
         plt.show()
 
 
+# plot qq plot of the prediction errors of treatment country co2
 def plot_qq(df: object, treatment_country: str, model: str, timeframe: str, var_name: str):
     figures_path_res = get_fig_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
 
@@ -224,6 +212,7 @@ def plot_qq(df: object, treatment_country: str, model: str, timeframe: str, var_
         plt.show()
 
 
+# plot correlation matrix of all included variables
 def plot_corr(matrix: object, timeframe: str):
     figures_path_meth = get_fig_path(timeframe=timeframe, folder='methodology')
     var_name = 'corr_matrix'
@@ -236,7 +225,3 @@ def plot_corr(matrix: object, timeframe: str):
         sns_plot.figure.savefig(f'{figures_path_meth}/{var_name}.png', dpi=300, bbox_inches='tight')
     if show_plots:
         plt.show()
-
-
-# if __name__ == "__main__":
-#     plot_total(treatment_country='france', timeframe='m')

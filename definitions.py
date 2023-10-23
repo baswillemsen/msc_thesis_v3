@@ -2,7 +2,6 @@
 data_source_path = 'data/source'
 data_path = 'data'
 output_path = 'output'
-
 all_paths = [data_source_path, data_path, output_path]
 
 # PRINTING, SHOWING PLOTS
@@ -10,11 +9,11 @@ show_output = True
 show_plots = False
 fig_size = (10, 6)
 
-save_output = True
-save_figs = True
+save_output = False
+save_figs = False
 
 # NON-STATIC DEFINITIONS
-target_var = 'co2'
+target_var = 'gdp'
 stat = 'stat'
 sign_level = 0.10
 fake_num = -99999
@@ -45,7 +44,6 @@ donor_countries_all = ['austria',
                        'bulgaria',
                        'croatia',
                        'czech_republic',
-                       # 'cyprus',
                        'germany',
                        'greece',
                        'hungary',

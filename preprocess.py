@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from definitions import data_source_path, corr_country_names, sign_level, fake_num, show_plots, \
-    country_col, year_col, quarter_col, month_col, date_col, incl_countries, show_output, timeframe_val
+    country_col, year_col, quarter_col, month_col, date_col, incl_countries, show_output
 from helper_functions_general import read_data, select_country_year_measure, month_name_to_num, rename_order_scale, \
     downsample_month_to_quarter, quarter_to_month, upsample_quarter_to_month, get_timeframe_col, get_trans, \
     get_data_path, interpolate_series, validate_input
@@ -14,7 +14,7 @@ from statistical_tests import stat_test
 from plot_functions import plot_series
 
 
-# Monthly CO2 data
+# preprocess monthly CO2 data
 def preprocess_co2_m(source_file: str, source_country_col: str, source_year_col: str, var_name: str,
                      var_scale: str, downsample_method: str):
     # read data
@@ -48,6 +48,7 @@ def preprocess_co2_m(source_file: str, source_country_col: str, source_year_col:
     return co2_m, co2_q
 
 
+# preprocess brent oil data
 def preprocess_brent_m(source_file: str, source_date_col: str, source_measure_col: str, var_name: str,
                        downsample_method: str):
     # read data
@@ -76,7 +77,7 @@ def preprocess_brent_m(source_file: str, source_date_col: str, source_measure_co
     return brent_m, brent_q
 
 
-# Quarterly World Bank data
+# preprocess world bank data
 def preprocess_WB(source_file: str, source_country_col: str, source_time_col: str, source_measure_col: str,
                   source_incl_measure: list, source_timeframe: str, var_name: str, var_scale: float,
                   downsample_method: str = None):
@@ -122,7 +123,7 @@ def preprocess_WB(source_file: str, source_country_col: str, source_time_col: st
     return df, df_alt
 
 
-# Monthly Eurostat data
+# preprocess eurostat data
 def preprocess_EUstat(source_file: str, source_country_col: str, var_name: str, var_scale: float,
                       source_timeframe: str, interpolate_method: str, downsample_method: str = None):
 
@@ -296,12 +297,6 @@ def make_stat(df: object, timeframe: str):
             total_stat['infl'] = infl_list
         if 'infl_energy' in trans:
             total_stat['infl_energy'] = infl_energy_list
-        if 'unempl' in trans:
-            total_stat['unempl'] = unempl_list
-        if 'trade' in trans:
-            total_stat['trade'] = trade_list
-        if 'cows' in trans:
-            total_stat['cows'] = cows_list
         if 'pop' in trans:
             total_stat['pop'] = pop_list
         if 'brent' in trans:
@@ -357,42 +352,6 @@ def preprocess():
                                            downsample_method='mean'
                                            )
 
-    # infl_energy_m, infl_energy_q = preprocess_EUstat(source_file='eurostat_infl_energy_m_1990_2023',
-    #                                                  source_country_col='Country',
-    #                                                  var_name='infl_energy',
-    #                                                  var_scale=1e-2,
-    #                                                  source_timeframe='m',
-    #                                                  interpolate_method='median',
-    #                                                  downsample_method='mean'
-    #                                                  )
-
-    # cows_m, cows_q = preprocess_EUstat(source_file='eurostat_cow_slaugh_m_1990_2023',
-    #                                    source_country_col='Country',
-    #                                    var_name='cows',
-    #                                    var_scale=1e6,
-    #                                    source_timeframe='m',
-    #                                    interpolate_method='median',
-    #                                    downsample_method='mean'
-    #                                    )
-
-    # trade_m, trade_q = preprocess_EUstat(source_file='eurostat_trade_m_1990_2023',
-    #                                      source_country_col='Country',
-    #                                      var_name='trade',
-    #                                      var_scale=1e6,
-    #                                      source_timeframe='m',
-    #                                      interpolate_method='median',
-    #                                      downsample_method='mean'
-    #                                      )
-
-    # gdp_q, gdp_m = preprocess_EUstat(source_file='eurostat_gdp_q_1975_2023',
-    #                                  source_country_col='Country',
-    #                                  var_name='gdp',
-    #                                  var_scale=1e6,
-    #                                  source_timeframe='q',
-    #                                  interpolate_method='median',
-    #                                  downsample_method='mean'
-    #                                  )
-
     gdp_q, gdp_m = preprocess_WB(source_file='wb_gdp_q_1996_2022',
                                  source_country_col='Country',
                                  source_time_col='TIME',
@@ -418,7 +377,6 @@ def preprocess():
     total_m = total_join(key_cols=[country_col, date_col, year_col, month_col], timeframe=timeframe,
                          co2=co2_m, brent=brent_m,
                          infl=infl_m, ind_prod=ind_prod_m, unempl=unempl_m,
-                         # trade=trade_m, infl_energy=infl_energy_m, cows=cows_m,
                          pop=pop_m, gdp=gdp_m)
     make_stat(df=total_m, timeframe=timeframe)
 
@@ -427,7 +385,6 @@ def preprocess():
     total_q = total_join(key_cols=[country_col, date_col, year_col, quarter_col], timeframe=timeframe,
                          co2=co2_q, brent=brent_q,
                          infl=infl_q, ind_prod=ind_prod_q, unempl=unempl_q,
-                         # trade=trade_q, infl_energy=infl_energy_q, cows=cows_q,
                          pop=pop_q, gdp=gdp_q)
     make_stat(df=total_q, timeframe=timeframe)
 

@@ -8,14 +8,13 @@ import csv
 from datetime import datetime
 from sklearn.metrics import r2_score
 
-from sklearn.preprocessing import StandardScaler
-
 from definitions import target_var, country_col, date_col, save_output, fake_num, show_plots, save_figs
 from helper_functions_general import get_table_path, get_impl_date, get_trans, get_donor_countries
 from plot_functions import plot_predictions, plot_diff, plot_cumsum, plot_cumsum_impl, plot_qq
 from statistical_tests import shapiro_wilk_test, t_test_result
 
 
+# pivot the standard dataframe into needed series for the arco method
 def arco_pivot(df: object, treatment_country: str, timeframe: str, model: str, prox: bool):
     tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
 
@@ -43,6 +42,7 @@ def arco_pivot(df: object, treatment_country: str, timeframe: str, model: str, p
     return treatment, donors
 
 
+# pivot the standard dataframe into needed series for the synthetic control method
 def sc_pivot(df: object, treatment_country: str, timeframe: str, model: str, impl_date: str, prox: bool):
     tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
     donor_countries = get_donor_countries(prox=prox, treatment_country=treatment_country)
@@ -66,14 +66,13 @@ def sc_pivot(df: object, treatment_country: str, timeframe: str, model: str, imp
     return df_pivot, pre_treat, post_treat, treat_unit
 
 
+# pivot the standard dataframe into needed series for the did method
 def did_pivot(df: object, treatment_country: str, timeframe: str, model: str, prox: bool, x_years: int):
     tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
     donor_countries = get_donor_countries(prox=prox, treatment_country=treatment_country)
 
     impl_date = get_impl_date(treatment_country=treatment_country)
     impl_date_index = list(df[date_col]).index(impl_date)
-    # pre_period = df[date_col][impl_date_index - 12*x_years:impl_date_index]
-    # post_period = df[date_col][impl_date_index:impl_date_index + 12*x_years]
     all_periods = df[date_col][impl_date_index - int(12*x_years):impl_date_index + int(12*x_years)]
 
     df = df[(df[country_col].isin(donor_countries + [treatment_country])) &
@@ -103,6 +102,7 @@ def did_pivot(df: object, treatment_country: str, timeframe: str, model: str, pr
     return df_sel, treatment_pre, treatment_post, donors_pre, donors_post
 
 
+# function to transform back the log-differenced co2 series to absolute numbers
 def transform_back(df: object, df_stat: object, pred_log_diff: object, timeframe: str, treatment_country: str):
 
     # summarize chosen configuration
@@ -122,14 +122,10 @@ def transform_back(df: object, df_stat: object, pred_log_diff: object, timeframe
     if diff_order == 2:
         orig_data_act_pred_log_diff_check = orig_data_log_diff1.diff(diff_level)
 
-    # print(len(orig_data_act_pred_log_diff_check[3:]))
-    # print(orig_data_act_pred_log_diff_check[3:])
-    # print(len(pred_log_diff))
-    # print(pred_log_diff)
     # save act_pred_log_diff_check
     act_pred_log_diff_check = pd.DataFrame(list(zip(orig_data_act_pred_log_diff_check, pred_log_diff)),
                                            columns=['act', 'pred']).set_index(orig_data_log.index)
-    act_pred_log_diff_check['error'] = act_pred_log_diff_check['pred'] - act_pred_log_diff_check['act']
+    act_pred_log_diff_check['error'] = act_pred_log_diff_check['act'] - act_pred_log_diff_check['pred']
 
     if diff_order == 2:
         pred1 = np.zeros(len(orig_data_log_diff1))
@@ -148,16 +144,17 @@ def transform_back(df: object, df_stat: object, pred_log_diff: object, timeframe
     # act_pred_log
     act_pred_log = pd.DataFrame(list(zip(orig_data_log, pred2)),
                                 columns=['act', 'pred']).set_index(orig_data_log.index)
-    act_pred_log['error'] = act_pred_log['pred'] - act_pred_log['act']
+    act_pred_log['error'] = act_pred_log['act'] - act_pred_log['pred']
 
     # act_pred
     act_pred = pd.DataFrame(list(zip(np.exp(orig_data_log), np.exp(pred2))),
                             columns=['act', 'pred']).set_index(orig_data_log.index)
-    act_pred['error'] = act_pred['pred'] - act_pred['act']
+    act_pred['error'] = act_pred['act'] - act_pred['pred']
 
     return act_pred_log_diff_check, act_pred_log, act_pred
 
 
+# function to save the intermediate dataframes, including plots on predictions, errors, cumsum, qq
 def save_dataframe(df: object, var_title: str, model: str, treatment_country: str, timeframe: str,
                    save_csv: bool, save_predictions: bool, save_diff: bool,
                    save_cumsum: bool, save_cumsum_impl: bool, save_qq: bool):
@@ -181,6 +178,7 @@ def save_dataframe(df: object, var_title: str, model: str, treatment_country: st
             plot_cumsum_impl(df=df, treatment_country=treatment_country, timeframe=timeframe, var_name=var_name, model=model)
 
 
+# save results from the arco and sc methods into csv
 def save_results(act_pred_log_diff, act_pred_log, act_pred, var_title,
                  model, stat, timeframe, sign_level, incl_countries, incl_years,
                  treatment_country, impl_date, impl_date_index, n_train, n_test,
@@ -237,6 +235,7 @@ def save_results(act_pred_log_diff, act_pred_log, act_pred, var_title,
         file.close()
 
 
+# save results from the did method into csv
 def save_did(model, stat, timeframe, sign_level, incl_countries, incl_years, treatment_country, impl_date,
              var_title, x_years, prox, ols):
 

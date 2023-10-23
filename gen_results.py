@@ -9,11 +9,14 @@ from main import main
 from definitions import treatment_countries
 
 
+##################################################
+### Generate all results given timeframe       ###
+##################################################
 def gen_results(timeframe: str):
 
     # preprocess()
 
-    for model in ['sc']:
+    for model in ['arco']:
 
         for treatment_country in treatment_countries:
             print('============================================================')

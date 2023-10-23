@@ -3,7 +3,6 @@
 ################################
 import os
 import sys
-import openpyxl
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -20,9 +19,9 @@ for path in all_paths:
         os.makedirs(path)
 
 
-################################
-### main script              ###
-################################
+############################################
+### main script for activating models    ###
+############################################
 def main(model: str, timeframe: str, treatment_country: str):
     if validate_input(model, stat, timeframe, treatment_country):
 
@@ -48,7 +47,7 @@ def main(model: str, timeframe: str, treatment_country: str):
             act_pred_log_diff = sc(df=df, df_stat=df_log_diff, treatment_country=treatment_country, timeframe=timeframe,
                                    model=model, prox=False)
         elif model == 'did':
-            act_pred_log_diff = did(df=df, treatment_country=treatment_country, timeframe=timeframe,
+            act_pred_log_diff = did(df=df_log_diff, treatment_country=treatment_country, timeframe=timeframe,
                                     model=model, prox=False, x_years=3)
         else:
             raise ValueError(f'Select a valid model: {model_val}')

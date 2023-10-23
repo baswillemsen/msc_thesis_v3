@@ -14,16 +14,15 @@ from sklearn.model_selection import TimeSeriesSplit
 from sklearn.linear_model import LassoCV
 
 import SparseSC
-from sklearn.linear_model import LinearRegression
 import statsmodels.formula.api as smf
 
 # custom functions
-from definitions import fake_num, show_plots, sign_level, save_figs, target_var, incl_years, incl_countries, stat, \
-    save_output, date_col
+from definitions import fake_num, show_plots, sign_level, save_figs, incl_years, incl_countries, stat, save_output, \
+    date_col
 from helper_functions_general import flatten, get_impl_date, get_table_path, get_months_cors
-from helper_functions_estimation import arco_pivot, sc_pivot, transform_back, save_dataframe, did_pivot, save_results, save_did
+from helper_functions_estimation import arco_pivot, sc_pivot, transform_back, save_dataframe, did_pivot, save_results, \
+    save_did
 from plot_functions import plot_lasso_path
-from statistical_tests import shapiro_wilk_test, t_test_result
 
 
 ################################
@@ -34,7 +33,6 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
          model: str, prox: bool):
     tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
 
-    # pivot treatment and donors
     treatment_log_diff, donors_log_diff = arco_pivot(df=df_stat, treatment_country=treatment_country,
                                                      timeframe=timeframe, model=model, prox=prox)
     # print(f'Nr of parameters included ({len(donors_log_diff.columns)}x): {donors_log_diff.columns}')
@@ -117,7 +115,7 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
         pred_log_diff = flatten(SS_treatmentfit_pre.inverse_transform(lasso.predict(X_log_diff_stand).reshape(-1, 1)))
         act_pred_log_diff = pd.DataFrame(list(zip(act_log_diff, pred_log_diff)),
                                          columns=['act', 'pred']).set_index(treatment_log_diff.index)
-        act_pred_log_diff['error'] = act_pred_log_diff['pred'] - act_pred_log_diff['act']
+        act_pred_log_diff['error'] = act_pred_log_diff['act'] - act_pred_log_diff['pred']
 
         act_pred_log_diff_check, \
             act_pred_log, act_pred = transform_back(df=df, df_stat=df_stat, treatment_country=treatment_country,
@@ -164,12 +162,15 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
         return act_pred_log_diff
 
 
+################################
+### Synthetic Control method ###
+################################
 def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, model: str, prox: bool):
     # pivot treatment and donors
     impl_date = get_impl_date(treatment_country=treatment_country)
     impl_date_index = list(df[date_col]).index(impl_date)
 
-    df_pivot, pre_treat, post_treat, treat_unit = sc_pivot(df=df, treatment_country=treatment_country,
+    df_pivot, pre_treat, post_treat, treat_unit = sc_pivot(df=df_stat, treatment_country=treatment_country,
                                                            timeframe=timeframe, model=model, impl_date=impl_date,
                                                            prox=prox)
 
@@ -186,7 +187,7 @@ def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, mode
     # act_pred_log_diff.rename(columns={treatment_country: 'act'}, inplace=True)
     # pred_log_diff = sc.predict(df_pivot.T.values)[0]
     # act_pred_log_diff['pred'] = pred_log_diff
-    # act_pred_log_diff['error'] = act_pred_log_diff['pred'] - act_pred_log_diff['act']
+    # act_pred_log_diff['error'] = act_pred_log_diff['act'] - act_pred_log_diff['pred']
 
     # standardize
     SS = StandardScaler()
@@ -195,7 +196,7 @@ def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, mode
     post_treat_stand = pd.DataFrame(SS.fit_transform(post_treat), columns=df_pivot.columns).set_index(post_treat.index)
 
     # define the SC estimator
-    sc = SparseSC.fit_fast(
+    sc = SparseSC.fit(
         features=np.array(pre_treat_stand.T),
         targets=np.array(post_treat_stand.T),
         treated_units=treat_unit,
@@ -208,9 +209,9 @@ def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, mode
 
     act_pred_log_diff = df_pivot[treatment_country].to_frame()
     act_pred_log_diff.rename(columns={treatment_country: 'act'}, inplace=True)
-    pred_log_diff = sc.predict(df_pivot.T.values)[0].reshape(-1, 1)
+    # pred_log_diff = sc.predict(df_pivot.T.values)[0].reshape(-1, 1)
     act_pred_log_diff['pred'] = pred_log_diff
-    act_pred_log_diff['error'] = act_pred_log_diff['pred'] - act_pred_log_diff['act']
+    act_pred_log_diff['error'] = act_pred_log_diff['act'] - act_pred_log_diff['pred']
 
     # transform back
     act_pred_log_diff_check, \
@@ -254,6 +255,9 @@ def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, mode
     return act_pred_log_diff
 
 
+################################
+### Diff-in-Diff method      ###
+################################
 def did(df: object, treatment_country: str, timeframe: str, model: str, prox: bool, x_years: int):
 
     impl_date = get_impl_date(treatment_country=treatment_country)
