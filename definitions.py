@@ -24,7 +24,7 @@ month_col = 'month'
 quarter_col = 'quarter'
 date_col = 'date'
 
-model_val = ['arco', 'sc', 'did']
+model_val = ['ols', 'lasso', 'nn', 'rf', 'sc', 'did']
 stat_val = ['stat', 'non_stat']
 timeframe_val = ['m', 'q']
 folder_val = ['data', 'methodology', 'results']

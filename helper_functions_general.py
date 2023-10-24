@@ -80,7 +80,7 @@ def get_trans(timeframe: str = None):
             , 'gdp': (False, 0)
             , 'ind_prod': (False, 0)
             , 'infl': (False, 1)
-            , 'unempl': (False, 1)
+            , 'unempl': (True, 1)
             , 'pop': (True, 1)
             , 'brent': (True, 1)
         }
@@ -90,7 +90,7 @@ def get_trans(timeframe: str = None):
             , 'gdp': (False, 0)
             , 'ind_prod': (False, 0)
             , 'infl': (False, 1)
-            , 'unempl': (False, 1)
+            , 'unempl': (True, 1)
             , 'pop': (True, 1)
             , 'brent': (True, 1)
         }
@@ -134,7 +134,10 @@ def get_impl_date(treatment_country: str = None, input: str = None):
 
 
 # get corrections for implementation months
-def get_months_cors(timeframe, treatment_country):
+def get_months_cors(model: str, timeframe: str, treatment_country: str):
+    if model == 'ols':
+        return 0
+
     if treatment_country not in treatment_countries:
         return 0
     else:
@@ -178,13 +181,30 @@ def get_donor_countries(prox: bool = None, treatment_country: str = None):
             return donor_countries_all
 
 
+# def get_ols_pars(treatment_country: str):
+#     if treatment_country not in treatment_countries:
+#         return 10
+#     else:
+#         n_pars = {'switzerland': 10,
+#                   'ireland': 10,
+#                   'united_kingdom': 10,
+#                   'france': 10,
+#                   'portugal': 10,
+#                   'other': 10
+#                   }
+#     return n_pars[treatment_country]
+
+
 # define static colors for plotting the series from different models
 def get_model_color(type: str):
     color = {'act': '#1f77b4',
              'error': '#1f77b4',
              'impl': 'black',
-             'arco': 'darkorange',  # orange
+             'lasso': 'darkorange',  # orange
              'sc': 'hotpink',  # green
+             'ols': 'yellowgreen',
+             'nn':  'yellowgreen',
+             'rf': 'yellowgreen'
              }
     return color[type]
 

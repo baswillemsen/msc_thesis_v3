@@ -1,0 +1,17 @@
+Index,Regressor,Coefficient
+1,romania co2,0.303
+2,czech_republic co2,0.205
+3,netherlands co2,0.193
+4,spain co2,0.09
+5,slovakia gdp,0.075
+6,czech_republic gdp,0.061
+7,germany co2,0.052
+8,bulgaria gdp,0.046
+9,bulgaria ind_prod,0.04
+10,croatia ind_prod,0.034
+11,spain ind_prod,-0.019
+12,hungary ind_prod,-0.021
+13,belgium co2,-0.049
+14,netherlands ind_prod,-0.051
+15,czech_republic ind_prod,-0.06
+16,belgium gdp,-0.097

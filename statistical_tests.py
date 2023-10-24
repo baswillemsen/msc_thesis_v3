@@ -9,7 +9,7 @@ from helper_functions_general import read_data, get_timescale, get_trans, get_im
 
 from statsmodels.tsa.stattools import adfuller
 from scipy.stats import shapiro
-from scipy.stats import ttest_1samp
+from scipy.stats import ttest_1samp, ttest_ind, t
 
 
 # adfuller test for stationarity (unit-root test)
@@ -117,22 +117,35 @@ def stat_test(x: list, sign_level: float):
 # one-sample t-test to see if results are significant
 def t_test_result(df: object, treatment_country: str):
 
+    df_pre = df[df.index >= get_impl_date(treatment_country=treatment_country)]
     df_post = df[df.index >= get_impl_date(treatment_country=treatment_country)]
+
     att_mean = df_post['error'].mean()
     att_std = df_post['error'].std()
-
     print(f'ATT (mean): {round(att_mean,4)}')
     print(f'ATT (std):  {round(att_std,4)}')
 
-    ttest_res = ttest_1samp(df_post['error'], popmean=0)
-    if ttest_res[1] < sign_level:
+    # T = len(df)
+    # T_pre = len(df_pre)
+    # T_post = len(df_post)
+    # dof = T_post - 1
+    # gamma_1 = sum(df_pre['error']**2) / T_pre
+    # gamma_2 = sum(df_post['error'] ** 2) / T_post
+    # omega_hat_sqrt = np.sqrt(gamma_1 / (T_pre/T) + gamma_2 / (T_post/T))
+    # t_stat = att_mean / (omega_hat_sqrt / np.sqrt(T))
+    # p_value = 2*(1 - t.cdf(abs(t_stat), dof))
+
+    p_value = ttest_1samp(df_post['error'], popmean=0).pvalue
+    # p_value = ttest_ind(a=df_post['act'], b=df_post['pred'], equal_var=False, alternative='two-sided').pvalue
+
+    if p_value < sign_level:
         significant = 1
-        print(f'Result is significant (p-value={round(ttest_res[1],3)})')
+        print(f'Result is significant (p-value={p_value})')
     else:
         significant = 0
-        print(f'Result is NOT significant (p-value={round(ttest_res[1],3)})')
+        print(f'Result is NOT significant (p-value={p_value})')
 
-    return att_mean, att_std, significant, ttest_res[1]
+    return att_mean, att_std, significant, p_value
 
 
 if __name__ == "__main__":

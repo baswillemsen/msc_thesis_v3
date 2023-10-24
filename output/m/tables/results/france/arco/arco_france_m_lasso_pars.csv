@@ -1,8 +1,7 @@
 Index,Regressor,Coefficient
-1,belgium co2,0.369
-2,netherlands co2,0.255
-3,spain co2,0.15
-4,croatia co2,0.103
-5,spain unempl,0.003
-6,czech_republic gdp,-0.003
-7,lithuania gdp,-0.037
+1,belgium co2,0.374
+2,netherlands co2,0.254
+3,spain co2,0.158
+4,croatia co2,0.104
+5,czech_republic gdp,-0.009
+6,lithuania gdp,-0.043

@@ -178,7 +178,7 @@ def save_results(act_pred_log_diff, act_pred_log, act_pred, var_title,
                  model, stat, timeframe, sign_level, incl_countries, incl_years,
                  treatment_country, impl_date, impl_date_index, n_train, n_test,
                  prox=None, months_cor=None, split_date=None, r2_pre_log_diff_stand=None,
-                 lasso_alpha=None, n_pars=None, lasso_pars=None, lasso_coefs=None):
+                 lasso_alpha=None, n_pars=None, pars=None, coefs=None):
 
     if var_title == f'{model}_results_optim':
         tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
@@ -209,8 +209,8 @@ def save_results(act_pred_log_diff, act_pred_log, act_pred, var_title,
     r2_pre_log_diff = r2_score(act_pred_log_diff['act'][:impl_date_index], act_pred_log_diff['pred'][:impl_date_index])
     r2_pre_log = r2_score(act_pred_log['act'][:impl_date_index], act_pred_log['pred'][:impl_date_index])
     r2_pre = r2_score(act_pred['act'][:impl_date_index], act_pred['pred'][:impl_date_index])
-    colmns = ['model', 'timestamp', 'timeframe', 'stat', 'sign_level',  'treatment_country', 'incl_vars', 'incl_countries', 'incl_years', 'impl_date', 'n_train', 'n_test', 'r2_pre_log_diff', 'r2_pre_log', 'r2_pre', 'shapiro_p', 'normal_errors', 'att_mean', 'att_std', 'att_p', 'att_sign', 'att_log_diff_mean', 'att_log_diff_std', 'att_log_diff_p', 'att_log_diff_sign', 'prox', 'months_cor', 'split_date', 'r2_pre_log_diff_stand', 'lasso_alpha', 'n_pars', 'lasso_pars', 'lasso_coefs']
-    result = [model,    timestamp,   timeframe,   stat,   sign_level,    treatment_country,   incl_vars,   incl_countries,   incl_years,   impl_date,   n_train,   n_test,   r2_pre_log_diff,   r2_pre_log,   r2_pre,   shapiro_p,   normal_errors,   att_mean,   att_std,   att_p,   att_sign,   att_log_diff_mean,   att_log_diff_std,   att_log_diff_p,   att_log_diff_sign,   prox,   months_cor,   split_date,   r2_pre_log_diff_stand,   lasso_alpha,   n_pars,   lasso_pars,   lasso_coefs]
+    colmns = ['model', 'timestamp', 'timeframe', 'stat', 'sign_level',  'treatment_country', 'incl_vars', 'incl_countries', 'incl_years', 'impl_date', 'n_train', 'n_test', 'r2_pre_log_diff', 'r2_pre_log', 'r2_pre', 'shapiro_p', 'normal_errors', 'att_mean', 'att_std', 'att_p', 'att_sign', 'att_log_diff_mean', 'att_log_diff_std', 'att_log_diff_p', 'att_log_diff_sign', 'prox', 'months_cor', 'split_date', 'r2_pre_log_diff_stand', 'lasso_alpha', 'n_pars', 'pars', 'coefs']
+    result = [model,    timestamp,   timeframe,   stat,   sign_level,    treatment_country,   incl_vars,   incl_countries,   incl_years,   impl_date,   n_train,   n_test,   r2_pre_log_diff,   r2_pre_log,   r2_pre,   shapiro_p,   normal_errors,   att_mean,   att_std,   att_p,   att_sign,   att_log_diff_mean,   att_log_diff_std,   att_log_diff_p,   att_log_diff_sign,   prox,   months_cor,   split_date,   r2_pre_log_diff_stand,   lasso_alpha,   n_pars,   pars,   coefs]
 
     if len(result) != len(colmns):
         raise ValueError('Length column names in file is different from length of output')
@@ -232,19 +232,19 @@ def save_results(act_pred_log_diff, act_pred_log, act_pred, var_title,
 
 # save results from the did method into csv
 def save_did(model, stat, timeframe, sign_level, incl_countries, incl_years, treatment_country, impl_date,
-             var_title, x_years, prox, ols):
+             var_title, x_years, prox, diff_in_diff, ols):
 
     tables_path_res = get_table_path(timeframe=timeframe, folder='results')
     timestamp = datetime.now().strftime("%Y-%m-%d, %H:%M")
 
     incl_vars = get_trans()
     ols_n = ols.nobs
-    ols_diff = -1 * ols.params['treatment_post_dummy']
+    ols_diff = ols.params['treatment_post_dummy']
     ols_t_p = ols.pvalues['treatment_post_dummy']
     ols_f_p = ols.f_pvalue
     ols_r2 = ols.rsquared
-    colmns = ['model', 'timestamp', 'timeframe', 'stat', 'sign_level',  'treatment_country', 'incl_vars', 'incl_countries', 'incl_years', 'impl_date', 'x_years', 'prox', 'ols_n', 'ols_diff', 'ols_t_p', 'ols_f_p', 'ols_r2']
-    result = [model,    timestamp,   timeframe,   stat,   sign_level,    treatment_country,   incl_vars,   incl_countries,   incl_years,   impl_date,   x_years,   prox,   ols_n,   ols_diff,   ols_t_p,   ols_f_p,   ols_r2]
+    colmns = ['model', 'timestamp', 'timeframe', 'stat', 'sign_level',  'treatment_country', 'incl_vars', 'incl_countries', 'incl_years', 'impl_date', 'x_years', 'prox', 'diff_in_diff', 'ols_n', 'ols_diff', 'ols_t_p', 'ols_f_p', 'ols_r2']
+    result = [model,    timestamp,   timeframe,   stat,   sign_level,    treatment_country,   incl_vars,   incl_countries,   incl_years,   impl_date,   x_years,   prox,   diff_in_diff,   ols_n,   ols_diff,   ols_t_p,   ols_f_p,   ols_r2]
 
     if len(result) != len(colmns):
         raise ValueError('Length column names in file is different from length of output')

@@ -16,7 +16,7 @@ def gen_results(timeframe: str):
 
     # preprocess()
 
-    for model in ['arco']:
+    for model in ['rf', 'nn']:
 
         for treatment_country in treatment_countries:
             print('============================================================')

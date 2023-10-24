@@ -1,7 +1,8 @@
 Index,Regressor,Coefficient
-1,belgium co2,0.528
-2,netherlands co2,0.164
-3,spain co2,0.015
-4,netherlands gdp,0.003
-5,netherlands pop,-0.068
-6,belgium pop,-0.082
+1,austria brent,0.742
+2,austria gdp,0.085
+3,belgium gdp,-0.021
+4,austria infl,-0.028
+5,belgium co2,-0.041
+6,austria unempl,-0.143
+7,austria ind_prod,-0.187
