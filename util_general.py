@@ -241,23 +241,6 @@ def get_model_color(type: str):
         return 'black'
 
 
-# get formal title for saving the plots
-def get_formal_title(var_name: str):
-    if 'act_pred_log_diff_check' in var_name:
-        return 'log-differenced'
-
-    elif 'act_pred_log_diff' in var_name:
-        return 'log-differenced'
-
-    elif 'act_pred_log' in var_name:
-        return 'log'
-
-    elif 'act_pred' in var_name:
-        return ''
-    else:
-        return var_name
-
-
 # get timescale for transforming quarter/month into year
 def get_timescale(timeframe: str = None):
     timeframe_scale = {'q': 4,
@@ -369,3 +352,51 @@ def validate_input(model: str = None, stat: str = None, timeframe: str = None, t
 
     else:
         return True
+
+
+# get formal title for saving the plots
+def get_formal_title(var_name: str):
+    if 'act_pred_log_diff_check' in var_name:
+        return 'log-differenced'
+
+    elif 'act_pred_log_diff' in var_name:
+        return 'log-differenced'
+
+    elif 'act_pred_log' in var_name:
+        return 'log'
+
+    elif 'act_pred' in var_name:
+        return ''
+    else:
+        return var_name
+
+
+# get formal var name for saving the plots
+def get_formal_var_name(var_name: str = None):
+    var_name_formal = {'co2': 'CO2 Emissions',
+                       'gdp': 'GDP',
+                       'ind_prod': 'Industrial Production',
+                       'pop': 'Population',
+                       'infl': 'Inflation',
+                       'unempl': 'Unemployment',
+                       'brent': 'Brent Oil'
+                       }
+    if var_name is not None:
+        return var_name_formal[var_name]
+    else:
+        return var_name_formal.keys()
+
+
+# get formal var name for saving the plots
+def get_formal_country_name(country: str = None):
+    country_name_formal = {'switzerland': 'Switzerland',
+                           'ireland': 'Ireland',
+                           'united_kingdom': 'United Kingdom',
+                           'france': 'France',
+                           'portugal': 'Portugal',
+                           'other': 'Other'
+                           }
+    if country is not None and country in treatment_countries:
+        return country_name_formal[country]
+    else:
+        return country_name_formal.keys()

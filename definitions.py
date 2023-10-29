@@ -71,22 +71,3 @@ corr_country_names = {'republic of cyprus': 'cyprus',
                       'switzerland and liechtenstein': 'switzerland',
                       'united kingdom': 'united_kingdom'
                       }
-
-country_name_formal = {'switzerland': 'Switzerland',
-                       'ireland': 'Ireland',
-                       'united_kingdom': 'United Kingdom',
-                       'france': 'France',
-                       'portugal': 'Portugal',
-                       'other': 'Other'
-                       }
-
-var_name_formal = {'co2': 'CO2 Emissions',
-                   'co2_cap': 'CO2 Emissions per capita',
-                   'gdp': 'GDP',
-                   'gdp_cap': 'GDP per capita',
-                   'ind_prod': 'Industrial Production',
-                   'pop': 'Population',
-                   'infl': 'Inflation',
-                   'unempl': 'Unemployment',
-                   'brent': 'Brent Oil'
-                   }

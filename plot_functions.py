@@ -17,8 +17,8 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 from sklearn.linear_model import Lasso
 
-from definitions import fig_size, show_plots, save_figs, treatment_countries, country_name_formal
-from util_general import get_impl_date, get_fig_path, get_formal_title, get_model_color
+from definitions import fig_size, show_plots, save_figs, treatment_countries
+from util_general import get_impl_date, get_fig_path, get_formal_title, get_model_color, get_formal_country_name
 
 
 # plot intermediate series as transformed by preprocess
@@ -56,8 +56,8 @@ def plot_lasso_path(X: list, y: list, treatment_country: str, model: str, timefr
     ax.plot(alphas, coefs)
     ax.axvline(x=alpha_cv, color=get_model_color('impl'))
 
-    if treatment_country in country_name_formal.keys():
-        ax.set_title(f'{country_name_formal[treatment_country]} LASSO Path')
+    if treatment_country in treatment_countries:
+        ax.set_title(f'{get_formal_country_name(treatment_country)} LASSO Path')
     else:
         ax.set_title(f'LASSO Path')
     ax.set_xscale('log')
@@ -93,8 +93,8 @@ def plot_predictions(df: object, treatment_country: str, model: str, timeframe: 
     for tick in ax.get_xticklabels():
         tick.set_rotation(45)
 
-    if treatment_country in country_name_formal.keys():
-        ax.set_title(f'{country_name_formal[treatment_country]} {get_formal_title(var_name=var_name)} CO2 series')
+    if treatment_country in treatment_countries:
+        ax.set_title(f'{get_formal_country_name(treatment_country)} {get_formal_title(var_name=var_name)} CO2 series')
     else:
         ax.set_title(f'{get_formal_title(var_name=var_name)} CO2 series')
     ax.set_xlabel('Year')
@@ -121,8 +121,8 @@ def plot_diff(df: object, treatment_country: str, model: str, timeframe: str, va
     for tick in ax.get_xticklabels():
         tick.set_rotation(45)
 
-    if treatment_country in country_name_formal.keys():
-        ax.set_title(f'{country_name_formal[treatment_country]} {get_formal_title(var_name=var_name)} '
+    if treatment_country in treatment_countries:
+        ax.set_title(f'{get_formal_country_name(treatment_country)} {get_formal_title(var_name=var_name)} '
                      f'CO2 series prediction error')
     else:
         ax.set_title(f'{get_formal_title(var_name=var_name)} CO2 series prediction error')
@@ -149,8 +149,9 @@ def plot_cumsum(df: object, treatment_country: str, model: str, timeframe: str, 
     for tick in ax.get_xticklabels():
         tick.set_rotation(45)
 
-    if treatment_country in country_name_formal.keys():
-        ax.set_title(f'{country_name_formal[treatment_country]} {get_formal_title(var_name=var_name)} CO2 series (cumsum)')
+    if treatment_country in treatment_countries:
+        ax.set_title(f'{get_formal_country_name(treatment_country)} {get_formal_title(var_name=var_name)} '
+                     f'CO2 series (cumsum)')
     else:
         ax.set_title(f'{get_formal_title(var_name=var_name)} CO2 series (cumsum)')
     ax.set_xlabel('Year')
@@ -177,8 +178,9 @@ def plot_cumsum_impl(df: object, treatment_country: str, model: str, timeframe: 
     for tick in ax.get_xticklabels():
         tick.set_rotation(45)
 
-    if treatment_country in country_name_formal.keys():
-        ax.set_title(f'{country_name_formal[treatment_country]} {get_formal_title(var_name=var_name)} CO2 series (cumsum)')
+    if treatment_country in treatment_countries:
+        ax.set_title(f'{get_formal_country_name(treatment_country)} {get_formal_title(var_name=var_name)} '
+                     f'CO2 series (cumsum)')
     else:
         ax.set_title(f'{get_formal_title(var_name=var_name)} CO2 series (cumsum)')
     ax.set_xlabel('Year')
@@ -201,8 +203,8 @@ def plot_qq(df: object, treatment_country: str, model: str, timeframe: str, var_
     # print(df['error'].dropna())
     sm.qqplot(df['error'].dropna(), line='45', fit=True, ax=ax)
 
-    if treatment_country in country_name_formal.keys():
-        ax.set_title(f'{country_name_formal[treatment_country]} {get_formal_title(var_name=var_name)} '
+    if treatment_country in treatment_countries:
+        ax.set_title(f'{get_formal_country_name(treatment_country)} {get_formal_title(var_name=var_name)} '
                      f'prediction error QQ-plot')
     else:
         ax.set_title(f'{get_formal_title(var_name=var_name)} prediction error QQ-plot')

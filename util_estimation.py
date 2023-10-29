@@ -202,7 +202,7 @@ def save_results(act_pred_log_diff, act_pred_log, act_pred, var_title,
         std = [round(att_log_diff_std, 3), round(att_log_std, 3), round(att_std, 3)]
         p_val = [round(att_log_diff_p, 3), round(att_log_p, 3), round(att_p, 3)]
         df_arco = pd.DataFrame(list(zip(series, att, std, p_val)),
-                               columns=['Series', '$\hat{\Delta}_T$ (ATT)', '$\hat{\sigma}_{\Delta_T}$ (STD)', 'P-value'])
+                               columns=['Series', '$\hat{\Delta}_T$ (ATE)', '$\hat{\sigma}_{\Delta_T}$ (STD)', 'p-value'])
         df_arco.to_csv(f'{tables_path_res_country}/{model}_{treatment_country}_{timeframe}_att.csv', index=False)
 
     incl_vars = get_trans()
