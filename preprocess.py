@@ -176,20 +176,21 @@ def total_join(key_cols: list, timeframe: str,
                pop: object = None, gdp: object = None):
     total = co2.copy()
     if gdp is not None:
-        total = total.merge(gdp, how='left', on=key_cols)
+        total = total.merge(gdp, how='outer', on=key_cols)
     if ind_prod is not None:
-        total = total.merge(ind_prod, how='left', on=key_cols)
+        total = total.merge(ind_prod, how='outer', on=key_cols)
     if infl is not None:
-        total = total.merge(infl, how='left', on=key_cols)
+        total = total.merge(infl, how='outer', on=key_cols)
     if unempl is not None:
-        total = total.merge(unempl, how='left', on=key_cols)
+        total = total.merge(unempl, how='outer', on=key_cols)
     if pop is not None:
-        total = total.merge(pop, how='left', on=key_cols)
+        total = total.merge(pop, how='outer', on=key_cols)
     if brent is not None:
-        total = total.merge(brent, how='left', on=key_cols.remove(country_col))
+        total = total.merge(brent, how='outer', on=key_cols.remove(country_col))
 
     total = total.dropna(axis=0, how='any', subset=total.columns.drop(['ind_prod', 'infl']))
     total = total.fillna(fake_num).reset_index(drop=True)
+    total = total.sort_values([country_col, date_col])
     total.to_csv(f'{get_data_path(timeframe=timeframe)}/total_{timeframe}.csv', header=True, index=False)
 
     return total

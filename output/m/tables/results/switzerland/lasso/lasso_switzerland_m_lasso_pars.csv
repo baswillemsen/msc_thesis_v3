@@ -1,8 +1,8 @@
 Index,Regressor,Coefficient
-1,austria co2,0.563
-2,belgium co2,0.253
-3,germany co2,0.041
-4,belgium pop,0.017
-5,austria ind_prod,-0.024
-6,lithuania gdp,-0.057
-7,bulgaria co2,-0.184
+1,austria co2,0.5634756933616627
+2,belgium co2,0.2529647808080166
+3,germany co2,0.04133856042182452
+4,belgium pop,0.01734432766735692
+5,austria ind_prod,-0.023622536068203807
+6,lithuania gdp,-0.05746375789997526
+7,bulgaria co2,-0.18374298976070155

@@ -1,8 +1,0 @@
-Index,Regressor,Coefficient
-1,austria brent,0.742
-2,austria gdp,0.085
-3,belgium gdp,-0.021
-4,austria infl,-0.028
-5,belgium co2,-0.041
-6,austria unempl,-0.143
-7,austria ind_prod,-0.187

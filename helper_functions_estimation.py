@@ -18,7 +18,7 @@ from statistical_tests import shapiro_wilk_test, t_test_result
 def arco_pivot(df: object, treatment_country: str, timeframe: str, model: str, prox: bool):
     tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
 
-    donor_countries = get_donor_countries(prox=prox, treatment_country=treatment_country)
+    donor_countries = get_donor_countries(model=model, prox=prox, treatment_country=treatment_country)
 
     treatment = df.copy()
     treatment = treatment[treatment[country_col] == treatment_country].set_index(date_col)[target_var].to_frame()
@@ -45,7 +45,7 @@ def arco_pivot(df: object, treatment_country: str, timeframe: str, model: str, p
 # pivot the standard dataframe into needed series for the synthetic control method
 def sc_pivot(df: object, treatment_country: str, timeframe: str, model: str, impl_date: str, prox: bool):
     tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
-    donor_countries = get_donor_countries(prox=prox, treatment_country=treatment_country)
+    donor_countries = get_donor_countries(model=model, prox=prox, treatment_country=treatment_country)
 
     df_pivot = df.copy()
     df_pivot = df_pivot[df_pivot[country_col].isin(donor_countries + [treatment_country])]
@@ -69,7 +69,7 @@ def sc_pivot(df: object, treatment_country: str, timeframe: str, model: str, imp
 # pivot the standard dataframe into needed series for the did method
 def did_pivot(df: object, treatment_country: str, timeframe: str, model: str, prox: bool, x_years: int):
     tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
-    donor_countries = get_donor_countries(prox=prox, treatment_country=treatment_country)
+    donor_countries = get_donor_countries(model=model, prox=prox, treatment_country=treatment_country)
 
     impl_date = get_impl_date(treatment_country=treatment_country)
     impl_date_index = list(df[date_col]).index(impl_date)

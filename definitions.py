@@ -14,7 +14,7 @@ save_figs = True
 
 # NON-STATIC DEFINITIONS
 target_var = 'co2'
-stat = 'non_stat'
+stat = 'stat'
 sign_level = 0.10
 fake_num = -99999
 
@@ -24,7 +24,7 @@ month_col = 'month'
 quarter_col = 'quarter'
 date_col = 'date'
 
-model_val = ['ols', 'lasso', 'nn', 'rf', 'sc', 'did']
+model_val = ['ols', 'lasso', 'rf', 'sc', 'did']  # ['ols', 'lasso', 'nn', 'rf', 'sc', 'did', 'xgb']
 stat_val = ['stat', 'non_stat']
 timeframe_val = ['m', 'q']
 folder_val = ['data', 'methodology', 'results']
@@ -76,7 +76,8 @@ country_name_formal = {'switzerland': 'Switzerland',
                        'ireland': 'Ireland',
                        'united_kingdom': 'United Kingdom',
                        'france': 'France',
-                       'portugal': 'Portugal'
+                       'portugal': 'Portugal',
+                       'other': 'Other'
                        }
 
 var_name_formal = {'co2': 'CO2 Emissions',
@@ -86,6 +87,6 @@ var_name_formal = {'co2': 'CO2 Emissions',
                    'ind_prod': 'Industrial Production',
                    'pop': 'Population',
                    'infl': 'Inflation',
+                   'unempl': 'Unemployment',
                    'brent': 'Brent Oil'
                    }
-

@@ -1,10 +1,10 @@
 Index,Regressor,Coefficient
-1,belgium co2,0.54
-2,netherlands co2,0.098
-3,lithuania co2,0.083
-4,lithuania gdp,0.047
-5,lithuania unempl,-0.013
-6,netherlands pop,-0.023
-7,spain unempl,-0.028
-8,belgium pop,-0.057
-9,czech_republic pop,-0.067
+1,belgium co2,0.5383358455342194
+2,lithuania co2,0.0951275212480912
+3,netherlands co2,0.09399421991109687
+4,lithuania gdp,0.04895313321974259
+5,lithuania unempl,-0.012444423669195305
+6,netherlands pop,-0.02431114503967112
+7,spain unempl,-0.031147850948606306
+8,belgium pop,-0.0596621046367218
+9,czech_republic pop,-0.07269361655029864

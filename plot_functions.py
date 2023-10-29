@@ -198,6 +198,7 @@ def plot_qq(df: object, treatment_country: str, model: str, timeframe: str, var_
     df = df[df.index < get_impl_date(treatment_country)]
 
     fig, ax = plt.subplots(figsize=fig_size)
+    # print(df['error'].dropna())
     sm.qqplot(df['error'].dropna(), line='45', fit=True, ax=ax)
 
     if treatment_country in country_name_formal.keys():

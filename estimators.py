@@ -14,7 +14,6 @@ from sklearn.model_selection import TimeSeriesSplit
 from sklearn.linear_model import LassoCV, LinearRegression
 from sklearn.feature_selection import SequentialFeatureSelector
 
-from sklearn.neural_network import MLPRegressor
 from sklearn.ensemble import RandomForestRegressor
 
 import SparseSC
@@ -36,7 +35,6 @@ from plot_functions import plot_lasso_path
 def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts_splits: int,
          alpha_min: float, alpha_max: float, alpha_step: float, tol: float, lasso_iters: int,
          model: str, prox: bool):
-    global lasso
     tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
 
     treatment_log_diff, donors_log_diff = arco_pivot(df=df_stat, treatment_country=treatment_country,
@@ -49,13 +47,14 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
         return None
     else:
 
+        # for months_cor in [-15, -12, -9, -6, -3, 0, 3, 6, 9, 12, 15]:
+        months_cor = get_months_cors(model=model, timeframe=timeframe, treatment_country=treatment_country)
+
         y_log_diff = treatment_log_diff
         X_log_diff = donors_log_diff
 
         impl_date = get_impl_date(treatment_country=treatment_country)
         impl_date_index = list(treatment_log_diff.index).index(impl_date)
-
-        months_cor = get_months_cors(model=model, timeframe=timeframe, treatment_country=treatment_country)
         split_index = impl_date_index + months_cor
         split_date = treatment_log_diff.index[split_index]
 
@@ -78,6 +77,7 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
         y_log_diff_pre_stand = pd.DataFrame(SS.fit_transform(y_log_diff_pre), index=y_log_diff_pre.index,
                                             columns=y_log_diff_pre.columns)
 
+        ### LASSO ======================================================================================
         if model == 'lasso':
             # define model
             ts_split = TimeSeriesSplit(n_splits=ts_splits)
@@ -94,9 +94,11 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
             )
 
             # fit model
-            lasso.fit(X_log_diff_pre_stand, y_log_diff_pre_stand[target_var])
+            X = X_log_diff_pre_stand
+            y = y_log_diff_pre_stand[target_var]
+            lasso.fit(X, y)
             # lasso results
-            r2_pre_log_diff_stand = lasso.score(X_log_diff_pre_stand, y_log_diff_pre_stand)
+            r2_pre_log_diff_stand = lasso.score(X, y)
             lasso_alpha = lasso.alpha_
             print(f'R2 r2_pre_log_diff_stand: {r2_pre_log_diff_stand}')
             print(f'alpha: {lasso_alpha}')
@@ -138,6 +140,83 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
                                              columns=['act', 'pred']).set_index(treatment_log_diff.index)
             act_pred_log_diff['error'] = act_pred_log_diff['act'] - act_pred_log_diff['pred']
 
+        ### XGBOOST ======================================================================================
+        # elif model == 'xgb':
+        #     ts_split = TimeSeriesSplit(n_splits=ts_splits)
+        #     # xgb = XGBRegressor()
+        #     xgb = XGBRegressor(n_estimators=100,
+        #                        max_depth=10,
+        #                        # eta=0.1,
+        #                        # subsample=0.7,
+        #                        # colsample_bytree=0.8,
+        #                        reg_alpha=47)
+        #
+        #     y = np.array(y_log_diff_pre_stand).ravel()
+        #     X = X_log_diff_pre_stand
+        #     # scores = cross_val_score(estimator=xgb,
+        #     #                          X=X,
+        #     #                          y=y,
+        #     #                          scoring='neg_mean_absolute_error',
+        #     #                          cv=ts_split,
+        #     #                          n_jobs=-1)
+        #     # scores = np.absolute(scores)
+        #     # print('Mean MAE: %.3f (%.3f)' % (scores.mean(), scores.std()))
+        #
+        #     xgb.fit(X, y)
+        #
+        #     act_log_diff = flatten(np.array(y_log_diff).reshape(-1, 1))
+        #     pred_log_diff = flatten(SS_treatmentfit_pre.inverse_transform(
+        #         np.array(xgb.predict(X_log_diff_stand)).reshape(-1, 1)))
+        #     act_pred_log_diff = pd.DataFrame(list(zip(act_log_diff, pred_log_diff)), columns=['act', 'pred']).set_index(
+        #         treatment_log_diff.index)
+        #     act_pred_log_diff['error'] = act_pred_log_diff['act'] - act_pred_log_diff['pred']
+        #
+        #     lasso_alpha = None
+        #     r2_pre_log_diff_stand = xgb.score(X=X, y=y)
+        #
+        #     feats = {}
+        #     for i, val in enumerate(xgb.feature_importances_):
+        #         if val != 0:
+        #             feats[donors_log_diff.columns[i]] = val
+        #     feats = dict(sorted(feats.items(), key=lambda item: item[1], reverse=True))
+        #     n_pars = len(feats)
+        #     pars = list(feats.keys())
+        #     coefs = list(feats.values())
+
+        ### RANDOM FOREST ===================================================================================
+        elif model == 'rf':
+            rf = RandomForestRegressor(n_estimators=10,
+                                       max_depth=10,
+                                       min_weight_fraction_leaf=0.25,
+                                       bootstrap=True,
+                                       random_state=0,
+                                       criterion='squared_error'
+                                       )
+
+            y = np.array(y_log_diff_pre_stand).ravel()
+            X = X_log_diff_pre_stand
+            rf.fit(X, y)
+
+            act_log_diff = flatten(np.array(y_log_diff).reshape(-1, 1))
+            pred_log_diff = flatten(SS_treatmentfit_pre.inverse_transform(
+                np.array(rf.predict(X_log_diff_stand)).reshape(-1, 1)))
+            act_pred_log_diff = pd.DataFrame(list(zip(act_log_diff, pred_log_diff)), columns=['act', 'pred']).set_index(
+                treatment_log_diff.index)
+            act_pred_log_diff['error'] = act_pred_log_diff['act'] - act_pred_log_diff['pred']
+
+            lasso_alpha = None
+            r2_pre_log_diff_stand = rf.score(X=X, y=y)
+
+            feats = {}
+            for i, val in enumerate(rf.feature_importances_):
+                if val != 0:
+                    feats[donors_log_diff.columns[i]] = val
+            feats = dict(sorted(feats.items(), key=lambda item: item[1], reverse=True))
+            n_pars = len(feats)
+            pars = list(feats.keys())
+            coefs = list(feats.values())
+
+        ### OLS ======================================================================================
         elif model == 'ols':
             # Perform stepwise regression
             # n_pars = get_ols_pars(treatment_country=treatment_country)
@@ -184,68 +263,40 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
             pars = pars
             coefs = list(model_res.params)
 
-        elif model == 'nn':
-            params = {'hidden_layer_sizes': [10, 10, 10],
-                      'activation': 'relu',
-                      'solver': 'adam',
-                      'alpha': 0.0,
-                      'batch_size': 10,
-                      'random_state': 0,
-                      'tol': 0.000001,
-                      'nesterovs_momentum': False,
-                      'learning_rate': 'constant',
-                      'learning_rate_init': 0.01,
-                      'max_iter': 100000,
-                      'shuffle': False,
-                      'n_iter_no_change': 100,
-                      'verbose': False
-                      }
-            net = MLPRegressor(**params)
-
-            y = np.array(y_log_diff_pre_stand).ravel()
-            X = X_log_diff_pre_stand
-            net.fit(X, y)
-
-            act_log_diff = flatten(np.array(y_log_diff).reshape(-1, 1))
-            pred_log_diff = flatten(SS_treatmentfit_pre.inverse_transform(
-                np.array(net.predict(X_log_diff_stand)).reshape(-1, 1)))
-            act_pred_log_diff = pd.DataFrame(list(zip(act_log_diff, pred_log_diff)), columns=['act', 'pred']).set_index(
-                treatment_log_diff.index)
-            act_pred_log_diff['error'] = act_pred_log_diff['act'] - act_pred_log_diff['pred']
-
-            lasso_alpha = None
-            r2_pre_log_diff_stand = net.score(X=X, y=y)
-            n_pars = None
-            pars = None
-            coefs = None
-
-        elif model == 'rf':
-            rf = RandomForestRegressor(n_estimators=10,
-                                       max_depth=10,
-                                       min_weight_fraction_leaf=0.2)
-
-            y = np.array(y_log_diff_pre_stand).ravel()
-            X = X_log_diff_pre_stand
-            rf.fit(X, y)
-
-            act_log_diff = flatten(np.array(y_log_diff).reshape(-1, 1))
-            pred_log_diff = flatten(SS_treatmentfit_pre.inverse_transform(
-                np.array(rf.predict(X_log_diff_stand)).reshape(-1, 1)))
-            act_pred_log_diff = pd.DataFrame(list(zip(act_log_diff, pred_log_diff)), columns=['act', 'pred']).set_index(
-                treatment_log_diff.index)
-            act_pred_log_diff['error'] = act_pred_log_diff['act'] - act_pred_log_diff['pred']
-
-            lasso_alpha = None
-            r2_pre_log_diff_stand = rf.score(X=X, y=y)
-
-            feats = {}
-            for i, val in enumerate(rf.feature_importances_):
-                if val != 0:
-                    feats[donors_log_diff.columns[i]] = val
-            feats = dict(sorted(feats.items(), key=lambda item: item[1], reverse=True))
-            n_pars = len(feats)
-            pars = list(feats.keys())
-            coefs = list(feats.values())
+        # elif model == 'nn':
+        #     params = {'hidden_layer_sizes': [10, 10, 10],
+        #               'activation': 'relu',
+        #               'solver': 'adam',
+        #               'alpha': 0.0,
+        #               'batch_size': 10,
+        #               'random_state': 0,
+        #               'tol': 0.000001,
+        #               'nesterovs_momentum': False,
+        #               'learning_rate': 'constant',
+        #               'learning_rate_init': 0.01,
+        #               'max_iter': 100000,
+        #               'shuffle': False,
+        #               'n_iter_no_change': 100,
+        #               'verbose': False
+        #               }
+        #     net = MLPRegressor(**params)
+        #
+        #     y = np.array(y_log_diff_pre_stand).ravel()
+        #     X = X_log_diff_pre_stand
+        #     net.fit(X, y)
+        #
+        #     act_log_diff = flatten(np.array(y_log_diff).reshape(-1, 1))
+        #     pred_log_diff = flatten(SS_treatmentfit_pre.inverse_transform(
+        #         np.array(net.predict(X_log_diff_stand)).reshape(-1, 1)))
+        #     act_pred_log_diff = pd.DataFrame(list(zip(act_log_diff, pred_log_diff)), columns=['act', 'pred']).set_index(
+        #         treatment_log_diff.index)
+        #     act_pred_log_diff['error'] = act_pred_log_diff['act'] - act_pred_log_diff['pred']
+        #
+        #     lasso_alpha = None
+        #     r2_pre_log_diff_stand = net.score(X=X, y=y)
+        #     n_pars = None
+        #     pars = None
+        #     coefs = None
 
         else:
             raise ValueError(f'Input valid model argument: {model_val}')
@@ -257,8 +308,18 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
         n_train = len(y_log_diff_pre_stand)
         n_test = len(y_log_diff) - len(y_log_diff_pre_stand)
 
-        # save dataframes and plots
+        # # save dataframes and plots
         if save_output or show_plots or save_figs:
+            save_results(act_pred_log_diff=act_pred_log_diff, act_pred_log=act_pred_log, act_pred=act_pred,
+                         model=model, stat=stat, timeframe=timeframe, sign_level=sign_level,
+                         incl_countries=incl_countries, incl_years=incl_years,
+                         treatment_country=treatment_country, impl_date=impl_date, impl_date_index=impl_date_index,
+                         n_train=n_train, n_test=n_test, var_title=f'{model}_results',
+                         # model specific
+                         prox=prox, months_cor=months_cor, split_date=split_date,
+                         r2_pre_log_diff_stand=r2_pre_log_diff_stand,
+                         lasso_alpha=lasso_alpha, n_pars=n_pars, pars=pars, coefs=coefs)
+
             save_dataframe(df=act_pred_log_diff, var_title='act_pred_log_diff',
                            model=model, treatment_country=treatment_country, timeframe=timeframe,
                            save_csv=True, save_predictions=True, save_diff=True,
@@ -279,16 +340,6 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
                            save_csv=True, save_predictions=True, save_diff=True,
                            save_cumsum=True, save_cumsum_impl=True, save_qq=True)
 
-            save_results(act_pred_log_diff=act_pred_log_diff, act_pred_log=act_pred_log, act_pred=act_pred,
-                         model=model, stat=stat, timeframe=timeframe, sign_level=sign_level,
-                         incl_countries=incl_countries, incl_years=incl_years,
-                         treatment_country=treatment_country, impl_date=impl_date, impl_date_index=impl_date_index,
-                         n_train=n_train, n_test=n_test, var_title=f'{model}_results',
-                         # model specific
-                         prox=prox, months_cor=months_cor, split_date=split_date,
-                         r2_pre_log_diff_stand=r2_pre_log_diff_stand,
-                         lasso_alpha=lasso_alpha, n_pars=n_pars, pars=pars, coefs=coefs)
-
         return act_pred_log_diff
 
 
@@ -300,8 +351,14 @@ def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, mode
     impl_date = get_impl_date(treatment_country=treatment_country)
     impl_date_index = list(df[date_col]).index(impl_date)
 
+    # for months_cor in [-15, -12, -9, -6, -3, 0, 3, 6, 9, 12, 15]:
+    months_cor = get_months_cors(model=model, timeframe=timeframe, treatment_country=treatment_country)
+
+    split_index = impl_date_index + months_cor
+    split_date = df[date_col][split_index]
+
     df_pivot, pre_treat, post_treat, treat_unit = sc_pivot(df=df_stat, treatment_country=treatment_country,
-                                                           timeframe=timeframe, model=model, impl_date=impl_date,
+                                                           timeframe=timeframe, model=model, impl_date=split_date,
                                                            prox=prox)
 
     # # define the SC estimator
@@ -317,7 +374,7 @@ def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, mode
     # act_pred_log_diff.rename(columns={treatment_country: 'act'}, inplace=True)
     # pred_log_diff = sc.predict(df_pivot.T.values)[0]
     # act_pred_log_diff['pred'] = pred_log_diff
-    # act_pred_log_diff['error'] = act_pred_log_diff['act'] - act_pred_log_diff['pred']
+    # act_pred_log_diff['error'] = act_pred_log_diff['pred'] - act_pred_log_diff['act']
 
     # standardize
     SS = StandardScaler()
@@ -326,22 +383,21 @@ def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, mode
     post_treat_stand = pd.DataFrame(SS.fit_transform(post_treat), columns=df_pivot.columns).set_index(post_treat.index)
 
     # define the SC estimator
-    sc = SparseSC.fit(
+    sc = SparseSC.fit_fast(
         features=np.array(pre_treat_stand.T),
         targets=np.array(post_treat_stand.T),
         treated_units=treat_unit,
         model_type='retrospective',
+        verbose=0
     )
 
     # Predict the series, make act_pred dataframe
     SS_treatmentfit = SS.fit(np.array(df_pivot).reshape(-1, 1))
-    pred_log_diff = SS_treatmentfit.inverse_transform(sc.predict(df_pivot_stand.T.values)[0].reshape(-1, 1))
-
     act_pred_log_diff = df_pivot[treatment_country].to_frame()
     act_pred_log_diff.rename(columns={treatment_country: 'act'}, inplace=True)
-    # pred_log_diff = sc.predict(df_pivot.T.values)[0].reshape(-1, 1)
+    pred_log_diff = flatten(SS_treatmentfit.inverse_transform(sc.predict(df_pivot_stand.T.values)[0].reshape(-1, 1)))
     act_pred_log_diff['pred'] = pred_log_diff
-    act_pred_log_diff['error'] = act_pred_log_diff['act'] - act_pred_log_diff['pred']
+    act_pred_log_diff['error'] = act_pred_log_diff['pred'] - act_pred_log_diff['act']
 
     # transform back
     act_pred_log_diff_check, \
@@ -352,8 +408,17 @@ def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, mode
     n_train = len(pre_treat.columns)
     n_test = len(post_treat.columns)
 
-    # save dataframes and plots
+    # # save dataframes and plots
     if save_output or show_plots or save_figs:
+        save_results(act_pred_log_diff=act_pred_log_diff, act_pred_log=act_pred_log, act_pred=act_pred,
+                     model=model, stat=stat, timeframe=timeframe, sign_level=sign_level,
+                     incl_countries=incl_countries, incl_years=incl_years,
+                     treatment_country=treatment_country, impl_date=impl_date, impl_date_index=impl_date_index,
+                     n_train=n_train, n_test=n_test, var_title=f'{model}_results',
+                     # model specific
+                     prox=prox, months_cor=months_cor, split_date=split_date, r2_pre_log_diff_stand=r2_pre_log_diff_stand,
+                     lasso_alpha=None, n_pars=None, pars=None, coefs=None)
+
         save_dataframe(df=act_pred_log_diff, var_title='act_pred_log_diff',
                        model=model, treatment_country=treatment_country, timeframe=timeframe,
                        save_csv=True, save_predictions=True, save_diff=True,
@@ -361,26 +426,18 @@ def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, mode
 
         save_dataframe(df=act_pred_log_diff_check, var_title='act_pred_log_diff_check',
                        model=model, treatment_country=treatment_country, timeframe=timeframe,
-                       save_csv=True, save_predictions=False, save_diff=False,
-                       save_cumsum=False, save_cumsum_impl=False, save_qq=False)
+                       save_csv=True, save_predictions=True, save_diff=True,
+                       save_cumsum=True, save_cumsum_impl=True, save_qq=True)
 
         save_dataframe(df=act_pred_log, var_title='act_pred_log',
                        model=model, treatment_country=treatment_country, timeframe=timeframe,
-                       save_csv=True, save_predictions=False, save_diff=False,
-                       save_cumsum=False, save_cumsum_impl=False, save_qq=False)
+                       save_csv=True, save_predictions=True, save_diff=True,
+                       save_cumsum=True, save_cumsum_impl=True, save_qq=True)
 
         save_dataframe(df=act_pred, var_title='act_pred',
                        model=model, treatment_country=treatment_country, timeframe=timeframe,
-                       save_csv=True, save_predictions=True, save_diff=False,
-                       save_cumsum=False, save_cumsum_impl=False, save_qq=False)
-
-        save_results(act_pred_log_diff=act_pred_log_diff, act_pred_log=act_pred_log, act_pred=act_pred,
-                     model=model, stat=stat, timeframe=timeframe, sign_level=sign_level,
-                     incl_countries=incl_countries, incl_years=incl_years,
-                     treatment_country=treatment_country, impl_date=impl_date, impl_date_index=impl_date_index,
-                     n_train=n_train, n_test=n_test, var_title=f'{model}_results',
-                     # model specific
-                     prox=prox, r2_pre_log_diff_stand=r2_pre_log_diff_stand)
+                       save_csv=True, save_predictions=True, save_diff=True,
+                       save_cumsum=True, save_cumsum_impl=True, save_qq=True)
 
     return act_pred_log_diff
 
