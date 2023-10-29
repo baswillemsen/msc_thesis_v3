@@ -1,1 +1,7 @@
 Index,Regressor,Coefficient
+1,united_kingdom co2,0.42399178128772497
+2,netherlands gdp,0.03707821522748836
+3,austria brent,-0.001183647654099372
+4,lithuania unempl,-0.009246898655370608
+5,romania unempl,-0.02463873581876881
+6,united_kingdom ind_prod,-0.049336344450831994

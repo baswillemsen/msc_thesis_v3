@@ -10,7 +10,7 @@ from sklearn.preprocessing import StandardScaler
 
 from definitions import figures_path_meth, treatment_countries, fig_size, show_plots, save_figs, show_output, \
     target_var, country_col, date_col
-from helper_functions_general import read_data, get_impl_date, get_trans, get_timescale, get_data_path
+from util_general import read_data, get_impl_date, get_trans, get_timescale, get_data_path
 from plot_functions import plot_corr
 
 

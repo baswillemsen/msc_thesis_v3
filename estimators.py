@@ -23,9 +23,8 @@ import statsmodels.api as sm
 # custom functions
 from definitions import fake_num, show_plots, sign_level, save_figs, incl_years, incl_countries, stat, save_output, \
     date_col, target_var, model_val
-from helper_functions_general import flatten, get_impl_date, get_table_path, get_months_cors
-from helper_functions_estimation import arco_pivot, sc_pivot, transform_back, save_dataframe, did_pivot, save_results, \
-    save_did
+from util_general import flatten, get_impl_date, get_table_path, get_months_cors
+from util_estimation import arco_pivot, sc_pivot, transform_back, save_dataframe, did_pivot, save_results, save_did
 from plot_functions import plot_lasso_path
 
 
@@ -140,49 +139,6 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
                                              columns=['act', 'pred']).set_index(treatment_log_diff.index)
             act_pred_log_diff['error'] = act_pred_log_diff['act'] - act_pred_log_diff['pred']
 
-        ### XGBOOST ======================================================================================
-        # elif model == 'xgb':
-        #     ts_split = TimeSeriesSplit(n_splits=ts_splits)
-        #     # xgb = XGBRegressor()
-        #     xgb = XGBRegressor(n_estimators=100,
-        #                        max_depth=10,
-        #                        # eta=0.1,
-        #                        # subsample=0.7,
-        #                        # colsample_bytree=0.8,
-        #                        reg_alpha=47)
-        #
-        #     y = np.array(y_log_diff_pre_stand).ravel()
-        #     X = X_log_diff_pre_stand
-        #     # scores = cross_val_score(estimator=xgb,
-        #     #                          X=X,
-        #     #                          y=y,
-        #     #                          scoring='neg_mean_absolute_error',
-        #     #                          cv=ts_split,
-        #     #                          n_jobs=-1)
-        #     # scores = np.absolute(scores)
-        #     # print('Mean MAE: %.3f (%.3f)' % (scores.mean(), scores.std()))
-        #
-        #     xgb.fit(X, y)
-        #
-        #     act_log_diff = flatten(np.array(y_log_diff).reshape(-1, 1))
-        #     pred_log_diff = flatten(SS_treatmentfit_pre.inverse_transform(
-        #         np.array(xgb.predict(X_log_diff_stand)).reshape(-1, 1)))
-        #     act_pred_log_diff = pd.DataFrame(list(zip(act_log_diff, pred_log_diff)), columns=['act', 'pred']).set_index(
-        #         treatment_log_diff.index)
-        #     act_pred_log_diff['error'] = act_pred_log_diff['act'] - act_pred_log_diff['pred']
-        #
-        #     lasso_alpha = None
-        #     r2_pre_log_diff_stand = xgb.score(X=X, y=y)
-        #
-        #     feats = {}
-        #     for i, val in enumerate(xgb.feature_importances_):
-        #         if val != 0:
-        #             feats[donors_log_diff.columns[i]] = val
-        #     feats = dict(sorted(feats.items(), key=lambda item: item[1], reverse=True))
-        #     n_pars = len(feats)
-        #     pars = list(feats.keys())
-        #     coefs = list(feats.values())
-
         ### RANDOM FOREST ===================================================================================
         elif model == 'rf':
             rf = RandomForestRegressor(n_estimators=10,
@@ -263,41 +219,6 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
             pars = pars
             coefs = list(model_res.params)
 
-        # elif model == 'nn':
-        #     params = {'hidden_layer_sizes': [10, 10, 10],
-        #               'activation': 'relu',
-        #               'solver': 'adam',
-        #               'alpha': 0.0,
-        #               'batch_size': 10,
-        #               'random_state': 0,
-        #               'tol': 0.000001,
-        #               'nesterovs_momentum': False,
-        #               'learning_rate': 'constant',
-        #               'learning_rate_init': 0.01,
-        #               'max_iter': 100000,
-        #               'shuffle': False,
-        #               'n_iter_no_change': 100,
-        #               'verbose': False
-        #               }
-        #     net = MLPRegressor(**params)
-        #
-        #     y = np.array(y_log_diff_pre_stand).ravel()
-        #     X = X_log_diff_pre_stand
-        #     net.fit(X, y)
-        #
-        #     act_log_diff = flatten(np.array(y_log_diff).reshape(-1, 1))
-        #     pred_log_diff = flatten(SS_treatmentfit_pre.inverse_transform(
-        #         np.array(net.predict(X_log_diff_stand)).reshape(-1, 1)))
-        #     act_pred_log_diff = pd.DataFrame(list(zip(act_log_diff, pred_log_diff)), columns=['act', 'pred']).set_index(
-        #         treatment_log_diff.index)
-        #     act_pred_log_diff['error'] = act_pred_log_diff['act'] - act_pred_log_diff['pred']
-        #
-        #     lasso_alpha = None
-        #     r2_pre_log_diff_stand = net.score(X=X, y=y)
-        #     n_pars = None
-        #     pars = None
-        #     coefs = None
-
         else:
             raise ValueError(f'Input valid model argument: {model_val}')
 
@@ -327,18 +248,18 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
 
             save_dataframe(df=act_pred_log_diff_check, var_title='act_pred_log_diff_check',
                            model=model, treatment_country=treatment_country, timeframe=timeframe,
-                           save_csv=True, save_predictions=True, save_diff=True,
-                           save_cumsum=True, save_cumsum_impl=True, save_qq=True)
+                           save_csv=True, save_predictions=False, save_diff=False,
+                           save_cumsum=False, save_cumsum_impl=False, save_qq=False)
 
             save_dataframe(df=act_pred_log, var_title='act_pred_log',
                            model=model, treatment_country=treatment_country, timeframe=timeframe,
-                           save_csv=True, save_predictions=True, save_diff=True,
-                           save_cumsum=True, save_cumsum_impl=True, save_qq=True)
+                           save_csv=True, save_predictions=False, save_diff=False,
+                           save_cumsum=False, save_cumsum_impl=False, save_qq=False)
 
             save_dataframe(df=act_pred, var_title='act_pred',
                            model=model, treatment_country=treatment_country, timeframe=timeframe,
-                           save_csv=True, save_predictions=True, save_diff=True,
-                           save_cumsum=True, save_cumsum_impl=True, save_qq=True)
+                           save_csv=True, save_predictions=True, save_diff=False,
+                           save_cumsum=False, save_cumsum_impl=False, save_qq=False)
 
         return act_pred_log_diff
 
@@ -361,21 +282,6 @@ def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, mode
                                                            timeframe=timeframe, model=model, impl_date=split_date,
                                                            prox=prox)
 
-    # # define the SC estimator
-    # sc = SparseSC.fit_fast(
-    #     features=np.array(pre_treat.T),
-    #     targets=np.array(post_treat.T),
-    #     treated_units=treat_unit,
-    #     model_type='retrospective',
-    # )
-    #
-    # # Predict the series, make act_pred dataframe
-    # act_pred_log_diff = df_pivot[treatment_country].to_frame()
-    # act_pred_log_diff.rename(columns={treatment_country: 'act'}, inplace=True)
-    # pred_log_diff = sc.predict(df_pivot.T.values)[0]
-    # act_pred_log_diff['pred'] = pred_log_diff
-    # act_pred_log_diff['error'] = act_pred_log_diff['pred'] - act_pred_log_diff['act']
-
     # standardize
     SS = StandardScaler()
     df_pivot_stand = pd.DataFrame(SS.fit_transform(df_pivot), columns=df_pivot.columns).set_index(df_pivot.index)
@@ -397,7 +303,7 @@ def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, mode
     act_pred_log_diff.rename(columns={treatment_country: 'act'}, inplace=True)
     pred_log_diff = flatten(SS_treatmentfit.inverse_transform(sc.predict(df_pivot_stand.T.values)[0].reshape(-1, 1)))
     act_pred_log_diff['pred'] = pred_log_diff
-    act_pred_log_diff['error'] = act_pred_log_diff['pred'] - act_pred_log_diff['act']
+    act_pred_log_diff['error'] = act_pred_log_diff['act'] - act_pred_log_diff['pred']
 
     # transform back
     act_pred_log_diff_check, \
@@ -426,18 +332,18 @@ def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, mode
 
         save_dataframe(df=act_pred_log_diff_check, var_title='act_pred_log_diff_check',
                        model=model, treatment_country=treatment_country, timeframe=timeframe,
-                       save_csv=True, save_predictions=True, save_diff=True,
-                       save_cumsum=True, save_cumsum_impl=True, save_qq=True)
+                       save_csv=True, save_predictions=False, save_diff=False,
+                       save_cumsum=False, save_cumsum_impl=False, save_qq=False)
 
         save_dataframe(df=act_pred_log, var_title='act_pred_log',
                        model=model, treatment_country=treatment_country, timeframe=timeframe,
-                       save_csv=True, save_predictions=True, save_diff=True,
-                       save_cumsum=True, save_cumsum_impl=True, save_qq=True)
+                       save_csv=True, save_predictions=False, save_diff=False,
+                       save_cumsum=False, save_cumsum_impl=False, save_qq=False)
 
         save_dataframe(df=act_pred, var_title='act_pred',
                        model=model, treatment_country=treatment_country, timeframe=timeframe,
-                       save_csv=True, save_predictions=True, save_diff=True,
-                       save_cumsum=True, save_cumsum_impl=True, save_qq=True)
+                       save_csv=True, save_predictions=True, save_diff=False,
+                       save_cumsum=False, save_cumsum_impl=False, save_qq=False)
 
     return act_pred_log_diff
 

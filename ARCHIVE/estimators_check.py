@@ -19,8 +19,8 @@ import statsmodels.formula.api as smf
 
 # custom functions
 from definitions import fake_num, show_plots, sign_level, save_figs, country_col, target_var
-from helper_functions_general import flatten, get_impl_date
-from helper_functions_estimation import arco_pivot, sc_pivot, transform_back, save_dataframe, did_pivot
+from util_general import flatten, get_impl_date
+from util_estimation import arco_pivot, sc_pivot, transform_back, save_dataframe, did_pivot
 from plot_functions import plot_lasso_path
 from statistical_tests import shapiro_wilk_test, t_test, t_test_result
 

@@ -3,14 +3,14 @@
 ################################
 import os
 import sys
-
 import warnings
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # custom functions
 from definitions import all_paths, country_col, year_col, stat, incl_countries, incl_years, model_val
-from helper_functions_general import read_data, validate_input, get_trans, get_data_path, get_impl_date
+from util_general import read_data, validate_input, get_trans, get_data_path, get_impl_date
 from estimators import arco, sc, did
 
 ### define paths & static defs
@@ -30,7 +30,8 @@ def main(model: str, timeframe: str, treatment_country: str):
         df_log_diff = read_data(source_path=get_data_path(timeframe=timeframe), file_name=f'total_{timeframe}_{stat}')
 
         df = df[(df[country_col].isin(incl_countries)) & (df[year_col].isin(incl_years))]
-        df_log_diff = df_log_diff[(df_log_diff[country_col].isin(incl_countries)) & (df_log_diff[year_col].isin(incl_years))]
+        df_log_diff = df_log_diff[
+            (df_log_diff[country_col].isin(incl_countries)) & (df_log_diff[year_col].isin(incl_years))]
 
         # See which countries are included
         print(f'Treatment country: {treatment_country} ({get_impl_date(treatment_country=treatment_country)})')
@@ -39,10 +40,11 @@ def main(model: str, timeframe: str, treatment_country: str):
         print(f'Years included ({len(df[year_col].unique())}x): {df[year_col].unique()}')
 
         # run the model, get back actual and predicted values
-        if model in ['ols', 'lasso', 'nn', 'rf', 'xgb']:
-            act_pred_log_diff = arco(df=df, df_stat=df_log_diff, treatment_country=treatment_country, timeframe=timeframe,
+        if model in ['ols', 'lasso', 'rf']:
+            act_pred_log_diff = arco(df=df, df_stat=df_log_diff, treatment_country=treatment_country,
+                                     timeframe=timeframe,
                                      alpha_min=0.01, alpha_max=1.0, alpha_step=0.001, ts_splits=5,
-                                     lasso_iters=100000000, tol=0.00000001, model=model, prox=False)
+                                     lasso_iters=100000000, tol=0.00000001, model=model, prox=True)
         elif model == 'sc':
             act_pred_log_diff = sc(df=df, df_stat=df_log_diff, treatment_country=treatment_country, timeframe=timeframe,
                                    model=model, prox=False)

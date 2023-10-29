@@ -15,7 +15,7 @@ import SparseSC
 # custom functions
 from definitions import show_output, fake_num, country_col, date_col, tables_path_res, save_output, \
     target_var, show_plots, sign_level
-from helper_functions_general import flatten, arco_pivot, sc_pivot, get_impl_date, get_trans
+from util_general import flatten, arco_pivot, sc_pivot, get_impl_date, get_trans
 from plot_functions import plot_lasso_path, plot_predictions
 from statistical_tests import shapiro_wilk_test
 

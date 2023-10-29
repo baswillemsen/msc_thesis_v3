@@ -18,7 +18,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 from sklearn.linear_model import Lasso
 
 from definitions import fig_size, show_plots, save_figs, treatment_countries, country_name_formal
-from helper_functions_general import get_impl_date, get_fig_path, get_formal_title, get_model_color
+from util_general import get_impl_date, get_fig_path, get_formal_title, get_model_color
 
 
 # plot intermediate series as transformed by preprocess

@@ -16,7 +16,7 @@ def gen_results(timeframe: str):
 
     # preprocess()
 
-    for model in ['rf']:
+    for model in ['lasso', 'rf', 'ols', 'sc']:
 
         for treatment_country in treatment_countries:
             print('============================================================')
