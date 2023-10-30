@@ -191,7 +191,7 @@ def transform_back(df: object, df_stat: object, pred_log_diff: object, timeframe
                                  columns=['act', 'pred']).set_index(orig_impl.index)
     act_pred_impl['error'] = act_pred_impl['act'] - act_pred_impl['pred']
 
-    return act_pred_log_diff_check, act_pred_log, act_pred, act_pred_log_diff_check_impl, act_pred_log_impl, act_pred_impl
+    return act_pred_log_diff_check, act_pred_log, act_pred
 
 
 # function to save the intermediate dataframes, including plots on predictions, errors, cumsum, qq
@@ -219,7 +219,7 @@ def save_dataframe(df: object, var_title: str, model: str, treatment_country: st
 
 
 # save results from the arco and sc methods into csv
-def save_results(act_pred_log_diff, act_pred_log, act_pred, act_pred_impl, var_title,
+def save_results(act_pred_log_diff, act_pred_log, act_pred, var_title,
                  model, stat, timeframe, sign_level, incl_countries, incl_years,
                  treatment_country, impl_date, impl_date_index, n_train, n_test,
                  prox=None, months_cor=None, split_date=None, r2_pre_log_diff_stand=None,
@@ -240,8 +240,6 @@ def save_results(act_pred_log_diff, act_pred_log, act_pred, act_pred_impl, var_t
         att_log_sign, att_log_p = t_test_result(df=act_pred_log, treatment_country=treatment_country)
     att_mean, att_std, \
         att_sign, att_p = t_test_result(df=act_pred, treatment_country=treatment_country)
-    att_mean_impl, att_std_impl, \
-        att_sign_impl, att_p_impl = t_test_result(df=act_pred_impl, treatment_country=treatment_country)
 
     if var_title == f'{model}_results':
         series = ['12-m log-diff $CO_2$', 'Log $CO_2$', 'Absolute $CO_2$']
