@@ -82,6 +82,10 @@ def plot_predictions(df: object, treatment_country: str, model: str, timeframe: 
     ax.plot(df['pred'], label='predicted', color=get_model_color(type=model))
     ax.axvline(x=get_impl_date(treatment_country, input='dt'), color=get_model_color(type='impl'))
 
+    # pred_ci = 1.96 * np.std(df['pred']) / np.sqrt(len(df['pred']))
+    # ax.fill_between(df.index, (df['pred'] - pred_ci), (df['pred'] + pred_ci),
+    #                 color=get_model_color(type='pred'), alpha=0.5)
+
     if var_name == 'act_pred':
         df['year'] = df.index.year
         df_group = df.groupby('year').mean()
@@ -98,7 +102,7 @@ def plot_predictions(df: object, treatment_country: str, model: str, timeframe: 
     else:
         ax.set_title(f'{get_formal_title(var_name=var_name)} CO2 series')
     ax.set_xlabel('Year')
-    ax.set_ylabel(f'{get_formal_title(var_name=var_name)} CO2 (tons)')
+    ax.set_ylabel(f'{get_formal_title(var_name=var_name)} CO2')
     ax.legend(loc='best')
 
     if save_figs:
@@ -127,7 +131,7 @@ def plot_diff(df: object, treatment_country: str, model: str, timeframe: str, va
     else:
         ax.set_title(f'{get_formal_title(var_name=var_name)} CO2 series prediction error')
     ax.set_xlabel('Year')
-    ax.set_ylabel(f'')
+    ax.set_ylabel(f'{get_formal_title(var_name=var_name)} error')
     ax.legend(loc='best')
 
     if save_figs:
@@ -144,6 +148,10 @@ def plot_cumsum(df: object, treatment_country: str, model: str, timeframe: str, 
     ax.plot(df['act'].cumsum(), label='actual', color=get_model_color(type='act'))
     ax.plot(df['pred'].cumsum(), label='predicted', color=get_model_color(type=model))
     ax.axvline(x=get_impl_date(treatment_country, input='dt'), color=get_model_color('impl'))
+
+    # pred_ci = 1.96 * np.std(df['pred']) / np.sqrt(len(df['pred']))
+    # ax.fill_between(df.index, (df['pred'].cumsum() - pred_ci), (df['pred'].cumsum() + pred_ci),
+    #                 color=get_model_color(type='pred'), alpha=0.5)
 
     ax.xaxis.set_major_locator(mdates.YearLocator())
     for tick in ax.get_xticklabels():
@@ -173,6 +181,10 @@ def plot_cumsum_impl(df: object, treatment_country: str, model: str, timeframe: 
     ax.plot(df['act'].cumsum(), label='actual', color=get_model_color(type='act'))
     ax.plot(df['pred'].cumsum(), label='predicted', color=get_model_color(type=model))
     ax.axvline(x=get_impl_date(treatment_country, input='dt'), color=get_model_color('impl'))
+
+    # pred_ci = 1.96 * np.std(df['pred']) / np.sqrt(len(df['pred']))
+    # ax.fill_between(df.index, (df['pred'].cumsum() - pred_ci), (df['pred'].cumsum() + pred_ci),
+    #                 color=get_model_color(type='pred'), alpha=0.5)
 
     ax.xaxis.set_major_locator(mdates.YearLocator())
     for tick in ax.get_xticklabels():

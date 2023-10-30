@@ -2,7 +2,6 @@
 ### import relevant packages ###
 ################################
 import os
-import numpy as np
 import pandas as pd
 import datetime as dt
 
@@ -151,39 +150,6 @@ def get_months_cors(model: str, timeframe: str, treatment_country: str):
     else:
         raise ValueError(f'Input valid timeframe argument: {timeframe_val}')
 
-    # elif model == 'lasso':
-    #     months_cors = {'switzerland': 15,  # 6,9,12
-    #                    'ireland': 0,  # any except -15, -12
-    #                    'united_kingdom': 0,  # -3, 6
-    #                    'france': -3,  # -6, -9, -12
-    #                    'portugal': 15,  # 9, 12
-    #                    'other': 0
-    #                    }
-    # elif model == 'rf':
-    #     months_cors = {'switzerland': 15,  # 6,9,12,15
-    #                    'ireland': 0,  # -3,0,3
-    #                    'united_kingdom': 0,  # -3,-6,-9
-    #                    'france': 0,  # 3,6,9
-    #                    'portugal': -12,  # -6,12
-    #                    'other': 0
-    #                    }
-    # elif model == 'ols':
-    #     months_cors = {'switzerland': 15,  # 6,9,12,15
-    #                    'ireland': 0,  # -3,-6,6
-    #                    'united_kingdom': 0,
-    #                    'france': -6,  # -3,9,12
-    #                    'portugal': 15,  # 6,9,12
-    #                    'other': 0
-    #                    }
-    # elif model == 'sc':
-    #     months_cors = {'switzerland': -12,  # any, all insignificant
-    #                    'ireland': 15,  # -12,0,-3,-9,12
-    #                    'united_kingdom': -3,  # 0,3,6,9
-    #                    'france': -3, #-6,-9,-15
-    #                    'portugal': 15, #-15,-12,0,12
-    #                    'other': 0
-    #                    }
-
 
 # function to get the donor countries given the prox argument and the treatment country
 def get_donor_countries(model: str = None, prox: bool = None, treatment_country: str = None):
@@ -209,20 +175,6 @@ def get_donor_countries(model: str = None, prox: bool = None, treatment_country:
             return donor_countries_prox[treatment_country]
         else:
             return donor_countries_all
-
-
-# def get_ols_pars(treatment_country: str):
-#     if treatment_country not in treatment_countries:
-#         return 10
-#     else:
-#         n_pars = {'switzerland': 10,
-#                   'ireland': 10,
-#                   'united_kingdom': 10,
-#                   'france': 10,
-#                   'portugal': 10,
-#                   'other': 10
-#                   }
-#     return n_pars[treatment_country]
 
 
 # define static colors for plotting the series from different models

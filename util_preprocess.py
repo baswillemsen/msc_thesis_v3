@@ -24,7 +24,7 @@ def select_country_year_measure(df: object, country_col: str = None, year_col: s
     return df
 
 
-# function to reoder the dataframe, rename the column names and scale the variables to absolute units.
+# function to re-order the dataframe, rename the column names and scale the variables to absolute units.
 def rename_order_scale(df: object, source_country_col: str = None, source_year_col: str = None, source_date_col: str = None,
                        timeframe: str = None, var_name: str = None, var_scale: float = None):
     if source_country_col is not None:

@@ -136,8 +136,7 @@ def transform_back(df: object, df_stat: object, pred_log_diff: object, timeframe
             pred_log[i] = pred_log[i - diff_level] + pred_log_diff[i]
 
     # act_pred_log
-    act_pred_log = pd.DataFrame(list(zip(orig_log, pred_log)),
-                                columns=['act', 'pred']).set_index(orig_log.index)
+    act_pred_log = pd.DataFrame(list(zip(orig_log, pred_log)), columns=['act', 'pred']).set_index(orig_log.index)
     act_pred_log['error'] = act_pred_log['act'] - act_pred_log['pred']
 
     # act_pred
@@ -146,7 +145,53 @@ def transform_back(df: object, df_stat: object, pred_log_diff: object, timeframe
                             columns=['act', 'pred']).set_index(orig.index)
     act_pred['error'] = act_pred['act'] - act_pred['pred']
 
-    return act_pred_log_diff_check, act_pred_log, act_pred
+    # From implementation
+    impl_date = get_impl_date(treatment_country=treatment_country)
+    date_start_impl_index = list(df_stat['date']).index(impl_date)
+    date_start_impl = df_stat['date'].iloc[date_start_impl_index]
+    date_end = df_stat['date'].iloc[-1]
+
+    log, diff_level, = get_trans(timeframe=timeframe)[target_var]
+
+    orig_impl = df.copy()
+    orig_impl = orig_impl[(orig_impl[country_col] == treatment_country) &
+                (orig_impl[date_col] >= date_start_impl) &
+                (orig_impl[date_col] <= date_end)].set_index(date_col)[target_var]
+    pred_log_diff_impl = pred_log_diff[date_start_impl_index:]
+
+    if log:
+        orig_log_impl = np.log(orig_impl)
+    else:
+        orig_log_impl = orig_impl
+
+    if diff_level != 0:
+        orig_act_pred_log_diff_check_impl = orig_log_impl.diff(diff_level)
+    else:
+        orig_act_pred_log_diff_check_impl = orig_log_impl
+
+    # save act_pred_log_diff_check
+    act_pred_log_diff_check_impl = pd.DataFrame(list(zip(orig_act_pred_log_diff_check_impl, pred_log_diff_impl)),
+                                                columns=['act', 'pred']).set_index(orig_act_pred_log_diff_check_impl.index)
+    act_pred_log_diff_check_impl['error'] = act_pred_log_diff_check_impl['act'] - act_pred_log_diff_check_impl['pred']
+
+    pred_log_impl = np.zeros(len(orig_log_impl))
+    pred_log_impl[:diff_level] = orig_log_impl[:diff_level]
+    for i in range(diff_level, len(orig_log_impl)):
+        if diff_level != 0:
+            pred_log_impl[i] = pred_log_impl[i - diff_level] + pred_log_diff_impl[i]
+
+    # act_pred_log
+    act_pred_log_impl = pd.DataFrame(list(zip(orig_log_impl, pred_log_impl)),
+                                     columns=['act', 'pred']).set_index(orig_log_impl.index)
+    act_pred_log_impl['error'] = act_pred_log_impl['act'] - act_pred_log_impl['pred']
+
+    # act_pred
+    pred_impl = np.exp(pred_log_impl)
+    act_pred_impl = pd.DataFrame(list(zip(orig_impl, pred_impl)),
+                                 columns=['act', 'pred']).set_index(orig_impl.index)
+    act_pred_impl['error'] = act_pred_impl['act'] - act_pred_impl['pred']
+
+    return act_pred_log_diff_check, act_pred_log, act_pred, act_pred_log_diff_check_impl, act_pred_log_impl, act_pred_impl
 
 
 # function to save the intermediate dataframes, including plots on predictions, errors, cumsum, qq
@@ -174,7 +219,7 @@ def save_dataframe(df: object, var_title: str, model: str, treatment_country: st
 
 
 # save results from the arco and sc methods into csv
-def save_results(act_pred_log_diff, act_pred_log, act_pred, var_title,
+def save_results(act_pred_log_diff, act_pred_log, act_pred, act_pred_impl, var_title,
                  model, stat, timeframe, sign_level, incl_countries, incl_years,
                  treatment_country, impl_date, impl_date_index, n_train, n_test,
                  prox=None, months_cor=None, split_date=None, r2_pre_log_diff_stand=None,
@@ -195,9 +240,11 @@ def save_results(act_pred_log_diff, act_pred_log, act_pred, var_title,
         att_log_sign, att_log_p = t_test_result(df=act_pred_log, treatment_country=treatment_country)
     att_mean, att_std, \
         att_sign, att_p = t_test_result(df=act_pred, treatment_country=treatment_country)
+    att_mean_impl, att_std_impl, \
+        att_sign_impl, att_p_impl = t_test_result(df=act_pred_impl, treatment_country=treatment_country)
 
     if var_title == f'{model}_results':
-        series = ['12-m Log-Diff $CO_2$', '12-m Log $CO_2$', 'Absolute $CO_2$']
+        series = ['12-m log-diff $CO_2$', 'Log $CO_2$', 'Absolute $CO_2$']
         att = [round(att_log_diff_mean, 3), round(att_log_mean, 3), round(att_mean, 3)]
         std = [round(att_log_diff_std, 3), round(att_log_std, 3), round(att_std, 3)]
         p_val = [round(att_log_diff_p, 3), round(att_log_p, 3), round(att_p, 3)]

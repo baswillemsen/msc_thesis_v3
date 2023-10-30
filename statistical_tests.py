@@ -117,7 +117,7 @@ def stat_test(x: list, sign_level: float):
 # one-sample t-test to see if results are significant
 def t_test_result(df: object, treatment_country: str):
 
-    df_pre = df[df.index >= get_impl_date(treatment_country=treatment_country)]
+    df_pre = df[df.index < get_impl_date(treatment_country=treatment_country)]
     df_post = df[df.index >= get_impl_date(treatment_country=treatment_country)]
 
     att_mean = df_post['error'].mean()
