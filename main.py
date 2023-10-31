@@ -50,7 +50,7 @@ def main(model: str, timeframe: str, treatment_country: str):
                                    model=model, prox=False)
         elif model == 'did':
             act_pred_log_diff = did(df=df_log_diff, treatment_country=treatment_country, timeframe=timeframe,
-                                    model=model, prox=True, x_years=3)
+                                    model=model, prox=False, x_years=3)
         else:
             raise ValueError(f'Select a valid model: {model_val}')
 

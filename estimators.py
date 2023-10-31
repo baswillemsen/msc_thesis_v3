@@ -205,6 +205,7 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
             X = X_log_diff_pre_stand
             model_res = sm.OLS(y, X).fit()
             print(model_res.summary())
+            # print(model_res.summary().as_csv())
 
             act_log_diff = flatten(np.array(y_log_diff).reshape(-1, 1))
             pred_log_diff = flatten(SS_treatmentfit_pre.inverse_transform(
@@ -241,26 +242,26 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
                          prox=prox, months_cor=months_cor, split_date=split_date,
                          r2_pre_log_diff_stand=r2_pre_log_diff_stand,
                          lasso_alpha=lasso_alpha, n_pars=n_pars, pars=pars, coefs=coefs)
-
-            save_dataframe(df=act_pred_log_diff, var_title='act_pred_log_diff',
-                           model=model, treatment_country=treatment_country, timeframe=timeframe,
-                           save_csv=True, save_predictions=True, save_diff=True,
-                           save_cumsum=True, save_cumsum_impl=True, save_qq=True)
-
-            save_dataframe(df=act_pred_log_diff_check, var_title='act_pred_log_diff_check',
-                           model=model, treatment_country=treatment_country, timeframe=timeframe,
-                           save_csv=True, save_predictions=True, save_diff=True,
-                           save_cumsum=True, save_cumsum_impl=True, save_qq=True)
-
-            save_dataframe(df=act_pred_log, var_title='act_pred_log',
-                           model=model, treatment_country=treatment_country, timeframe=timeframe,
-                           save_csv=True, save_predictions=True, save_diff=True,
-                           save_cumsum=True, save_cumsum_impl=True, save_qq=True)
-
-            save_dataframe(df=act_pred, var_title='act_pred',
-                           model=model, treatment_country=treatment_country, timeframe=timeframe,
-                           save_csv=True, save_predictions=True, save_diff=True,
-                           save_cumsum=True, save_cumsum_impl=True, save_qq=True)
+            #
+            # save_dataframe(df=act_pred_log_diff, var_title='act_pred_log_diff',
+            #                model=model, treatment_country=treatment_country, timeframe=timeframe,
+            #                save_csv=True, save_predictions=True, save_diff=True,
+            #                save_cumsum=True, save_cumsum_impl=True, save_qq=True)
+            #
+            # save_dataframe(df=act_pred_log_diff_check, var_title='act_pred_log_diff_check',
+            #                model=model, treatment_country=treatment_country, timeframe=timeframe,
+            #                save_csv=True, save_predictions=True, save_diff=True,
+            #                save_cumsum=True, save_cumsum_impl=True, save_qq=True)
+            #
+            # save_dataframe(df=act_pred_log, var_title='act_pred_log',
+            #                model=model, treatment_country=treatment_country, timeframe=timeframe,
+            #                save_csv=True, save_predictions=True, save_diff=True,
+            #                save_cumsum=True, save_cumsum_impl=True, save_qq=True)
+            #
+            # save_dataframe(df=act_pred, var_title='act_pred',
+            #                model=model, treatment_country=treatment_country, timeframe=timeframe,
+            #                save_csv=True, save_predictions=True, save_diff=True,
+            #                save_cumsum=True, save_cumsum_impl=True, save_qq=True)
 
         return act_pred_log_diff
 

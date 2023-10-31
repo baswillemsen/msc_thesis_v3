@@ -145,51 +145,51 @@ def transform_back(df: object, df_stat: object, pred_log_diff: object, timeframe
                             columns=['act', 'pred']).set_index(orig.index)
     act_pred['error'] = act_pred['act'] - act_pred['pred']
 
-    # From implementation
-    impl_date = get_impl_date(treatment_country=treatment_country)
-    date_start_impl_index = list(df_stat['date']).index(impl_date)
-    date_start_impl = df_stat['date'].iloc[date_start_impl_index]
-    date_end = df_stat['date'].iloc[-1]
-
-    log, diff_level, = get_trans(timeframe=timeframe)[target_var]
-
-    orig_impl = df.copy()
-    orig_impl = orig_impl[(orig_impl[country_col] == treatment_country) &
-                (orig_impl[date_col] >= date_start_impl) &
-                (orig_impl[date_col] <= date_end)].set_index(date_col)[target_var]
-    pred_log_diff_impl = pred_log_diff[date_start_impl_index:]
-
-    if log:
-        orig_log_impl = np.log(orig_impl)
-    else:
-        orig_log_impl = orig_impl
-
-    if diff_level != 0:
-        orig_act_pred_log_diff_check_impl = orig_log_impl.diff(diff_level)
-    else:
-        orig_act_pred_log_diff_check_impl = orig_log_impl
-
-    # save act_pred_log_diff_check
-    act_pred_log_diff_check_impl = pd.DataFrame(list(zip(orig_act_pred_log_diff_check_impl, pred_log_diff_impl)),
-                                                columns=['act', 'pred']).set_index(orig_act_pred_log_diff_check_impl.index)
-    act_pred_log_diff_check_impl['error'] = act_pred_log_diff_check_impl['act'] - act_pred_log_diff_check_impl['pred']
-
-    pred_log_impl = np.zeros(len(orig_log_impl))
-    pred_log_impl[:diff_level] = orig_log_impl[:diff_level]
-    for i in range(diff_level, len(orig_log_impl)):
-        if diff_level != 0:
-            pred_log_impl[i] = pred_log_impl[i - diff_level] + pred_log_diff_impl[i]
-
-    # act_pred_log
-    act_pred_log_impl = pd.DataFrame(list(zip(orig_log_impl, pred_log_impl)),
-                                     columns=['act', 'pred']).set_index(orig_log_impl.index)
-    act_pred_log_impl['error'] = act_pred_log_impl['act'] - act_pred_log_impl['pred']
-
-    # act_pred
-    pred_impl = np.exp(pred_log_impl)
-    act_pred_impl = pd.DataFrame(list(zip(orig_impl, pred_impl)),
-                                 columns=['act', 'pred']).set_index(orig_impl.index)
-    act_pred_impl['error'] = act_pred_impl['act'] - act_pred_impl['pred']
+    # # From implementation
+    # impl_date = get_impl_date(treatment_country=treatment_country)
+    # date_start_impl_index = list(df_stat['date']).index(impl_date)
+    # date_start_impl = df_stat['date'].iloc[date_start_impl_index]
+    # date_end = df_stat['date'].iloc[-1]
+    #
+    # log, diff_level, = get_trans(timeframe=timeframe)[target_var]
+    #
+    # orig_impl = df.copy()
+    # orig_impl = orig_impl[(orig_impl[country_col] == treatment_country) &
+    #             (orig_impl[date_col] >= date_start_impl) &
+    #             (orig_impl[date_col] <= date_end)].set_index(date_col)[target_var]
+    # pred_log_diff_impl = pred_log_diff[date_start_impl_index:]
+    #
+    # if log:
+    #     orig_log_impl = np.log(orig_impl)
+    # else:
+    #     orig_log_impl = orig_impl
+    #
+    # if diff_level != 0:
+    #     orig_act_pred_log_diff_check_impl = orig_log_impl.diff(diff_level)
+    # else:
+    #     orig_act_pred_log_diff_check_impl = orig_log_impl
+    #
+    # # save act_pred_log_diff_check
+    # act_pred_log_diff_check_impl = pd.DataFrame(list(zip(orig_act_pred_log_diff_check_impl, pred_log_diff_impl)),
+    #                                             columns=['act', 'pred']).set_index(orig_act_pred_log_diff_check_impl.index)
+    # act_pred_log_diff_check_impl['error'] = act_pred_log_diff_check_impl['act'] - act_pred_log_diff_check_impl['pred']
+    #
+    # pred_log_impl = np.zeros(len(orig_log_impl))
+    # pred_log_impl[:diff_level] = orig_log_impl[:diff_level]
+    # for i in range(diff_level, len(orig_log_impl)):
+    #     if diff_level != 0:
+    #         pred_log_impl[i] = pred_log_impl[i - diff_level] + pred_log_diff_impl[i]
+    #
+    # # act_pred_log
+    # act_pred_log_impl = pd.DataFrame(list(zip(orig_log_impl, pred_log_impl)),
+    #                                  columns=['act', 'pred']).set_index(orig_log_impl.index)
+    # act_pred_log_impl['error'] = act_pred_log_impl['act'] - act_pred_log_impl['pred']
+    #
+    # # act_pred
+    # pred_impl = np.exp(pred_log_impl)
+    # act_pred_impl = pd.DataFrame(list(zip(orig_impl, pred_impl)),
+    #                              columns=['act', 'pred']).set_index(orig_impl.index)
+    # act_pred_impl['error'] = act_pred_impl['act'] - act_pred_impl['pred']
 
     return act_pred_log_diff_check, act_pred_log, act_pred
 

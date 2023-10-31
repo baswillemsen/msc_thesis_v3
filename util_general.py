@@ -94,7 +94,7 @@ def get_trans(timeframe: str = None):
         }
     else:
         trans = ['co2'
-                 , 'gdp'
+                 # , 'gdp'
                  , 'ind_prod'
                  , 'infl'
                  , 'unempl'
@@ -179,13 +179,21 @@ def get_donor_countries(model: str = None, prox: bool = None, treatment_country:
 
 # define static colors for plotting the series from different models
 def get_model_color(type: str):
-    color = {'act': '#1f77b4',
-             'error': '#1f77b4',
+    # color = {'act': '#1f77b4',
+    #          'error': '#1f77b4',
+    #          'impl': 'black',
+    #          'lasso': 'darkorange',  # orange
+    #          'sc': 'hotpink',  # green
+    #          'ols': 'yellowgreen',
+    #          'rf': 'yellowgreen'
+    #          }
+    color = {'act': 'grey',
+             'error': '#1f77b4',  # blue
              'impl': 'black',
-             'lasso': 'darkorange',  # orange
-             'sc': 'hotpink',  # green
-             'ols': 'yellowgreen',
-             'rf': 'yellowgreen'
+             'lasso': '#1f77b4',  # blue
+             'rf': '#ff7f0e',  # orange
+             'ols': '#2ca02c',  # green
+             'sc': '#d62728'  # red
              }
     if type in color.keys():
         return color[type]
