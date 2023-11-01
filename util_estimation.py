@@ -11,7 +11,7 @@ from sklearn.metrics import r2_score
 from definitions import target_var, country_col, date_col, save_output, fake_num, show_plots, save_figs
 from util_general import get_table_path, get_impl_date, get_trans, get_donor_countries
 from plot_functions import plot_predictions, plot_diff, plot_cumsum, plot_cumsum_impl, plot_qq
-from statistical_tests import shapiro_wilk_test, t_test_result
+from statistical_tests import shapiro_wilk_test, sign_test_result
 
 
 # pivot the standard dataframe into needed series for the arco method
@@ -103,93 +103,65 @@ def did_pivot(df: object, treatment_country: str, timeframe: str, model: str, pr
 
 
 # function to transform back the log-differenced co2 series to absolute numbers
-def transform_back(df: object, df_stat: object, pred_log_diff: object, timeframe: str, treatment_country: str):
+def transform_back(df: object, act_pred_log_diff: object, timeframe: str, treatment_country: str):
+
+    act_log_diff = act_pred_log_diff['act']
+    pred_log_diff = act_pred_log_diff['pred']
 
     # summarize chosen configuration
-    date_start = df_stat['date'].iloc[0]
-    date_end = df_stat['date'].iloc[-1]
+    date_start = df['date'].iloc[0]
+    date_end = df['date'].iloc[-1]
     log, diff_level, = get_trans(timeframe=timeframe)[target_var]
 
     orig = df.copy()
     orig = orig[(orig[country_col] == treatment_country) &
                 (orig[date_col] >= date_start) &
                 (orig[date_col] <= date_end)].set_index(date_col)[target_var]
+
     if log:
         orig_log = np.log(orig)
     else:
         orig_log = orig
 
     if diff_level != 0:
-        orig_act_pred_log_diff_check = orig_log.diff(diff_level)
+        orig_log_diff = orig_log.diff(diff_level).dropna()
     else:
-        orig_act_pred_log_diff_check = orig_log
+        orig_log_diff = orig_log.dropna()
+
+    if sum(orig_log_diff - act_log_diff) > 1e-5:
+        raise ValueError('Fault in conversion')
 
     # save act_pred_log_diff_check
-    act_pred_log_diff_check = pd.DataFrame(list(zip(orig_act_pred_log_diff_check, pred_log_diff)),
-                                           columns=['act', 'pred']).set_index(orig_log.index)
+    act_pred_log_diff_check = pd.DataFrame(list(zip(act_log_diff, orig_log_diff, pred_log_diff)),
+                                           columns=['act', 'check', 'pred']).set_index(pred_log_diff.index)
     act_pred_log_diff_check['error'] = act_pred_log_diff_check['act'] - act_pred_log_diff_check['pred']
 
+    act_log = np.zeros(len(orig_log))
     pred_log = np.zeros(len(orig_log))
     pred_log[:diff_level] = orig_log[:diff_level]
+    act_log[:diff_level] = orig_log[:diff_level]
     for i in range(diff_level, len(orig_log)):
         if diff_level != 0:
-            pred_log[i] = pred_log[i - diff_level] + pred_log_diff[i]
+            pred_log[i] = pred_log[i - diff_level] + pred_log_diff[i - diff_level]
+            act_log[i] = act_log[i - diff_level] + act_log_diff[i - diff_level]
 
-    # act_pred_log
-    act_pred_log = pd.DataFrame(list(zip(orig_log, pred_log)), columns=['act', 'pred']).set_index(orig_log.index)
+    if sum(orig_log - act_log) > 1e-5:
+        raise ValueError('Fault in conversion')
+
+        # act_pred_log
+    act_pred_log = pd.DataFrame(list(zip(act_log, pred_log)), columns=['act', 'pred']).set_index(orig_log.index)
     act_pred_log['error'] = act_pred_log['act'] - act_pred_log['pred']
+    act_pred_log = act_pred_log.iloc[diff_level:]
 
     # act_pred
+    act = np.exp(act_log)
     pred = np.exp(pred_log)
-    act_pred = pd.DataFrame(list(zip(orig, pred)),
-                            columns=['act', 'pred']).set_index(orig.index)
-    act_pred['error'] = act_pred['act'] - act_pred['pred']
+    if sum(orig_log - act_log) > 1e-5:
+        raise ValueError('Fault in conversion')
 
-    # # From implementation
-    # impl_date = get_impl_date(treatment_country=treatment_country)
-    # date_start_impl_index = list(df_stat['date']).index(impl_date)
-    # date_start_impl = df_stat['date'].iloc[date_start_impl_index]
-    # date_end = df_stat['date'].iloc[-1]
-    #
-    # log, diff_level, = get_trans(timeframe=timeframe)[target_var]
-    #
-    # orig_impl = df.copy()
-    # orig_impl = orig_impl[(orig_impl[country_col] == treatment_country) &
-    #             (orig_impl[date_col] >= date_start_impl) &
-    #             (orig_impl[date_col] <= date_end)].set_index(date_col)[target_var]
-    # pred_log_diff_impl = pred_log_diff[date_start_impl_index:]
-    #
-    # if log:
-    #     orig_log_impl = np.log(orig_impl)
-    # else:
-    #     orig_log_impl = orig_impl
-    #
-    # if diff_level != 0:
-    #     orig_act_pred_log_diff_check_impl = orig_log_impl.diff(diff_level)
-    # else:
-    #     orig_act_pred_log_diff_check_impl = orig_log_impl
-    #
-    # # save act_pred_log_diff_check
-    # act_pred_log_diff_check_impl = pd.DataFrame(list(zip(orig_act_pred_log_diff_check_impl, pred_log_diff_impl)),
-    #                                             columns=['act', 'pred']).set_index(orig_act_pred_log_diff_check_impl.index)
-    # act_pred_log_diff_check_impl['error'] = act_pred_log_diff_check_impl['act'] - act_pred_log_diff_check_impl['pred']
-    #
-    # pred_log_impl = np.zeros(len(orig_log_impl))
-    # pred_log_impl[:diff_level] = orig_log_impl[:diff_level]
-    # for i in range(diff_level, len(orig_log_impl)):
-    #     if diff_level != 0:
-    #         pred_log_impl[i] = pred_log_impl[i - diff_level] + pred_log_diff_impl[i]
-    #
-    # # act_pred_log
-    # act_pred_log_impl = pd.DataFrame(list(zip(orig_log_impl, pred_log_impl)),
-    #                                  columns=['act', 'pred']).set_index(orig_log_impl.index)
-    # act_pred_log_impl['error'] = act_pred_log_impl['act'] - act_pred_log_impl['pred']
-    #
-    # # act_pred
-    # pred_impl = np.exp(pred_log_impl)
-    # act_pred_impl = pd.DataFrame(list(zip(orig_impl, pred_impl)),
-    #                              columns=['act', 'pred']).set_index(orig_impl.index)
-    # act_pred_impl['error'] = act_pred_impl['act'] - act_pred_impl['pred']
+    act_pred = pd.DataFrame(list(zip(act, pred)), columns=['act', 'pred']).set_index(orig.index)
+    act_pred['error'] = act_pred['act'] - act_pred['pred']
+    act_pred = act_pred.iloc[diff_level:]
 
     return act_pred_log_diff_check, act_pred_log, act_pred
 
@@ -234,12 +206,13 @@ def save_results(act_pred_log_diff, act_pred_log, act_pred, var_title,
     timestamp = datetime.now().strftime("%Y-%m-%d, %H:%M")
     normal_errors, shapiro_p = shapiro_wilk_test(df=act_pred_log_diff, treatment_country=treatment_country,
                                                  alpha=sign_level)
+
     att_log_diff_mean, att_log_diff_std, \
-        att_log_diff_sign, att_log_diff_p = t_test_result(df=act_pred_log_diff, treatment_country=treatment_country)
+        att_log_diff_sign, att_log_diff_p = sign_test_result(df=act_pred_log_diff, treatment_country=treatment_country)
     att_log_mean, att_log_std, \
-        att_log_sign, att_log_p = t_test_result(df=act_pred_log, treatment_country=treatment_country)
+        att_log_sign, att_log_p = sign_test_result(df=act_pred_log, treatment_country=treatment_country)
     att_mean, att_std, \
-        att_sign, att_p = t_test_result(df=act_pred, treatment_country=treatment_country)
+        att_sign, att_p = sign_test_result(df=act_pred, treatment_country=treatment_country)
 
     if var_title == f'{model}_results':
         series = ['12-m log-diff $CO_2$', 'Log $CO_2$', 'Absolute $CO_2$']

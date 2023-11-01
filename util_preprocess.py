@@ -4,8 +4,8 @@
 import numpy as np
 import pandas as pd
 
-from definitions import show_output, incl_countries, incl_years, \
-    country_col, year_col, month_col, quarter_col, date_col, agg_val, interpolation_val
+from definitions import show_output, incl_countries, incl_years, agg_val, interpolation_val, \
+    country_col, year_col, month_col, quarter_col, date_col
 from util_general import get_timeframe_col
 
 
@@ -66,7 +66,6 @@ def downsample_month_to_quarter(df_m: object, var_name: str, agg: str):
             else:
                 raise ValueError(f'Input a valid agg argument: {agg_val}')
             df_country[country_col] = [country] * len(df_country)
-
             df_q = pd.concat([df_q, df_country], axis=0)
 
     else:
