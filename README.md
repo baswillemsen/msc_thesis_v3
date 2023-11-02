@@ -23,7 +23,7 @@ show_output = True
 show_plots = False
 fig_size = (10, 6)
 save_output = True
-save_figs = False
+save_figs = True
 ```
 
 ### util_{}.py

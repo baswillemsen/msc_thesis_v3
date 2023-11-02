@@ -10,7 +10,7 @@ show_plots = False
 fig_size = (10, 6)
 
 save_output = True
-save_figs = False
+save_figs = True
 
 # NON-STATIC DEFINITIONS
 target_var = 'co2'
