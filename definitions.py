@@ -18,6 +18,7 @@ stat = 'stat'
 sign_level = 0.10
 fake_num = -99999
 
+# STATIC DEFINITIONS
 country_col = 'country'
 year_col = 'year'
 month_col = 'month'
@@ -28,11 +29,11 @@ model_val = ['lasso', 'rf', 'ols', 'sc', 'did']
 stat_val = ['stat', 'non_stat']
 timeframe_val = ['m', 'q']
 folder_val = ['data', 'methodology', 'results']
-
 interpolation_val = ['median', 'linear']
 agg_val = ['sum', 'mean']
 
 # COUNTRIES, YEARS INCLUDED
+incl_years = range(2000, 2020)
 treatment_countries = ['switzerland',
                        'ireland',
                        'united_kingdom',
@@ -57,8 +58,8 @@ donor_countries_all = ['austria',
 incl_countries = treatment_countries + donor_countries_all
 incl_countries = list(set(incl_countries))
 incl_countries.sort()
-incl_years = range(2000, 2020)
 
+# correction of country names in source data
 corr_country_names = {'republic of cyprus': 'cyprus',
                       'slovak republic': 'slovakia',
                       'czechia': 'czech_republic',

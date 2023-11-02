@@ -1,6 +1,4 @@
-################################
-### import relevant packages ###
-################################
+# import relevant packages
 import os
 import sys
 import warnings

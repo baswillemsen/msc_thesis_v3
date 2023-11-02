@@ -1,0 +1,4 @@
+Series,$\hat{\Delta}_T$ (ATE),$\hat{\sigma}_{\Delta_T}$ (STD),p-value
+12-m log-diff $CO_2$,-0.007,0.05,0.276
+Log $CO_2$,-0.138,0.081,0.0
+Absolute $CO_2$,-857799594.546,523054430.245,0.0

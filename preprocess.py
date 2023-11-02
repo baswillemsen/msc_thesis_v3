@@ -1,6 +1,4 @@
-################################
-### import relevant packages ###
-################################
+# import relevant packages
 import numpy as np
 import pandas as pd
 
@@ -58,8 +56,10 @@ def preprocess_brent_m(source_file: str, source_date_col: str, source_measure_co
     brent_m_raw = read_data(source_path=data_source_path, file_name=source_file)
     brent_m = brent_m_raw.copy()
 
+    # rename column names
     brent_m = brent_m.rename(columns={source_date_col: date_col, source_measure_col: var_name})
 
+    # define time columns
     brent_m[date_col] = pd.to_datetime(brent_m[date_col])
     brent_m[year_col] = brent_m[date_col].dt.year
     brent_m[month_col] = brent_m[date_col].dt.month
@@ -113,6 +113,7 @@ def preprocess_WB(source_file: str, source_country_col: str, source_time_col: st
     df = rename_order_scale(df=df, source_country_col=source_country_col, source_year_col=year_col,
                             timeframe=source_timeframe, var_name=var_name, var_scale=var_scale)
 
+    # downsample or upsample the data
     if source_timeframe == 'm':
         df_alt = downsample_month_to_quarter(df_m=df, var_name=var_name, agg=downsample_method)
     else:
@@ -143,23 +144,29 @@ def preprocess_EUstat(source_file: str, source_country_col: str, var_name: str, 
     df[source_country_col] = df[source_country_col].str.lower()
     df = df.replace({source_country_col: corr_country_names})
 
+    # pivot the data
     df = df.melt(id_vars=[source_country_col],
                  value_vars=df.drop([source_country_col], axis=1),
                  value_name=var_name)
 
+    # define the tiem columns
     df[date_col] = pd.to_datetime(df['variable'])
     df[year_col] = df[date_col].dt.year
     df[quarter_col] = df[date_col].dt.quarter
     df[month_col] = df[date_col].dt.month
     df = df.drop('variable', axis=1)
 
+    # select relevant countries, years and measure in data
     df = select_country_year_measure(df=df, year_col=year_col, country_col=source_country_col)
     df = df.replace({':': np.nan})
 
+    # rename, order, scale data
     df = rename_order_scale(df=df, source_country_col=source_country_col,
                             var_name=var_name, var_scale=var_scale, timeframe=source_timeframe)
+    # interpolate the data
     df[var_name] = interpolate_series(series=df[var_name], method=interpolate_method)
 
+    # downsample or upsample the data
     if source_timeframe == 'm':
         df_alt = downsample_month_to_quarter(df_m=df, var_name=var_name, agg=downsample_method)
     else:

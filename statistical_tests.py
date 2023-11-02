@@ -1,6 +1,4 @@
-################################
-### import relevant packages ###
-################################
+# import relevant packages
 import pandas as pd
 import numpy as np
 
@@ -10,6 +8,7 @@ from util_general import read_data, get_timescale, get_trans, get_impl_date, get
 from statsmodels.tsa.stattools import adfuller
 from scipy.stats import shapiro
 from scipy.stats import ttest_1samp, ttest_ind, norm
+from statsmodels.stats.stattools import durbin_watson
 
 
 # adfuller test for stationarity (unit-root test)
@@ -104,6 +103,19 @@ def shapiro_wilk_test(df: object, treatment_country: str, alpha: float):
         print(f'Shapiro-Wilk test: Errors NOT normally distributed (p-value={round(shap[1],3)})')
 
     return normal_errors, shap[1]
+
+
+# Durbin Watson test for non-serially correlated errors
+def durbin_watson_test(df: object, treatment_country: str, alpha: float):
+    db = durbin_watson(df['error'].loc[:get_impl_date(treatment_country)])
+    if 1 < db < 3:
+        serial_corr = 0
+        print(f'Shapiro-Wilk test: Errors are NOT serially correlated  (p-value={round(db,3)})')
+    else:
+        serial_corr = 1
+        print(f'Shapiro-Wilk test: Errors are serially correlated  (p-value={round(db,3)})')
+
+    return serial_corr, db
 
 
 def stat_test(x: list, sign_level: float):

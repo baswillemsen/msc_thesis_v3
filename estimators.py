@@ -1,6 +1,4 @@
-################################
-### import relevant packages ###
-################################
+# import relevant packages
 import numpy as np
 import pandas as pd
 
@@ -46,26 +44,26 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
         return None
     else:
 
-        # for months_cor in [-15, -12, -9, -6, -3, 0, 3, 6, 9, 12, 15]:
-        months_cor = get_months_cors(model=model, timeframe=timeframe, treatment_country=treatment_country)
-
+        # define X, y
         y_log_diff = treatment_log_diff
         X_log_diff = donors_log_diff
 
+        # get implementation dates
         impl_date = get_impl_date(treatment_country=treatment_country)
         impl_date_index = list(treatment_log_diff.index).index(impl_date)
+        months_cor = get_months_cors(model=model, timeframe=timeframe, treatment_country=treatment_country)
         split_index = impl_date_index + months_cor
         split_date = treatment_log_diff.index[split_index]
 
+        # split data
         y_log_diff_pre = treatment_log_diff[treatment_log_diff.index < split_date]
         X_log_diff_pre = donors_log_diff[donors_log_diff.index < split_date]
         print(f'Treatment implementation date (T_0):        {impl_date}')
-        print(f'Treatment split date (T_0 cor):             {split_date}')
         print(f'Nr of timeframes pre-treatment (t < T_0):   {len(X_log_diff_pre)}')
         print(f'Nr of timeframes post-treatment (t >= T_0): {len(donors_log_diff) - len(X_log_diff_pre)}')
         print("\n")
 
-        # Storing the fit object for later reference
+        # Standardize data, store fit for later
         SS = StandardScaler()
         SS_treatmentfit_pre = SS.fit(np.array(y_log_diff_pre).reshape(-1, 1))
         X_log_diff_stand = SS.fit_transform(np.array(X_log_diff))
@@ -81,6 +79,7 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
             # define model
             ts_split = TimeSeriesSplit(n_splits=ts_splits)
 
+            # define the LASSO estimator
             lasso = LassoCV(
                 alphas=np.arange(alpha_min, alpha_max, alpha_step),
                 fit_intercept=True,
@@ -110,16 +109,11 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
             n_pars = len(feats)
             pars = list(feats.keys())
             coefs = list(feats.values())
-
-            # feats = list(lasso.coef_)
-            # coefs_index = [i for i, val in enumerate(feats) if val != 0]
-            # n_pars = len(coefs_index)
-            # pars = list(donors_log_diff.columns[coefs_index])
-            # coefs = [round(coef, 3) for coef in feats if coef != 0]
             print(f'Parameters estimated ({n_pars}x): {pars}')
             print(f'Coefficients estimated ({n_pars}x): {coefs}')
             print("\n")
 
+            # save lasso results
             ind = list(range(1, n_pars + 1))
             df_results = pd.DataFrame(list(zip(pars, coefs)), columns=['Regressor', 'Coefficient'])
             df_results = df_results.sort_values('Coefficient', ascending=False)
@@ -127,11 +121,12 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
             df_results = df_results[['Index', 'Regressor', 'Coefficient']]
             df_results.to_csv(f'{tables_path_res}/{model}_{treatment_country}_{timeframe}_lasso_pars.csv', index=False)
 
+            # plot lasso path
             plot_lasso_path(X=X_log_diff_pre_stand, y=y_log_diff_pre_stand, treatment_country=treatment_country,
                             alpha_min=alpha_min, alpha_max=alpha_max, alpha_step=alpha_step, lasso_iters=lasso_iters,
                             model=model, timeframe=timeframe, alpha_cv=lasso_alpha)
 
-            # summarize chosen configuration
+            # transform standardized data back, predict
             act_log_diff = flatten(np.array(y_log_diff).reshape(-1, 1))
             pred_log_diff = flatten(
                 SS_treatmentfit_pre.inverse_transform(lasso.predict(X_log_diff_stand).reshape(-1, 1)))
@@ -141,6 +136,7 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
 
         ### RANDOM FOREST ===================================================================================
         elif model == 'rf':
+            # define the Random Forest estimator
             rf = RandomForestRegressor(n_estimators=10,
                                        max_depth=10,
                                        min_weight_fraction_leaf=0.25,
@@ -149,10 +145,12 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
                                        criterion='squared_error'
                                        )
 
+            # fit the model
             y = np.array(y_log_diff_pre_stand).ravel()
             X = X_log_diff_pre_stand
             rf.fit(X, y)
 
+            # transform standardized data back, predict
             act_log_diff = flatten(np.array(y_log_diff).reshape(-1, 1))
             pred_log_diff = flatten(SS_treatmentfit_pre.inverse_transform(
                 np.array(rf.predict(X_log_diff_stand)).reshape(-1, 1)))
@@ -174,9 +172,9 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
 
         ### OLS ======================================================================================
         elif model == 'ols':
-            # Perform stepwise regression
-            # n_pars = get_ols_pars(treatment_country=treatment_country)
+            # Perform stepwise regression to get regressors
             ts_split = TimeSeriesSplit(n_splits=ts_splits)
+            # define the SequentialFeatureSelector estimator
             sfs = SequentialFeatureSelector(estimator=LinearRegression(),
                                             n_features_to_select='auto',
                                             tol=1e-3,
@@ -186,10 +184,11 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
             selected_features = sfs.fit(X_log_diff_pre_stand, y_log_diff_pre_stand)
             pars = selected_features.get_feature_names_out()
 
-            # Storing the fit object for later reference
+            # re-establish X and y based on results from OLS model
             X_log_diff = X_log_diff[pars]
             X_log_diff_pre = X_log_diff[X_log_diff.index < split_date]
 
+            # standardize data
             SS = StandardScaler()
             SS_treatmentfit_pre = SS.fit(np.array(y_log_diff_pre).reshape(-1, 1))
             X_log_diff_stand = pd.DataFrame(SS.fit_transform(np.array(X_log_diff)), index=X_log_diff.index,
@@ -201,11 +200,13 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
             y_log_diff_pre_stand = pd.DataFrame(SS.fit_transform(y_log_diff_pre), index=y_log_diff_pre.index,
                                                 columns=y_log_diff_pre.columns)
 
+            # fit model
             y = y_log_diff_pre_stand
             X = X_log_diff_pre_stand
             model_res = sm.OLS(y, X).fit()
             print(model_res.summary())
 
+            # transform standardized data back, predict
             act_log_diff = flatten(np.array(y_log_diff).reshape(-1, 1))
             pred_log_diff = flatten(SS_treatmentfit_pre.inverse_transform(
                 np.array(model_res.predict(X_log_diff_stand)).reshape(-1, 1)))
@@ -222,24 +223,20 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
         else:
             raise ValueError(f'Input valid model argument: {model_val}')
 
-        # transform back
+        # transform log-diff back to log, absolute data
         act_pred_log_diff_check, \
             act_pred_log, act_pred, = transform_back(df=df, act_pred_log_diff=act_pred_log_diff,
                                                      treatment_country=treatment_country, timeframe=timeframe)
 
-        n_train = len(y_log_diff_pre_stand)
-        n_test = len(y_log_diff) - len(y_log_diff_pre_stand)
-
-        # # save dataframes and plots
+        # save dataframes and plots
         if save_output or show_plots or save_figs:
             save_results(act_pred_log_diff=act_pred_log_diff, act_pred_log=act_pred_log, act_pred=act_pred,
                          model=model, stat=stat, timeframe=timeframe,
                          sign_level=sign_level, incl_countries=incl_countries, incl_years=incl_years,
                          treatment_country=treatment_country, impl_date=impl_date, impl_date_index=impl_date_index,
-                         n_train=n_train, n_test=n_test, var_title=f'{model}_results',
+                         var_title=f'{model}_results',
                          # model specific
-                         prox=prox, months_cor=months_cor, split_date=split_date,
-                         r2_pre_log_diff_stand=r2_pre_log_diff_stand,
+                         prox=prox, r2_pre_log_diff_stand=r2_pre_log_diff_stand,
                          lasso_alpha=lasso_alpha, n_pars=n_pars, pars=pars, coefs=coefs)
 
             save_dataframe(df=act_pred_log_diff, var_title='act_pred_log_diff',
@@ -269,16 +266,15 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
 ### Synthetic Control method ###
 ################################
 def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, model: str, prox: bool):
-    # pivot treatment and donors
+
+    # get implementation dates
     impl_date = get_impl_date(treatment_country=treatment_country)
     impl_date_index = list(df[date_col]).index(impl_date)
-
-    # for months_cor in [-15, -12, -9, -6, -3, 0, 3, 6, 9, 12, 15]:
     months_cor = get_months_cors(model=model, timeframe=timeframe, treatment_country=treatment_country)
-
     split_index = impl_date_index + months_cor
     split_date = df[date_col][split_index]
 
+    # get pre-treatment, post-treatment CO2 data
     df_pivot, pre_treat, post_treat, treat_unit = sc_pivot(df=df_stat, treatment_country=treatment_country,
                                                            timeframe=timeframe, model=model, impl_date=split_date,
                                                            prox=prox)
@@ -312,8 +308,6 @@ def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, mode
                                                  treatment_country=treatment_country, timeframe=timeframe)
 
     r2_pre_log_diff_stand = sc.score_R2
-    n_train = len(pre_treat.columns)
-    n_test = len(post_treat.columns)
 
     # # save dataframes and plots
     if save_output or show_plots or save_figs:
@@ -321,9 +315,9 @@ def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, mode
                      model=model, stat=stat, timeframe=timeframe,
                      sign_level=sign_level, incl_countries=incl_countries, incl_years=incl_years,
                      treatment_country=treatment_country, impl_date=impl_date, impl_date_index=impl_date_index,
-                     n_train=n_train, n_test=n_test, var_title=f'{model}_results',
+                     var_title=f'{model}_results',
                      # model specific
-                     prox=prox, months_cor=months_cor, split_date=split_date, r2_pre_log_diff_stand=r2_pre_log_diff_stand,
+                     prox=prox, r2_pre_log_diff_stand=r2_pre_log_diff_stand,
                      lasso_alpha=None, n_pars=None, pars=None, coefs=None)
 
         save_dataframe(df=act_pred_log_diff, var_title='act_pred_log_diff',
@@ -353,7 +347,7 @@ def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, mode
 ### Diff-in-Diff method      ###
 ################################
 def did(df: object, treatment_country: str, timeframe: str, model: str, prox: bool, x_years: int):
-
+    # get implementationd dates
     impl_date = get_impl_date(treatment_country=treatment_country)
     # get treatment and donors pre- and post-treatment
     df_sel, treatment_pre, treatment_post, \
@@ -372,16 +366,8 @@ def did(df: object, treatment_country: str, timeframe: str, model: str, prox: bo
     diff_in_diff = treatment_diff - donors_diff
     print(f'diff-in-diff {diff_in_diff}')
 
-    # # linear regression
-    # lr = LinearRegression()
-    # X = df_sel[['treatment_dummy', 'post_dummy', 'treatment_post_dummy']]
-    # y = df_sel[target_var]
-    # lr.fit(X, y)
-    # print(lr.coef_)
-
     # Extended OLS
     ols = smf.ols('co2 ~ treatment_dummy + post_dummy + treatment_post_dummy', data=df_sel).fit()
-    # diff_in_diff = ols.params['treatment_post_dummy']
     print(ols.summary())
 
     # save dataframes and plots

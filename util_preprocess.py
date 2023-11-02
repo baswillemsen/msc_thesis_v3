@@ -1,6 +1,4 @@
-################################
-### import relevant packages ###
-################################
+# import relevant packages
 import numpy as np
 import pandas as pd
 
@@ -14,10 +12,8 @@ def select_country_year_measure(df: object, country_col: str = None, year_col: s
                                 measure_col: str = None, incl_measure: list = None):
     if country_col is not None:
         df = df[df[country_col].isin(incl_countries)]
-
     if year_col is not None:
         df = df[df[year_col].isin(incl_years)]
-
     if measure_col is not None:
         df = df[df[measure_col].isin(incl_measure)]
 
@@ -55,6 +51,7 @@ def downsample_month_to_quarter(df_m: object, var_name: str, agg: str):
                              country_col: []}
                             )
 
+        # downsample each country's data series by sum or mean
         for country in df_m[country_col].unique():
             df_country = df_m.copy()
             df_country = df_country[df_country[country_col] == country]
@@ -69,6 +66,7 @@ def downsample_month_to_quarter(df_m: object, var_name: str, agg: str):
             df_q = pd.concat([df_q, df_country], axis=0)
 
     else:
+        # for brent data
         df_q = df_m.copy()
         df_q = df_q.set_index(date_col)[var_name]
         if agg == 'sum':
@@ -81,6 +79,7 @@ def downsample_month_to_quarter(df_m: object, var_name: str, agg: str):
     df_q = df_q.reset_index()
     df_q = df_q.rename(columns={'index': date_col})
 
+    # reframe the time columns
     df_q[date_col] = [df_m[date_col][3 * i].to_pydatetime() for i in range(0, int(len(df_m) / 3))]
     df_q[year_col] = df_q[date_col].dt.year
     df_q[quarter_col] = df_q[date_col].dt.quarter
@@ -101,6 +100,7 @@ def upsample_quarter_to_month(df_q: object, var_name: str):
                          country_col: []}
                         )
 
+    # upsample each country's data series by interpolating the series
     for country in df_q[country_col].unique():
         df_country = df_q.copy()
         df_country = df_country[df_country[country_col] == country]
@@ -148,6 +148,7 @@ def interpolate_series(series: object, method='linear'):
         raise ValueError(f'Input a valid method argument: {interpolation_val}')
 
 
+# print the progress for the preprocessing of the data
 def print_preprocess(var_name: str, timeframe: str = None):
     if show_output:
         if timeframe is None:

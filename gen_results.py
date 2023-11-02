@@ -1,6 +1,4 @@
-################################
-### import relevant packages ###
-################################
+# import relevant packages
 import sys
 
 from preprocess import preprocess
@@ -14,7 +12,7 @@ from definitions import treatment_countries
 ##################################################
 def gen_results(timeframe: str):
 
-    # preprocess()
+    preprocess()
 
     for model in ['lasso', 'rf', 'ols', 'sc', 'did']:
 

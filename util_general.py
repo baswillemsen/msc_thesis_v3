@@ -1,6 +1,4 @@
-################################
-### import relevant packages ###
-################################
+# import relevant packages
 import os
 import pandas as pd
 import datetime as dt
@@ -187,14 +185,6 @@ def get_model_color(type: str):
              'ols': 'yellowgreen',
              'rf': 'yellowgreen'
              }
-    # color = {'act': 'grey',
-    #          'error': '#1f77b4',  # blue
-    #          'impl': 'black',
-    #          'lasso': '#1f77b4',  # blue
-    #          'rf': '#ff7f0e',  # orange
-    #          'ols': '#2ca02c',  # green
-    #          'sc': '#d62728'  # red
-    #          }
     if type in color.keys():
         return color[type]
     else:
