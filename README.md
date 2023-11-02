@@ -98,7 +98,7 @@ including both the figures and tables:
 - output  
 &nbsp; > m / q  
 &nbsp; &nbsp; > figures / tables  
-&nbsp; &nbsp; &nbsp; > data / methodology / results
+&nbsp; &nbsp; &nbsp; > data / methodology / results   
 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; > all results (csv) and results per country  
 
 
