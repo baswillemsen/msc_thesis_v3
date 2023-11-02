@@ -51,11 +51,12 @@ The data is read and based on the arguments (model, timeframe, treatment\_countr
 ```python
 python main.py '{model}' '{timeframe}' '{treatment_country}'
 ```
-For the arguments for model, timeframe and target_country the following are available 
-(please note in this thesis only timeframe _'m'_ (monthly) is used, while _q_ (quarterly) is not used):
-- model = {'lasso', 'rf', 'ols', 'sc', 'did'}
-- timeframe = {'m', 'q'}
-- treatment_country = {'switzerland', 'ireland', 'united_kingdom', 'france', 'portugal'}
+For the arguments for model, timeframe and target_country the following are available
+(please note in this thesis only timeframe _'m'_ (monthly) is used, while _q_ (quarterly) is not used).
+Input all arguments as STRINGS:
+- model = {lasso, rf, ols, sc, did}
+- timeframe = {m, q}
+- treatment_country = {switzerland, ireland, united_kingdom, france, portugal}
 
 ### gen_results.py
 While _main.py_ can run results for 1 model for 1 timeframe for 1 treatment country, this file is able to
@@ -66,7 +67,7 @@ python gen_results.py '{timeframe}'
 ```
 For the timeframe arguemen the following are available available 
 (please note in this thesis only timeframe _'m'_ (monthly) is used, while _q_ (quarterly) is not used):
-- timeframe = {'m', 'q'}
+- timeframe = {m, q}
 
 ### plot_function.py
 This file contains all functions for plotting the predictions, erros, cumulative summations, lasso paths,
