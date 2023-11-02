@@ -32,6 +32,7 @@ from plot_functions import plot_lasso_path
 def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts_splits: int,
          alpha_min: float, alpha_max: float, alpha_step: float, tol: float, lasso_iters: int,
          model: str, prox: bool):
+    print('Running ArCo method...')
     tables_path_res = get_table_path(timeframe=timeframe, folder='results', country=treatment_country, model=model)
 
     treatment_log_diff, donors_log_diff = arco_pivot(df=df_stat, treatment_country=treatment_country,
@@ -76,6 +77,7 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
 
         ### LASSO ======================================================================================
         if model == 'lasso':
+            print('Running LASSO model...')
             # define model
             ts_split = TimeSeriesSplit(n_splits=ts_splits)
 
@@ -136,6 +138,7 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
 
         ### RANDOM FOREST ===================================================================================
         elif model == 'rf':
+            print('Running Random Forest model...')
             # define the Random Forest estimator
             rf = RandomForestRegressor(n_estimators=10,
                                        max_depth=10,
@@ -172,6 +175,7 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
 
         ### OLS ======================================================================================
         elif model == 'ols':
+            print('Running OLS model...')
             # Perform stepwise regression to get regressors
             ts_split = TimeSeriesSplit(n_splits=ts_splits)
             # define the SequentialFeatureSelector estimator
@@ -246,18 +250,18 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
 
             save_dataframe(df=act_pred_log_diff_check, var_title='act_pred_log_diff_check',
                            model=model, treatment_country=treatment_country, timeframe=timeframe,
-                           save_csv=True, save_predictions=False, save_diff=False,
-                           save_cumsum=False, save_cumsum_impl=False, save_qq=False)
+                           save_csv=True, save_predictions=True, save_diff=True,
+                           save_cumsum=True, save_cumsum_impl=True, save_qq=True)
 
             save_dataframe(df=act_pred_log, var_title='act_pred_log',
                            model=model, treatment_country=treatment_country, timeframe=timeframe,
-                           save_csv=True, save_predictions=False, save_diff=False,
-                           save_cumsum=False, save_cumsum_impl=False, save_qq=False)
+                           save_csv=True, save_predictions=True, save_diff=True,
+                           save_cumsum=True, save_cumsum_impl=True, save_qq=True)
 
             save_dataframe(df=act_pred, var_title='act_pred',
                            model=model, treatment_country=treatment_country, timeframe=timeframe,
                            save_csv=True, save_predictions=True, save_diff=True,
-                           save_cumsum=False, save_cumsum_impl=False, save_qq=False)
+                           save_cumsum=True, save_cumsum_impl=True, save_qq=True)
 
         return act_pred_log_diff
 
@@ -266,6 +270,7 @@ def arco(df: object, df_stat: object, treatment_country: str, timeframe: str, ts
 ### Synthetic Control method ###
 ################################
 def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, model: str, prox: bool):
+    print('Running Synthetic Control method...')
 
     # get implementation dates
     impl_date = get_impl_date(treatment_country=treatment_country)
@@ -327,18 +332,18 @@ def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, mode
 
         save_dataframe(df=act_pred_log_diff_check, var_title='act_pred_log_diff_check',
                        model=model, treatment_country=treatment_country, timeframe=timeframe,
-                       save_csv=True, save_predictions=False, save_diff=False,
-                       save_cumsum=False, save_cumsum_impl=False, save_qq=False)
+                       save_csv=True, save_predictions=True, save_diff=True,
+                       save_cumsum=True, save_cumsum_impl=True, save_qq=True)
 
         save_dataframe(df=act_pred_log, var_title='act_pred_log',
                        model=model, treatment_country=treatment_country, timeframe=timeframe,
-                       save_csv=True, save_predictions=False, save_diff=False,
-                       save_cumsum=False, save_cumsum_impl=False, save_qq=False)
+                       save_csv=True, save_predictions=True, save_diff=True,
+                       save_cumsum=True, save_cumsum_impl=True, save_qq=True)
 
         save_dataframe(df=act_pred, var_title='act_pred',
                        model=model, treatment_country=treatment_country, timeframe=timeframe,
                        save_csv=True, save_predictions=True, save_diff=True,
-                       save_cumsum=False, save_cumsum_impl=False, save_qq=False)
+                       save_cumsum=True, save_cumsum_impl=True, save_qq=True)
 
     return act_pred_log_diff
 
@@ -347,6 +352,7 @@ def sc(df: object, df_stat: object, treatment_country: str, timeframe: str, mode
 ### Diff-in-Diff method      ###
 ################################
 def did(df: object, treatment_country: str, timeframe: str, model: str, prox: bool, x_years: int):
+    print('Running Difference-in-differences method...')
     # get implementationd dates
     impl_date = get_impl_date(treatment_country=treatment_country)
     # get treatment and donors pre- and post-treatment
